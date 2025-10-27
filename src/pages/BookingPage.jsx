@@ -1,0 +1,883 @@
+import React, { useEffect, useState, useMemo } from "react";
+import Header from "../components/Header.jsx";
+import { CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
+
+const steps = [
+  { id: 1, name: "Service" },
+  { id: 2, name: "Date & Time" },
+  { id: 3, name: "Your Details" },
+  { id: 4, name: "Review" },
+  { id: 5, name: "Payment" },
+];
+
+const services = [
+  {
+    id: "matricdance",
+    name: "Matric Dance: Video & Photography",
+    price: "R1500/h",
+    description:
+      "Full video coverage and photography for matric dance events. Includes highlights edit and photo gallery.",
+  },
+  {
+    id: "mdphotography",
+    name: "Matric Dance: Photography ONLY",
+    price: "R1000",
+    description:
+      "Photography-only package for matric dances — professional shots, retouching and an online gallery.",
+  },
+  {
+    id: "promo",
+    name: "Music Video: DJI Osmo (Visualizer)",
+    price: "R5000",
+    description:
+      "High-quality music video captured with DJI Osmo — ideal for visualizers and short promos.",
+  },
+  {
+    id: "music",
+    name: "Music Video: Reels",
+    price: "R3500",
+    description:
+      "Short-form music video / reels package optimized for social media platforms.",
+  },
+  {
+    id: "editing",
+    name: "Music Video Editing",
+    price: "R3000",
+    description:
+      "Professional editing service for your footage — cuts, sync, basic color and export masters.",
+  },
+  {
+    id: "grading",
+    name: "Color Grading",
+    price: "R2000",
+    description:
+      "Standalone color grading service to give your footage a cinematic look and consistent color profile.",
+  },
+  {
+    id: "other",
+    name: "Other / Custom Service",
+    price: "TBD",
+    description: "Custom requests — describe what you need and we'll provide a tailored quote.",
+  },
+];
+
+const Calendar = ({ selectedDate, onSelectDate }) => {
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  });
+  
+  const daysInMonth = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth() + 1,
+    0
+  ).getDate();
+  
+  const firstDayOfMonth = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth(),
+    1
+  ).getDay();
+
+  const monthName = currentMonth.toLocaleString('default', { month: 'long' });
+  const year = currentMonth.getFullYear();
+
+  const nextMonth = () => {
+    setCurrentMonth(prevMonth => {
+      const next = new Date(prevMonth);
+      next.setMonth(next.getMonth() + 1);
+      return next;
+    });
+  };
+
+  const prevMonth = () => {
+    setCurrentMonth(prevMonth => {
+      const prev = new Date(prevMonth);
+      prev.setMonth(prev.getMonth() - 1);
+      return prev;
+    });
+  };
+
+  const formatDateString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleDateClick = (date) => {
+    const formattedDate = formatDateString(date);
+    onSelectDate(formattedDate);
+  };
+
+  return (
+    <div className="w-full max-w-md mx-auto">
+      <div className="flex items-center justify-between mb-4">
+        <button
+          type="button"
+          onClick={prevMonth}
+          className="p-2 rounded transition-colors hover:bg-gray-700 text-gray-300"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <h3 className="text-lg font-semibold">
+          {monthName} {year}
+        </h3>
+        <button
+          type="button"
+          onClick={nextMonth}
+          className="p-2 hover:bg-gray-700 rounded text-gray-300"
+        >
+          <ChevronRight size={20} />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day} className="text-center text-sm text-gray-400 py-1">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: firstDayOfMonth }).map((_, index) => (
+          <div key={`empty-${index}`} className="p-2" />
+        ))}
+        
+        {Array.from({ length: daysInMonth }).map((_, index) => {
+          const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index + 1);
+          const dateString = formatDateString(date);
+          const isSelected = selectedDate === dateString;
+
+          return (
+            <button
+              key={index}
+              type="button"
+              onClick={() => handleDateClick(date)}
+              className={`p-2 rounded text-sm transition
+                ${isSelected ? 'bg-blue-600 text-white' : 'hover:bg-gray-700 text-white'}
+              `}
+            >
+              <span>
+                {index + 1}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+export default function BookingPage() {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [service, setService] = useState("");
+  const [expandedService, setExpandedService] = useState(null);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [details, setDetails] = useState({ name: "", email: "", phone: "", notes: "" });
+  const [customService, setCustomService] = useState({ title: "", description: "", budget: "" });
+  const [submitted, setSubmitted] = useState(false);
+  const [paymentOption, setPaymentOption] = useState(""); // "full" or "deposit"
+  const [availableDates, setAvailableDates] = useState([]);
+  const [loadingAvail, setLoadingAvail] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // modal visibility for custom service
+  const [showCustomModal, setShowCustomModal] = useState(false);
+  // hide the page-level Pay Now button briefly after "Save & Use"
+  const [hidePayNow, setHidePayNow] = useState(false);
+
+  const servicePricing = {
+    matricdance: { name: "Matric Dance: Video & Photography", price: 1500, type: "hourly" },
+    mdphotography: { name: "Matric Dance: Photography ONLY", price: 1000, type: "fixed" },
+    promo: { name: "Music Video: DJI Osmo (Visualizer)", price: 5000, type: "fixed" },
+    music: { name: "Music Video: Reels", price: 3500, type: "fixed" },
+    editing: { name: "Music Video Editing", price: 3000, type: "fixed" },
+    grading: { name: "Color Grading", price: 2000, type: "fixed" },
+    other: { name: "Custom Service", price: 0, type: "custom" },
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const mockDates = ["2024-01-15", "2024-01-16", "2024-01-17"];
+        if (!cancelled) setAvailableDates(mockDates);
+      } catch (e) {
+        // ignore
+      } finally {
+        if (!cancelled) setLoadingAvail(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const parseBudgetNumber = (txt) => {
+    if (!txt) return 0;
+    const m = txt.replace(/[, ]/g, "").match(/(\d+)/);
+    return m ? parseInt(m[1], 10) : 0;
+  };
+
+  const paymentAmounts = useMemo(() => {
+    if (service === "other") {
+      const customPrice = parseBudgetNumber(customService.budget);
+      return { full: customPrice || 0, deposit: Math.round((customPrice || 0) * 0.5) };
+    }
+    const info = servicePricing[service];
+    if (!info) return { full: 0, deposit: 0 };
+    const full = info.type === "hourly" ? info.price * 2 : info.price;
+    return { full, deposit: Math.round(full * 0.5) };
+  }, [service, customService]);
+
+  const getServiceDisplayName = () => {
+    if (service === "other") return customService.title || "Custom Service";
+    return servicePricing[service]?.name || service || "—";
+  };
+
+  const handleCustomServiceChange = (field, value) => {
+    setCustomService((p) => ({ ...p, [field]: value }));
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setDetails((p) => ({ ...p, [name]: value }));
+  };
+
+  const resetToServiceSelection = () => {
+    setService("");
+    setCustomService({ title: "", description: "", budget: "" });
+    setExpandedService(null);
+    setCurrentStep(1);
+  };
+
+  // One-by-one expansion: clicking opens this block and collapses others.
+  // Clicking the custom block opens modal to edit custom fields.
+  const handleServiceClick = (serviceId) => {
+    if (serviceId === "other") {
+      setShowCustomModal(true);
+      setExpandedService("other");
+      return;
+    }
+    setExpandedService((prev) => (prev === serviceId ? null : serviceId));
+    setService(serviceId);
+  };
+
+  const handleSaveCustomService = (form) => {
+    setCustomService(form);
+    setService("other");
+    setExpandedService("other");
+    setShowCustomModal(false);
+    // hide the Pay Now button (page-level) immediately after saving custom service
+    setHidePayNow(true);
+  };
+
+  useEffect(() => {
+    // clear the temporary hide flag when user navigates away from step 1
+    if (currentStep !== 1) setHidePayNow(false);
+  }, [currentStep]);
+
+  const validateStep = (step = currentStep) => {
+    if (step === 1) {
+      if (service === "other") return !!customService.title.trim() && !!customService.description.trim();
+      return !!service;
+    }
+    if (step === 2) {
+      // Simplified validation - just check if date and both times are selected
+      const [startTime, endTime] = time.split('-');
+      return !!date && !!startTime && !!endTime;
+    }
+    if (step === 3) return !!details.name && !!details.email;
+    if (step === 4) return true;
+    if (step === 5) return !!paymentOption && (service !== "other" || !!customService.budget);
+    return false;
+  };
+
+  const nextStep = () => {
+    if (!validateStep(currentStep)) return;
+    // prevent navigating to payment step for custom service
+    if (currentStep === 4 && service === "other") {
+      // for custom service, review step is final — confirm instead of going to payment
+      handleConfirmCustom();
+      return;
+    }
+    setCurrentStep((p) => Math.min(p + 1, 5));
+    // clear hidePayNow when user actually navigates
+    setHidePayNow(false);
+  };
+  const prevStep = () => {
+    setCurrentStep((p) => Math.max(p - 1, 1));
+    setHidePayNow(false);
+  };
+
+  const handlePay = async () => {
+    if (!validateStep(5)) return;
+    setIsProcessing(true);
+    try {
+      const amount = paymentOption === "full" ? paymentAmounts.full : paymentAmounts.deposit;
+      await new Promise((r) => setTimeout(r, 900)); // simulate
+      alert(`Simulated payment successful: R${amount}`);
+      setSubmitted(true);
+    } catch (e) {
+      alert("Payment failed");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // new: confirm custom request (no payment). Shows final message.
+  const handleConfirmCustom = () => {
+    // you could submit customService + details to API here
+    setSubmitted(true);
+  };
+
+  const CustomServiceModal = ({ open, onClose, initial, onSave }) => {
+    const [form, setForm] = useState(initial || { title: "", description: "", budget: "" });
+    useEffect(() => setForm(initial || { title: "", description: "", budget: "" }), [initial, open]);
+    useEffect(() => {
+      if (!open) return;
+      const onKey = (e) => e.key === "Escape" && onClose();
+      window.addEventListener("keydown", onKey);
+      return () => window.removeEventListener("keydown", onKey);
+    }, [open, onClose]);
+    if (!open) return null;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+        <div className="relative w-full max-w-xl mx-4 bg-gray-900 rounded-lg p-6 text-white shadow-lg">
+          <h2 className="text-xl font-semibold mb-4">Custom Service Request</h2>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              onSave(form);
+            }}
+            className="space-y-3"
+          >
+            <div>
+              <label className="block text-sm mb-1">Service Title *</label>
+              <input
+                required
+                value={form.title}
+                onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                className="w-full p-2 rounded bg-gray-800 border text-white"
+                placeholder="e.g., Corporate Event Videography"
+              />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Description *</label>
+              <textarea
+                required
+                value={form.description}
+                onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                className="w-full p-2 rounded bg-gray-800 border text-white min-h-28"
+                placeholder="Describe what you need, duration, locations, deliverables..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Budget (optional)</label>
+              <input
+                value={form.budget}
+                onChange={(e) => setForm((p) => ({ ...p, budget: e.target.value }))}
+                className="w-full p-2 rounded bg-gray-800 border text-white"
+                placeholder="e.g., R3000"
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <button type="button" onClick={onClose} className="px-4 py-2 border rounded hover:bg-gray-800">
+                Cancel
+              </button>
+              <button type="submit" className="px-4 py-2 bg-blue-600 rounded text-white">
+                Save & Use
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  const renderServiceGrid = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {services.map((s) => {
+        const isExpanded = expandedService === s.id;
+        return (
+          <div
+            key={s.id}
+            className={`flex flex-col border rounded-lg overflow-hidden transition-shadow duration-200 ${
+              isExpanded ? "border-blue-500 shadow-lg" : "border-gray-700 hover:shadow-md"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => handleServiceClick(s.id)}
+              className="w-full text-left p-3 flex items-start justify-between bg-transparent"
+              aria-expanded={isExpanded}
+            >
+              <div className="flex-1">
+                <h3 className={`font-semibold text-sm ${isExpanded ? "text-white" : "text-gray-100"}`}>{s.name}</h3>
+                <div className="mt-0.5">
+                  <span className="font-medium text-blue-300 text-sm">{s.price}</span>
+                </div>
+              </div>
+
+              <div className="ml-2 flex items-center">
+                {isExpanded ? <CheckCircle size={16} className="text-white" /> : null}
+              </div>
+            </button>
+
+            <div
+              className={`px-3 pb-3 text-xs text-gray-300 transition-[max-height] duration-300 ease-in-out overflow-hidden bg-black ${
+                isExpanded ? "max-h-48" : "max-h-0"
+              }`}
+            >
+              <p className="mb-2 leading-relaxed">{s.description}</p>
+
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setService(s.id);
+                    setCurrentStep(2);
+                  }}
+                  className="px-2 py-1 bg-blue-600 text-white rounded text-xs"
+                >
+                  Select & Continue
+                </button>
+
+                <div className="text-xs text-gray-400">
+                  <span className="text-blue-300 font-medium">{s.price}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  const renderStep = () => {
+    if (submitted) {
+      // show different confirmation for custom service vs normal booking
+      if (service === "other") {
+        return (
+          <div className="text-center py-10">
+            <h2 className="text-2xl font-semibold mb-2">Thanks — we received your request.</h2>
+            <p className="text-gray-400">
+              We will contact you shortly to discuss details and provide a tailored quote.
+            </p>
+          </div>
+        );
+      }
+
+      return (
+        <div className="text-center py-10">
+          <h2 className="text-2xl font-semibold mb-2">Thanks! Your booking was confirmed.</h2>
+          <p className="text-gray-400">We will contact you shortly with more details about your session.</p>
+        </div>
+      );
+    }
+
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold">{service === "other" ? "Describe Your Custom Service Request" : "Choose a service"}</h2>
+
+            {service === "other" ? (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="block">Service Title *</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 border rounded bg-gray-900 text-white"
+                    placeholder="e.g., Corporate Event Videography, Wedding Highlights, etc."
+                    value={customService.title}
+                    onChange={(e) => handleCustomServiceChange("title", e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block">Detailed Description *</label>
+                  <textarea
+                    className="w-full p-2 border rounded min-h-32 bg-gray-900 text-white"
+                    placeholder="Please describe exactly what you need..."
+                    value={customService.description}
+                    onChange={(e) => handleCustomServiceChange("description", e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block">Budget Estimate (Optional)</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 border rounded bg-gray-900 text-white"
+                    placeholder="e.g., R2000"
+                    value={customService.budget}
+                    onChange={(e) => handleCustomServiceChange("budget", e.target.value)}
+                  />
+                </div>
+
+                <div className="flex justify-between mt-6">
+                  <button type="button" className="px-4 py-2 border rounded hover:bg-gray-700 transition" onClick={resetToServiceSelection}>
+                    ← Back to Services
+                  </button>
+                  <button
+                    type="button"
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    onClick={nextStep}
+                    disabled={!customService.title.trim() || !customService.description.trim()}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            ) : (
+              renderServiceGrid()
+            )}
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-8">
+            <h2 className="text-2xl font-bold">Select date & time</h2>
+            
+            <div className="space-y-6">
+              <div>
+                <label className="block mb-4 font-medium">Select Date</label>
+                <Calendar
+                  selectedDate={date}
+                  onSelectDate={setDate}
+                  availableDates={availableDates}
+                />
+              </div>
+
+              <div>
+                <label className="block mb-4 font-medium">Select Time Range</label>
+                <div className="flex items-center space-x-4">
+                  <div className="flex-1">
+                    <label className="block text-sm text-gray-400 mb-1">Start Time</label>
+                    <select
+                      value={time.split('-')[0] || ''}
+                      onChange={(e) => {
+                        const endTime = time.split('-')[1] || '';
+                        setTime(`${e.target.value}${endTime ? '-' + endTime : ''}`);
+                      }}
+                      className="w-full p-2 border rounded bg-gray-900 text-white"
+                      required
+                    >
+                      <option value="">Select start time</option>
+                      {generateTimeOptions().map(timeOption => (
+                        <option 
+                          key={timeOption} 
+                          value={timeOption}
+                          disabled={time.split('-')[1] && timeOption >= time.split('-')[1]}
+                        >
+                          {timeOption}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="text-gray-400">to</div>
+                  <div className="flex-1">
+                    <label className="block text-sm text-gray-400 mb-1">End Time</label>
+                    <select
+                      value={time.split('-')[1] || ''}
+                      onChange={(e) => {
+                        const startTime = time.split('-')[0] || '';
+                        setTime(`${startTime}${startTime ? '-' + e.target.value : e.target.value}`);
+                      }}
+                      className="w-full p-2 border rounded bg-gray-900 text-white"
+                      required
+                    >
+                      <option value="">Select end time</option>
+                      {generateTimeOptions().map(timeOption => (
+                        <option 
+                          key={timeOption} 
+                          value={timeOption}
+                          disabled={time.split('-')[0] && timeOption <= time.split('-')[0]}
+                        >
+                          {timeOption}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <p className="mt-2 text-sm text-gray-400">
+                  Available hours: 8:00 AM - 8:00 PM, in 30-minute intervals
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold">Your details</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="block">Name *</label>
+                <input type="text" name="name" className="w-full p-2 border rounded bg-gray-900 text-white" value={details.name} onChange={handleInputChange} required />
+              </div>
+              <div className="space-y-2">
+                <label className="block">Email *</label>
+                <input type="email" name="email" className="w-full p-2 border rounded bg-gray-900 text-white" value={details.email} onChange={handleInputChange} required />
+              </div>
+              <div className="space-y-2">
+                <label className="block">Phone</label>
+                <input type="tel" name="phone" className="w-full p-2 border rounded bg-gray-900 text-white" value={details.phone} onChange={handleInputChange} />
+              </div>
+              <div className="sm:col-span-2 space-y-2">
+                <label className="block">Additional Notes</label>
+                <textarea name="notes" className="w-full p-2 border rounded min-h-24 bg-gray-900 text-white" value={details.notes} onChange={handleInputChange} placeholder={service === "other" ? "Any additional information about your custom request..." : "Any special requirements or questions..."} />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold">Review & Confirm</h2>
+            <div className="space-y-4 p-4 border rounded">
+              <div>
+                <span className="font-medium">Service:</span>
+                <div className="mt-1">
+                  {service === "other" ? (
+                    <div className="bg-gray-800 rounded p-3 text-white">
+                      <div>
+                        <strong>Title:</strong> {customService.title || "Not specified"}
+                      </div>
+                      <div>
+                        <strong>Description:</strong> {customService.description || "Not specified"}
+                      </div>
+                      {customService.budget && (
+                        <div>
+                          <strong>Budget:</strong> {customService.budget}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="bg-gray-800 rounded p-3 text-white">{servicePricing[service]?.name || service}</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="font-medium">Date:</span>
+                <span>{date || "Not specified"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Time:</span>
+                <span>{time || "Not specified"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Name:</span>
+                <span>{details.name || "Not specified"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Email:</span>
+                <span>{details.email || "Not specified"}</span>
+              </div>
+              {details.phone && (
+                <div className="flex justify-between">
+                  <span className="font-medium">Phone:</span>
+                  <span>{details.phone}</span>
+                </div>
+              )}
+              {details.notes && (
+                <div>
+                  <span className="font-medium">Additional Notes:</span>
+                  <div className="mt-1 bg-gray-800 rounded p-3 text-white">{details.notes}</div>
+                </div>
+              )}
+            </div>
+
+            {/* If custom service, show a note that we'll contact them (and do not show payment) */}
+            {service === "other" && (
+              <div className="bg-blue-900 border border-blue-700 rounded-lg p-4 text-blue-100">
+                <p className="font-medium">We will contact you to discuss details and provide a tailored quote.</p>
+                <p className="text-sm mt-1">NO PAYMENT IS REQUIRED NOW.
+                <p className="font-medium"> Please confirm your request below</p>
+                </p>
+              </div>
+            )}
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold">Payment Options</h2>
+
+            <div className="border rounded-lg p-6 mb-6">
+              <h4 className="text-lg font-semibold mb-4">Booking Summary</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span>Service:</span>
+                  <span>{getServiceDisplayName()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Date & Time:</span>
+                  <span>
+                    {date || "—"} {time ? `at ${time}` : ""}
+                  </span>
+                </div>
+                {service !== "other" && paymentAmounts.full > 0 && (
+                  <div className="flex justify-between text-lg font-semibold mt-4 pt-4 border-t border-gray-700">
+                    <span>Total Amount:</span>
+                    <span className="text-green-300">R{paymentAmounts.full}</span>
+                  </div>
+                )}
+                {service === "other" && customService.budget && (
+                  <div className="flex justify-between text-lg font-semibold mt-4 pt-4 border-t border-gray-700">
+                    <span>Estimated Budget:</span>
+                    <span className="text-green-300">{customService.budget}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* If somehow reached payment step with a custom service, hide payment options */}
+            {service === "other" ? (
+              <div className="bg-blue-900 border border-blue-700 rounded-lg p-4 text-blue-100">
+                <p className="font-medium">Custom service — no online payment here.</p>
+                <p className="text-sm mt-1">We will contact you to agree final details and payment terms.</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentOption("full")}
+                    className={`border-2 rounded-lg p-6 text-left transition ${paymentOption === "full" ? "border-green-500 bg-green-800 text-white" : "border-gray-300 hover:border-green-400"}`}
+                  >
+                    <h4 className="text-lg font-semibold mb-2">Pay Full Amount</h4>
+                    <div className="text-2xl font-bold text-green-300 mb-2">R{paymentAmounts.full || "TBD"}</div>
+                    <p className="text-gray-400 text-sm">Secure your booking with full payment</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentOption("deposit")}
+                    className={`border-2 rounded-lg p-6 text-left transition ${paymentOption === "deposit" ? "border-yellow-500 bg-yellow-800 text-white" : "border-gray-300 hover:border-yellow-400"}`}
+                  >
+                    <h4 className="text-lg font-semibold mb-2">Pay 50% Deposit</h4>
+                    <div className="text-2xl font-bold text-yellow-300 mb-2">R{paymentAmounts.deposit || "TBD"}</div>
+                    <p className="text-gray-400 text-sm">Pay half now, balance due before service</p>
+                  </button>
+                </div>
+
+                <div className="bg-yellow-900 border border-yellow-700 rounded-lg p-4 mb-6 text-yellow-100">
+                  <h4 className="font-semibold text-yellow-100 mb-2">Payment Information</h4>
+                  <p className="text-yellow-200 text-sm">
+                    {paymentOption === "deposit"
+                      ? `50% deposit of R${paymentAmounts.deposit} is required to secure your booking. The remaining balance will be due before the service date.`
+                      : "Full payment secures your booking and ensures availability for your selected date and time."}
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="bg-black flex flex-col min-h-screen text-white">
+      <Header />
+
+      <main className="flex-grow pt-24 pb-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-4xl font-bold mb-2 text-center">Book Services</h1>
+          <p className="text-gray-400 text-center mb-10">Capture your special moments ONE SHOT AT A TIME</p>
+
+          <div className="mb-8">
+            <div className="flex justify-between">
+              {steps
+                .filter((s) => !(s.id === 5 && service === "other")) // hide Payment step for custom service
+                .map((step) => {
+                  const completed = step.id < currentStep;
+                  const active = step.id === currentStep;
+                  return (
+                    <div key={step.id} className={`flex flex-col items-center ${active ? "text-blue-400" : "text-gray-400"}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${active ? "border-blue-400 bg-blue-900" : "border-gray-600"}`}>
+                        {completed ? <CheckCircle size={18} className="text-green-500" /> : step.id}
+                      </div>
+                      <span className="text-sm mt-1">{step.name}</span>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+
+          <div className="bg-black rounded-lg p-6 mb-8">{renderStep()}</div>
+
+          {!submitted && (
+            <div className="flex justify-between">
+              <button onClick={prevStep} type="button" className={`px-4 py-2 border border-gray-600 rounded hover:bg-gray-700 transition ${currentStep === 1 ? "invisible" : ""}`}>
+                Previous
+              </button>
+
+              {currentStep < 4 && !(currentStep === 1 && service === "other") ? (
+                <button onClick={nextStep} type="button" className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition ${!validateStep(currentStep) ? "opacity-50 pointer-events-none" : ""}`}>
+                  Next
+                </button>
+              ) : currentStep === 4 ? (
+                service === "other" ? (
+                  <button
+                    onClick={handleConfirmCustom}
+                    type="button"
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                  >
+                    Confirm Request
+                  </button>
+                ) : (
+                  <button onClick={nextStep} type="button" className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
+                    Continue to Payment
+                  </button>
+                )
+              ) : (
+                (!hidePayNow && service !== "other" ? (
+                  <button
+                    type="button"
+                    className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    onClick={handlePay}
+                    disabled={!paymentOption || (service === "other" && !customService.budget) || isProcessing}
+                  >
+                    {isProcessing ? "Processing..." : `Pay Now - R${paymentOption === "full" ? paymentAmounts.full : paymentAmounts.deposit}`}
+                  </button>
+                ) : (
+                  <div />
+                ))
+              )}
+            </div>
+          )}
+
+          <CustomServiceModal open={showCustomModal} onClose={() => setShowCustomModal(false)} initial={customService} onSave={handleSaveCustomService} />
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// Add this helper function near the top of your file
+const generateTimeOptions = () => {
+  const times = [];
+  for (let hour = 8; hour <= 20; hour++) {
+    const hourStr = hour.toString().padStart(2, '0');
+    times.push(`${hourStr}:00`);
+    if (hour !== 20) { // Don't add :30 for the last hour
+      times.push(`${hourStr}:30`);
+    }
+  }
+  return times;
+};
