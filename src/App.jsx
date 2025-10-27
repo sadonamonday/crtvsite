@@ -3,7 +3,6 @@ import Header from './components/Header';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
 
-
 export default function App() {
   return (
     <BrowserRouter>
