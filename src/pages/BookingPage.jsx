@@ -1,3 +1,5 @@
+
+
 import React, { useEffect, useState, useMemo } from "react";
 import Header from "../components/Header.jsx";
 import { CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
@@ -226,12 +228,16 @@ export default function BookingPage() {
   const paymentAmounts = useMemo(() => {
     if (service === "other") {
       const customPrice = parseBudgetNumber(customService.budget);
-      return { full: customPrice || 0, deposit: Math.round((customPrice || 0) * 0.5) };
+      const amounts = { full: customPrice || 0, deposit: Math.round((customPrice || 0) * 0.5) };
+      console.log('Custom service amounts:', amounts);
+      return amounts;
     }
     const info = servicePricing[service];
     if (!info) return { full: 0, deposit: 0 };
     const full = info.type === "hourly" ? info.price * 2 : info.price;
-    return { full, deposit: Math.round(full * 0.5) };
+    const amounts = { full, deposit: Math.round(full * 0.5) };
+    console.log('Regular service amounts:', amounts, 'for service:', service, 'info:', info);
+    return amounts;
   }, [service, customService]);
 
   const getServiceDisplayName = () => {
@@ -314,25 +320,152 @@ export default function BookingPage() {
     setHidePayNow(false);
   };
 
+  // Updated to use fetch with CORS
   const handlePay = async () => {
-    if (!validateStep(5)) return;
+    console.log('=== HANDLEPAY CALLED ===');
+    console.log('paymentOption:', paymentOption);
+    console.log('validateStep(5):', validateStep(5));
+    console.log('service:', service);
+    console.log('customService.budget:', customService.budget);
+    console.log('currentStep:', currentStep);
+    console.log('isProcessing:', isProcessing);
+    
+    if (!validateStep(5)) {
+      console.log('❌ Validation failed for step 5');
+      alert('Please select a payment option (Full Payment or Deposit)');
+      return;
+    }
+    
+    console.log('✅ Validation passed, proceeding with fetch request');
     setIsProcessing(true);
+    
+    // Prepare booking data for new backend structure
+    const bookingData = {
+      service: service,
+      customer_name: details.name,
+      customer_email: details.email,
+      customer_phone: details.phone || '',
+      amount: paymentAmounts[paymentOption] || 0,
+      item_name: getServiceDisplayName(),
+      item_description: `${getServiceDisplayName()} - ${date} ${time} - ${paymentOption === 'full' ? 'Full Payment' : '50% Deposit'}`
+    };
+    
+    console.log('Booking data:', bookingData);
+    console.log('Service value being sent:', JSON.stringify(service));
+    console.log('Service type:', typeof service);
+    console.log('Service length:', service ? service.length : 'null/undefined');
+    console.log('About to make fetch request to: https://crtvshots.atwebpages.com/form_booking.php');
+    
     try {
-      const amount = paymentOption === "full" ? paymentAmounts.full : paymentAmounts.deposit;
-      await new Promise((r) => setTimeout(r, 900)); // simulate
-      alert(`Simulated payment successful: R${amount}`);
-      setSubmitted(true);
-    } catch (e) {
-      alert("Payment failed");
-    } finally {
+      const response = await fetch('https://crtvshots.atwebpages.com/form_booking.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData)
+      });
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
+      // Get response text first to debug
+      const responseText = await response.text();
+      console.log('Raw response text:', responseText);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
+      if (response.ok) {
+        try {
+          const result = JSON.parse(responseText);
+          console.log('Parsed JSON response:', result);
+          
+          if (result.success && result.redirectUrl) {
+            console.log('Redirecting to PayFast:', result.redirectUrl);
+            window.location.href = result.redirectUrl;
+          } else {
+            console.error('Invalid response:', result);
+            alert('Invalid response from server: ' + JSON.stringify(result));
+            setIsProcessing(false);
+          }
+        } catch (jsonError) {
+          console.error('JSON parse error:', jsonError);
+          console.error('Response was not valid JSON:', responseText);
+          alert('Server returned invalid JSON: ' + responseText.substring(0, 200));
+          setIsProcessing(false);
+        }
+      } else {
+        console.error('Error response:', responseText);
+        alert('Payment processing failed: ' + responseText.substring(0, 200));
+        setIsProcessing(false);
+      }
+    } catch (error) {
+      console.error('Fetch error:', error);
+      alert('Network error: ' + error.message);
       setIsProcessing(false);
     }
   };
 
-  // new: confirm custom request (no payment). Shows final message.
-  const handleConfirmCustom = () => {
-    // you could submit customService + details to API here
-    setSubmitted(true);
+  // Updated to use fetch for custom services
+  const handleConfirmCustom = async () => {
+    setIsProcessing(true);
+    
+    // Prepare booking data for new backend structure (custom service)
+    const bookingData = {
+      service: service,
+      customer_name: details.name,
+      customer_email: details.email,
+      customer_phone: details.phone || '',
+      amount: parseBudgetNumber(customService.budget) || 1, // Minimum amount for PayFast
+      item_name: customService.title || 'Custom Service',
+      item_description: `${customService.title} - ${customService.description} - Custom Service Request`
+    };
+    
+    console.log('Custom service booking data:', bookingData);
+    
+    try {
+      const response = await fetch('https://crtvshots.atwebpages.com/form_booking.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData)
+      });
+      
+      console.log('Custom service response status:', response.status);
+      
+      // Get response text first to debug
+      const responseText = await response.text();
+      console.log('Custom service raw response text:', responseText);
+      
+      if (response.ok) {
+        try {
+          const result = JSON.parse(responseText);
+          console.log('Custom service parsed JSON response:', result);
+          
+          if (result.success && result.redirectUrl) {
+            console.log('Custom service redirecting to PayFast:', result.redirectUrl);
+            window.location.href = result.redirectUrl;
+          } else {
+            console.error('Invalid custom service response:', result);
+            alert('Invalid response from server: ' + JSON.stringify(result));
+            setIsProcessing(false);
+          }
+        } catch (jsonError) {
+          console.error('Custom service JSON parse error:', jsonError);
+          console.error('Custom service response was not valid JSON:', responseText);
+          alert('Server returned invalid JSON: ' + responseText.substring(0, 200));
+          setIsProcessing(false);
+        }
+      } else {
+        console.error('Custom service error response:', responseText);
+        alert('Custom service submission failed: ' + responseText.substring(0, 200));
+        setIsProcessing(false);
+      }
+    } catch (error) {
+      console.error('Custom service fetch error:', error);
+      alert('Network error: ' + error.message);
+      setIsProcessing(false);
+    }
   };
 
   const CustomServiceModal = ({ open, onClose, initial, onSave }) => {
@@ -847,14 +980,20 @@ export default function BookingPage() {
                 )
               ) : (
                 (!hidePayNow && service !== "other" ? (
-                  <button
-                    type="button"
-                    className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
-                    onClick={handlePay}
-                    disabled={!paymentOption || (service === "other" && !customService.budget) || isProcessing}
-                  >
-                    {isProcessing ? "Processing..." : `Pay Now - R${paymentOption === "full" ? paymentAmounts.full : paymentAmounts.deposit}`}
-                  </button>
+                  <div>
+                    <button
+                      type="button"
+                      className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      onClick={handlePay}
+                      disabled={!paymentOption || (service === "other" && !customService.budget) || isProcessing}
+                    >
+                      {isProcessing ? "Processing..." : `Pay Now - R${paymentOption === "full" ? paymentAmounts.full : paymentAmounts.deposit}`}
+                    </button>
+                    <div className="mt-2 text-sm text-gray-400">
+                      Payment Option: {paymentOption || "None selected"} | 
+                      Button Disabled: {(!paymentOption || (service === "other" && !customService.budget) || isProcessing) ? "Yes" : "No"}
+                    </div>
+                  </div>
                 ) : (
                   <div />
                 ))

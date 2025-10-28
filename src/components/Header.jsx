@@ -32,11 +32,22 @@ export default function Header() {
       {/* Center - Navigation */}
       <nav className="flex space-x-8">
         {navItems.map((item) => {
-          const to = item === "HOME" ? "/" : item === "BOOKING" ? "/booking" : "#";
+          const getPath = (item) => {
+            switch (item) {
+              case "HOME": return "/";
+              case "BOOKING": return "/booking";
+              case "GALLERY": return "/gallery";
+              case "MERCH": return "/merch";
+              case "TESTIMONIALS": return "/testimonials";
+              case "ABOUT": return "/about";
+              default: return "#";
+            }
+          };
+          
           return (
             <Link
               key={item}
-              to={to}
+              to={getPath(item)}
               className={`relative text-sm font-semibold tracking-wide uppercase ${
                 active === item ? "text-white" : "text-gray-300"
               } hover:text-white transition`}
