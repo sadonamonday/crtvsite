@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import Header from "../components/Header.jsx";
 import { CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import Footer from "../components/Footer";
 
 const steps = [
   { id: 1, name: "Service" },
@@ -1128,6 +1129,11 @@ export default function BookingPage() {
           <CustomServiceModal open={showCustomModal} onClose={() => setShowCustomModal(false)} initial={customService} onSave={handleSaveCustomService} />
         </div>
       </main>
+      
+      {/* Footer with white background */}
+      <div className="bg-white">
+        <Footer />
+      </div>
     </div>
   );
 }
