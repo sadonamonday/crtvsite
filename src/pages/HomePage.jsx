@@ -4,6 +4,7 @@ import RecentWork from '../components/RecentWork';
 import MusicCarousel from '../components/MusicCarousel';
 import Testimonials from '../components/Testimonials';
 import ContactForm from '../components/ContactForm';
+import Footer from "../components/Footer.jsx";
 
 export default function HomePage() {
   return (
@@ -14,6 +15,7 @@ export default function HomePage() {
       <MusicCarousel />
       <Testimonials />
       <ContactForm />
+      <Footer />
     </div>
   );
 }
