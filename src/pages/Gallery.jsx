@@ -16,7 +16,7 @@ const Gallery = () => {
         setError(null);
         
         // Fetch (force failing for now)
-        const response = await fetch('https://crtvshotss.atwebpages.com/gallery_lis.php', {
+        const response = await fetch('https://crtvshotss.atwebpages.com/gallery_list.php', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
