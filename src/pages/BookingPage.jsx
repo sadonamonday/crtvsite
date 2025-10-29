@@ -354,10 +354,10 @@ export default function BookingPage() {
     console.log('Service value being sent:', JSON.stringify(service));
     console.log('Service type:', typeof service);
     console.log('Service length:', service ? service.length : 'null/undefined');
-    console.log('About to make fetch request to: https://crtvshots.atwebpages.com/form_booking.php');
+    console.log('About to make fetch request to: https://crtvshotss.atwebpages.com/form_booking.php');
     
     try {
-      const response = await fetch('https://crtvshots.atwebpages.com/form_booking.php', {
+      const response = await fetch('https://crtvshotss.atwebpages.com/form_booking.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -415,7 +415,7 @@ export default function BookingPage() {
       customer_name: details.name,
       customer_email: details.email,
       customer_phone: details.phone || '',
-      amount: parseBudgetNumber(customService.budget) || 1, // Minimum amount for PayFast
+      amount: parseBudgetNumber(customService.budget) || 1, 
       item_name: customService.title || 'Custom Service',
       item_description: `${customService.title} - ${customService.description} - Custom Service Request`
     };
@@ -423,7 +423,7 @@ export default function BookingPage() {
     console.log('Custom service booking data:', bookingData);
     
     try {
-      const response = await fetch('https://crtvshots.atwebpages.com/form_booking.php', {
+      const response = await fetch('https://crtvshotss.atwebpages.com/form_booking.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
