@@ -126,24 +126,9 @@ export default function Footer() {
             </div>
 
             {/* Bottom Section */}
-            <div
-                className={`max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center pt-6 text-sm ${
-                    isDark ? "text-gray-400" : "text-gray-600"
-                }`}
-            >
-                <p>© {new Date().getFullYear()} CRTV Shots. All Rights Reserved.</p>
-                <p>
-                    Built by{" "}
-                    <a
-                        href="#"
-                        className={`font-medium ${
-                            isDark ? "text-white" : "text-black"
-                        } hover:underline`}
-                    >
-                        TechArmy
-                    </a>
-                </p>
-            </div>
+           <div className=" border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                    <p>© 2025 CRTV SHOTS. All rights reserved.</p>
+                </div>
         </footer>
     );
 }
