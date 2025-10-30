@@ -858,8 +858,14 @@ export default function BookingPage() {
       item_description: `${getServiceDisplayName()} - ${date} ${time} - ${paymentOption === 'full' ? 'Full Payment' : '50% Deposit'}`
     };
     
+    console.log('Booking data:', bookingData);
+    console.log('Service value being sent:', JSON.stringify(service));
+    console.log('Service type:', typeof service);
+    console.log('Service length:', service ? service.length : 'null/undefined');
+    console.log('About to make fetch request to: https://crtvshots.atwebpages.com/form_booking.php');
+    
     try {
-      const response = await fetch('https://crtvshots.atwebpages.com/form_booking.php', {
+      const response = await fetch('https://crtvshotss.atwebpages.com/form_booking.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -889,50 +895,66 @@ export default function BookingPage() {
   };
 
   const handleConfirmCustom = async () => {
-  setIsProcessing(true);
-  
-  const bookingData = {
-    service: "other",
-    customer_name: details.name,
-    customer_email: details.email,
-    customer_phone: details.phone || '',
-    customer_address: details.address || '',
-    amount: parseBudgetNumber(customService.budget) || 1,
-    item_name: customService.title || 'Custom Service',
-    item_description: `${customService.title} - ${customService.description} - Custom Service Request`
-  };
-  
-  try {
-    const response = await fetch('https://crtvshots.atwebpages.com/form_booking.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(bookingData)
-    });
+    setIsProcessing(true);
     
-    const responseText = await response.text();
+    // Prepare booking data for new backend structure (custom service)
+    const bookingData = {
+      service: service,
+      customer_name: details.name,
+      customer_email: details.email,
+      customer_phone: details.phone || '',
+      amount: parseBudgetNumber(customService.budget) || 1, // Minimum amount for PayFast
+      item_name: customService.title || 'Custom Service',
+      item_description: `${customService.title} - ${customService.description} - Custom Service Request`
+    };
     
-    if (response.ok) {
-      const result = JSON.parse(responseText);
+    console.log('Custom service booking data:', bookingData);
+    
+    try {
+      const response = await fetch('https://crtvshots.atwebpages.com/form_booking.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData)
+      });
       
-      if (result.success && result.redirectUrl) {
-        // Show confirmation message before redirecting
-        alert('Your custom service request has been submitted successfully! We will contact you shortly to discuss the details.');
-        window.location.href = result.redirectUrl;
+      console.log('Custom service response status:', response.status);
+      
+      // Get response text first to debug
+      const responseText = await response.text();
+      console.log('Custom service raw response text:', responseText);
+      
+      if (response.ok) {
+        try {
+          const result = JSON.parse(responseText);
+          console.log('Custom service parsed JSON response:', result);
+          
+          if (result.success && result.redirectUrl) {
+            console.log('Custom service redirecting to PayFast:', result.redirectUrl);
+            window.location.href = result.redirectUrl;
+          } else {
+            console.error('Invalid custom service response:', result);
+            alert('Invalid response from server: ' + JSON.stringify(result));
+            setIsProcessing(false);
+          }
+        } catch (jsonError) {
+          console.error('Custom service JSON parse error:', jsonError);
+          console.error('Custom service response was not valid JSON:', responseText);
+          alert('Server returned invalid JSON: ' + responseText.substring(0, 200));
+          setIsProcessing(false);
+        }
       } else {
-        alert('Invalid response from server: ' + JSON.stringify(result));
+        console.error('Custom service error response:', responseText);
+        alert('Custom service submission failed: ' + responseText.substring(0, 200));
         setIsProcessing(false);
       }
-    } else {
-      alert('Custom service submission failed: ' + responseText.substring(0, 200));
+    } catch (error) {
+      console.error('Custom service fetch error:', error);
+      alert('Network error: ' + error.message);
       setIsProcessing(false);
     }
-  } catch (error) {
-    alert('Network error: ' + error.message);
-    setIsProcessing(false);
-  }
-};
+  };
 
   const CustomServiceModal = ({ open, onClose, initial, onSave }) => {
     const [form, setForm] = useState(initial || { title: "", description: "", budget: "" });
