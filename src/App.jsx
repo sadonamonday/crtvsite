@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
-//import Gallery from './pages/Gallery';
+import Gallery from './pages/Gallery';
 import MerchPage from './pages/MerchPage';
 import TestimonialsPage from './pages/TestimonialsPage';
 import AboutPage from './pages/AboutPage';
