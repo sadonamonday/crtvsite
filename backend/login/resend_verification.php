@@ -1,5 +1,5 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:5174");
+header("Access-Control-Allow-Origin: http://localhost:5173");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Credentials: true");
@@ -9,9 +9,9 @@ include "database.php";
 session_start();
 
 // PHPMailer
-require 'C:/xampp/htdocs/crtv-shots-website/vendor/phpmailer/phpmailer/src/PHPMailer.php';
-require 'C:/xampp/htdocs/crtv-shots-website/vendor/phpmailer/phpmailer/src/SMTP.php';
-require 'C:/xampp/htdocs/crtv-shots-website/vendor/phpmailer/phpmailer/src/Exception.php';
+require 'C:/xampp/htdocs/crtvsite/vendor/phpmailer/phpmailer/src/PHPMailer.php';
+require 'C:/xampp/htdocs/crtvsite/vendor/phpmailer/phpmailer/src/SMTP.php';
+require 'C:/xampp/htdocs/crtvsite/vendor/phpmailer/phpmailer/src/Exception.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -57,7 +57,7 @@ if (empty($row['verification_token'])) {
 }
 
 // Send verification email
-$verificationLink = "http://localhost/crtv-shots-website/backend/api/config/verify_email.php?token=$token";
+$verificationLink = "http://localhost/crtvsite/backend/login/verify_email.php?token=$token";
 
 $mail = new PHPMailer(true);
 try {

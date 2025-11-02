@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
-//import Gallery from './pages/Gallery';
+import Gallery from './pages/Gallery';
 import MerchPage from './pages/MerchPage';
 import TestimonialsPage from './pages/TestimonialsPage';
 import AboutPage from './pages/AboutPage';
@@ -13,6 +13,7 @@ import Cart from "./pages/Cart.jsx";
 import Checkout from "./pages/Checkout.jsx";
 import Login from "./pages/Login";
 import Verify2FA from "./pages/Verify2fa.jsx";
+import AdminDashboard from './pages/AdminDashboard.jsx';
 
 function AppContent() {
   const location = useLocation();

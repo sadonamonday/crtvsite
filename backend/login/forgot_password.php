@@ -6,9 +6,13 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-require __DIR__ . '/../../vendor/autoload.php';
+require 'C:/xampp/htdocs/crtvsite/vendor/autoload.php';
 
+// Set PHP timezone
+date_default_timezone_set('Africa/Johannesburg');
 
+// Optional: set MySQL session timezone to match PHP
+mysqli_query($con, "SET time_zone = '+02:00'");
 
 $message = "";
 $email_val = "";
@@ -26,51 +30,60 @@ if (isset($_POST['forgot_password'])) {
 
     if (mysqli_num_rows($result) > 0) {
         // Generate secure token
-        $token = bin2hex(random_bytes(16));
+        $token = bin2hex(random_bytes(16)); // 32-character token
         $token_hash = hash("sha256", $token);
-        $expiry = date("Y-m-d H:i:s", strtotime('+1 hour'));
+        $expiry = date("Y-m-d H:i:s", time() + 3600); // 1 hour from now
 
-        // Update DB
+        // Update DB with token and expiry
         $update_query = "UPDATE `users` 
                          SET reset_token_hash=?, reset_token_expires_at=? 
                          WHERE user_email=?";
         $stmt = mysqli_prepare($con, $update_query);
         mysqli_stmt_bind_param($stmt, "sss", $token_hash, $expiry, $user_email);
-        mysqli_stmt_execute($stmt);
 
-        // Send reset email using PHPMailer
-        $mail = new PHPMailer(true);
-        try {
-            $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com';
-            $mail->SMTPAuth   = true;
-            $mail->Username   = 'ngwenya1305@gmail.com'; // Change to your email
-            $mail->Password   = 'ghsr bssh ztza ulid';    // Use Gmail App Password
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = 587;
-
-            $mail->setFrom('your-email@gmail.com', 'CRTVSHOTS');
-            $mail->addAddress($user_email);
-
-            $reset_link = "http://localhost/crtv-shots-website/backend/api/config/reset_password.php?token=$token";
-
-            $mail->isHTML(true);
-            $mail->Subject = "Password Reset Request";
-            $mail->Body    = "<p>We received a request to reset your password.</p>
-                              <p>Click the link below to reset your password:</p>
-                              <p><a href='$reset_link'>$reset_link</a></p>
-                              <p>This link expires in 1 hour.</p>";
-
-            $mail->send();
-
-            $message = "<div class='alert alert-success text-center'>
-                            A password reset email has been sent to <strong>$user_email</strong>.
-                        </div>";
-        } catch (Exception $e) {
+        if (!mysqli_stmt_execute($stmt)) {
             $message = "<div class='alert alert-danger text-center'>
-                            Could not send email. Mailer Error: {$mail->ErrorInfo}
+                            Failed to set reset token. Error: " . mysqli_stmt_error($stmt) . "
                         </div>";
+        } else {
+            // Debug info (can remove in production)
+            // echo "Token: $token<br>Hash: $token_hash<br>Expiry: $expiry<br>";
+
+            // Send reset email using PHPMailer
+            $mail = new PHPMailer(true);
+            try {
+                $mail->isSMTP();
+                $mail->Host       = 'smtp.gmail.com';
+                $mail->SMTPAuth   = true;
+                $mail->Username   = 'ngwenya1305@gmail.com'; // your email
+                $mail->Password   = 'ghsr bssh ztza ulid';   // App password
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port       = 587;
+
+                $mail->setFrom('your-email@gmail.com', 'CRTVSHOTS');
+                $mail->addAddress($user_email);
+
+                $reset_link = "http://localhost/crtvsite/backend/login/reset_password.php?token=$token";
+
+                $mail->isHTML(true);
+                $mail->Subject = "Password Reset Request";
+                $mail->Body    = "<p>We received a request to reset your password.</p>
+                                  <p>Click the link below to reset your password:</p>
+                                  <p><a href='$reset_link'>$reset_link</a></p>
+                                  <p>This link expires in 1 hour.</p>";
+
+                $mail->send();
+
+                $message = "<div class='alert alert-success text-center'>
+                                A password reset email has been sent to <strong>$user_email</strong>.
+                            </div>";
+            } catch (Exception $e) {
+                $message = "<div class='alert alert-danger text-center'>
+                                Could not send email. Mailer Error: {$mail->ErrorInfo}
+                            </div>";
+            }
         }
+
     } else {
         $message = "<div class='alert alert-danger text-center'>
                         The email you entered is not registered. Please try again.
@@ -78,6 +91,7 @@ if (isset($_POST['forgot_password'])) {
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
