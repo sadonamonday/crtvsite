@@ -19,7 +19,7 @@ const MerchPage = () => {
     const fetchProducts = async () => {
       try {
         const res = await fetch(
-          "http://localhost/crtvsite/backend/products/get_products.php"
+          "http://crtvshotss.atwebpages.com/products/get_products.php"
         );
         const data = await res.json();
         setProducts(data);

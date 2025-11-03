@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Calendar, CalendarDays, Settings, LogOut, Home } from "lucide-react";
 import "./AdminDashboard.css";
+import AdminAddProduct from './AdminAddProduct';
+import { PlusCircle } from 'lucide-react';
 
 // Helper functions (same as BookingPage)
 const generateTimeOptions = () => {
@@ -306,6 +308,10 @@ const AdminDashboard = () => {
             <Calendar size={20} />
             <span>Availability</span>
           </button>
+
+          <button onClick={() => setActiveTab("products")} className={`nav-item ${activeTab === "products" ? "active" : ""}`}>
+        <PlusCircle size={20} /><span>Add Product</span>
+        </button>
           
           <button
             onClick={() => setActiveTab("settings")}
@@ -458,6 +464,8 @@ const AdminDashboard = () => {
               </div>
             </div>
           )}
+
+          {activeTab === "products" && <AdminAddProduct />}
 
           {activeTab === "settings" && (
             <div className="settings-view">

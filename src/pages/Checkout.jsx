@@ -195,7 +195,7 @@ const Checkout = () => {
               onClick={handlePlaceOrder}
               disabled={submitting}
               className={`${
-                submitting ? "bg-gray-400" : "bg-yellow-700 hover:bg-yellow-800"
+                submitting ? "bg-green-400" : "bg-green-700 hover:bg-green-800"
               } text-black font-semibold px-6 py-3 rounded w-full transition`}
             >
               {submitting ? "Placing Order..." : "Place Order"}

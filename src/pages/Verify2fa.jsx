@@ -27,7 +27,7 @@ const Verify2FA = () => {
 
     try {
       const res = await fetch(
-        "http://localhost/crtv-shots-website/backend/api/config/verify_2fa.php",
+        "http://crtvshotss.atwebpages.com/verify_2fa.php",
         {
           method: "POST",
           body: formData,
@@ -64,7 +64,7 @@ const Verify2FA = () => {
       formData.append("user_email", email);
 
       const res = await fetch(
-        "http://localhost/crtv-shots-website/backend/api/config/resend_2fa.php",
+        "http://crtvshotss.atwebpages.com/resend_2fa.php",
         {
           method: "POST",
           body: formData,
