@@ -53,7 +53,7 @@ const MerchPage = () => {
     <div className="bg-gray-50 flex flex-col min-h-screen">
       <Header />
 
-      <div className="min-h-screen bg-gray-50 pt-20 pb-10 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gray-50 pt-33 pb-10 px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-10 text-center">MERCHANDISE</h1>
 
         {/* Search & Category Filter */}

@@ -1469,7 +1469,7 @@ export default function BookingPage() {
     <div className="bg-white flex flex-col min-h-screen">
       <Header />
 
-      <main className="flex-grow pt-24 pb-12">
+      <main className="flex-grow pt-30t md:pt-32 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl font-bold mb-2 text-center">Book Services</h1>
           <p className="text-red-600 text-center mb-10">Capture your special moments ONE SHOT AT A TIME</p>
