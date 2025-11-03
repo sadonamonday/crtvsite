@@ -1092,7 +1092,7 @@ export default function BookingPage() {
       <div className="flex justify-between pt-4">
         <button 
           type="button" 
-          className="px-6 py-3 border border-gray-600 text-gray-600 rounded-lg hover:bg-gray-600 hover:text-white transition"
+          className="px-6 py-3 border border-red-600 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition"
           onClick={() => setActiveCategory("all")}
         >
           ← Back to Services
