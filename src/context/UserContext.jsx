@@ -10,7 +10,7 @@ export const UserProvider = ({ children }) => {
     const fetchUser = async () => {
       try {
         const res = await fetch(
-          "http://localhost/crtvsite/backend/users/get_user.php",
+          "http://crtvshotss.atwebpages.com/users/get_user.php",
           {
             method: "GET",
             credentials: "include", // send PHP session cookie

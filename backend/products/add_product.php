@@ -1,5 +1,5 @@
 <?php
-include '../config/database.php';
+include '../login/database.php';
 
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");

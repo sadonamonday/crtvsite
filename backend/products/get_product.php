@@ -18,7 +18,7 @@ $result = $stmt->get_result();
 $product = $result->fetch_assoc();
 
 if ($product) {
-    $product['image'] = 'http://localhost/crtv-shots-website/backend/api/uploads/' . $product['image'];
+    $product['image'] = 'http://localhost/crtvsite/backend/uploads/' . $product['image'];
     echo json_encode($product);
 } else {
     echo json_encode(['error' => 'Product not found']);
