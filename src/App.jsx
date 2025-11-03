@@ -13,7 +13,7 @@ import Cart from "./pages/Cart.jsx";
 import Checkout from "./pages/Checkout.jsx";
 import Login from "./pages/Login";
 import Verify2FA from "./pages/Verify2fa.jsx";
-import AdminDashboard from "./pages/AdminDashboard.jsx";
+import AdminDashboard from './pages/AdminDashboard.jsx';
 
 function AppContent() {
   const location = useLocation();
