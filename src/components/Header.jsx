@@ -76,7 +76,7 @@ export default function Header() {
                         isDark ? "bg-white/10" : "bg-black/5"
                     }`}
                 >
-                    <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+                    <img src="/Logo.png" alt="Logo" className="w-full h-full object-contain" />
                 </div>
             </div>
 
