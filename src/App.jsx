@@ -4,7 +4,7 @@ import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
 import Gallery from './pages/Gallery';
 import MerchPage from './pages/MerchPage';
-import TestimonialsPage from './pages/TestimonialsPage';
+import ReviewsPage from './pages/Reviews.jsx';
 import AboutPage from './pages/AboutPage';
 import { UserProvider } from "./context/UserContext.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
@@ -27,7 +27,7 @@ function AppContent() {
           <Route path="/" element={<HomePage />} />
           <Route path="/booking" element={<BookingPage />} />
           <Route path="/merch" element={<MerchPage />} />
-          <Route path="/testimonials" element={<TestimonialsPage />} />
+          <Route path="/reviews" element={<ReviewsPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />

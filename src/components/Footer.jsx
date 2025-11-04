@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react";
-import logo from "../assets/logo.png";
 
 export default function Footer() {
     const [isDark, setIsDark] = useState(true);
@@ -39,7 +38,7 @@ export default function Footer() {
                 {/* Logo and About */}
                 <div className="space-y-3">
                     <img
-                        src={logo}
+                        src="/Logo.png"
                         alt="Logo"
                         className="w-16 h-16 object-contain"
                     />
@@ -65,7 +64,7 @@ export default function Footer() {
                         <li><a href="/booking" className="hover:text-primary transition">Booking</a></li>
                         <li><a href="/gallery" className="hover:text-primary transition">Gallery</a></li>
                         <li><a href="/merch" className="hover:text-primary transition">Merchandise</a></li>
-                        <li><a href="/testimonials" className="hover:text-primary transition">Testimonials</a></li>
+                        <li><a href="/reviews" className="hover:text-primary transition">reviews</a></li>
                         <li><a href="/about" className="hover:text-primary transition">About</a></li>
                     </ul>
                 </div>

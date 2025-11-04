@@ -2,7 +2,7 @@ import Hero from '../components/Hero';
 import About from '../components/About';
 import RecentWork from '../components/RecentWork';
 import MusicCarousel from '../components/MusicCarousel';
-import Testimonials from '../components/Testimonials';
+import Reviews from '../components/ReviewsData.jsx';
 import ContactForm from '../components/ContactForm';
 import Footer from "../components/Footer.jsx";
 
@@ -13,7 +13,7 @@ export default function HomePage() {
       <About />
       <RecentWork />
       <MusicCarousel />
-      <Testimonials />
+      <Reviews />
       <ContactForm />
       <Footer />
     </div>
