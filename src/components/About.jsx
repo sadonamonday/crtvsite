@@ -1,4 +1,3 @@
-import makoImg from "../assets/Mako-crtvshots.jpg";
 
 export default function About() {
     return (
