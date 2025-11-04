@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react";
-import logo from "../assets/logo.png";
 
 export default function Footer() {
     const [isDark, setIsDark] = useState(true);
@@ -39,7 +38,7 @@ export default function Footer() {
                 {/* Logo and About */}
                 <div className="space-y-3">
                     <img
-                        src={logo}
+                        src="/Logo.png"
                         alt="Logo"
                         className="w-16 h-16 object-contain"
                     />

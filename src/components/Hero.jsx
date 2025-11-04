@@ -1,6 +1,6 @@
 import { Instagram, Youtube, Music } from "lucide-react";
 
-import backgroundVideo from "../assets/backgroundVideo.mp4";
+//import backgroundVideo from "../assets/backgroundVideo.mp4";
 export default function Hero() {
     return (
         <div className="relative w-full h-screen bg-black text-white overflow-hidden">
@@ -13,7 +13,7 @@ export default function Hero() {
                 muted
                 playsInline
             >
-                <source src={backgroundVideo} type="video/mp4" />
+                <source src="backgroundVideo.mp4" type="video/mp4" />
             </video>
 
             {/* Dark overlay */}
