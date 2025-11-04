@@ -65,7 +65,7 @@ export default function Footer() {
                         <li><a href="/booking" className="hover:text-primary transition">Booking</a></li>
                         <li><a href="/gallery" className="hover:text-primary transition">Gallery</a></li>
                         <li><a href="/merch" className="hover:text-primary transition">Merchandise</a></li>
-                        <li><a href="/testimonials" className="hover:text-primary transition">Testimonials</a></li>
+                        <li><a href="/reviews" className="hover:text-primary transition">reviews</a></li>
                         <li><a href="/about" className="hover:text-primary transition">About</a></li>
                     </ul>
                 </div>

@@ -3,7 +3,7 @@ import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-const testimonials = [
+const reviewsData = [
     {
         name: "Thando",
         quote: "Working with CRTVSHOTS was amazing. The visuals captured the soul of our brand perfectly.",
@@ -18,7 +18,7 @@ const testimonials = [
     },
 ];
 
-export default function Testimonials() {
+export default function Reviews() {
     return (
         <section className="py-20 px-6 md:px-20 bg-[#121212] text-white relative overflow-hidden">
             {/* Subtle background glow */}
@@ -27,7 +27,7 @@ export default function Testimonials() {
             <div className="relative max-w-5xl mx-auto text-center">
                 {/* Section Title */}
                 <h2 className="text-4xl md:text-5xl font-bold mb-10 tracking-tight">
-                    Testimonials
+                    reviews
                 </h2>
                 <p className="text-gray-400 mb-12 text-lg">
                     Hear from some of the incredible people I’ve had the chance to collaborate with.
@@ -49,7 +49,7 @@ export default function Testimonials() {
                     }}
                     modules={[Autoplay, Pagination]}
                 >
-                    {testimonials.map((t, i) => (
+                    {reviewsData.map((t, i) => (
                         <SwiperSlide key={i}>
                             <div className="bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] rounded-2xl p-10 shadow-lg mx-auto max-w-3xl">
                                 <p className="italic text-xl leading-relaxed text-gray-200">
