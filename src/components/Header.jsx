@@ -173,7 +173,7 @@ export default function Header() {
                 ) : (
                     <div className="flex items-center space-x-2">
                         <img
-                            src={defaultProfilePic}
+                            src="/profile.png"
                             alt="Profile"
                             className={`h-8 w-8 rounded-full border transition ${
                                 isDark ? "border-white/40" : "border-black/40"
