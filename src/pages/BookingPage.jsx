@@ -488,7 +488,18 @@ const Calendar = ({ selectedDate, onSelectDate }) => {
     return `${year}-${month}-${day}`;
   };
 
+  // Function to check if a date is in the past
+  const isPastDate = (date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to compare dates only
+    return date < today;
+  };
+
   const handleDateClick = (date) => {
+    // Don't allow selection of past dates
+    if (isPastDate(date)) {
+      return;
+    }
     const formattedDate = formatDateString(date);
     onSelectDate(formattedDate);
   };
@@ -532,17 +543,22 @@ const Calendar = ({ selectedDate, onSelectDate }) => {
           const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index + 1);
           const dateString = formatDateString(date);
           const isSelected = selectedDate === dateString;
+          const isPast = isPastDate(date);
 
           return (
              <button
                key={index}
                type="button"
                onClick={() => handleDateClick(date)}
+               disabled={isPast}
                className={`p-2 rounded text-sm transition
-                ${isSelected ? 'bg-green-600 text-white' : 'hover:bg-black text-white'}
+                ${isSelected ? 'bg-green-600 text-white' : 
+                  isPast ? 'text-gray-500 cursor-not-allowed' : 
+                  'hover:bg-black text-white'}
+                ${!isPast && 'hover:bg-gray-800'}
               `}
              >
-               <span>
+               <span className={isPast ? 'line-through opacity-50' : ''}>
                  {index + 1}
                </span>
              </button>
@@ -552,7 +568,6 @@ const Calendar = ({ selectedDate, onSelectDate }) => {
      </div>
    );
  };
-
 const TimeDropdownSelector = ({ selectedTime, onTimeSelect }) => {
   const timeOptions = generateTimeOptions();
   const [startTime, setStartTime] = useState("");
@@ -1471,7 +1486,7 @@ export default function BookingPage() {
       <main className="flex-grow pt-30t md:pt-32 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl font-bold mb-2 text-center text-white">Book Services</h1>
-          <p className="text-red-400 text-center mb-10">Capture your special moments ONE SHOT AT A TIME</p>
+          <p className="text-red-600 text-center mb-10">Capture your special moments ONE SHOT AT A TIME</p>
 
           <div className="mb-8">
             <div className="flex justify-between bg-black rounded-lg p-3 border border-gray-700">
