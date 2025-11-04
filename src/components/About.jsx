@@ -7,25 +7,18 @@ export default function About() {
                 {/* Left: Text Content */}
                 <div className="space-y-6">
                     <h2 className="text-4xl md:text-5xl font-bold text-green-900 leading-tight">
-                        About <span className="text-red-800">Me</span>
+                        About <span className="text-red-800">CRTVSHOTS</span>
                     </h2>
 
                     <p className="text-gray-600 leading-relaxed">
-                        Hey! I'm <span className="font-semibold text-gray-900">Makomborero</span> — Mako for short. I'm a
-                        multidisciplinary creative based in Johannesburg, South Africa,
-                        working across <span className="font-medium">photography, colour grading, video editing,
-            cinematography,</span> and <span className="font-medium">directing</span>.
+                        We direct, shoot, and edit music videos that bring sound to life through cinematic visuals.
+                        Working with underground and emerging artists such as KindlyNxsh, Blxckie, Blaqbonez,
+                        Pabi Cooper, Brotherkupa, Jaykatana, Shouldbeyuang and Shekhinah.
                     </p>
 
                     <p className="text-gray-600 leading-relaxed">
-                        I bring stories to life through visuals that resonate. With a deep
-                        passion for <span className="italic">raw, authentic storytelling</span>, I’ve had the privilege
-                        of collaborating with underground, up-and-coming artists and
-                        established names — helping them translate their visions into
-                        powerful visuals. My mission is simple:{" "}
-                        <span className="font-semibold text-gray-900">
-              to turn dreams into reality.
-            </span>
+                        We aim to capture more than just performance—we tell stories, build moods, and create visuals
+                        that elevate the music.
                     </p>
 
                     {/* Optional Call-to-Action Button */}

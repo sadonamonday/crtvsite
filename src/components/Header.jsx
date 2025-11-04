@@ -18,13 +18,13 @@ export default function Header() {
         if (pathname.startsWith("/booking")) return "BOOKING";
         if (pathname.startsWith("/merch")) return "MERCH";
         if (pathname.startsWith("/gallery")) return "GALLERY";
-        if (pathname.startsWith("/testimonials")) return "TESTIMONIALS";
+        if (pathname.startsWith("/reviews")) return "reviews";
         if (pathname.startsWith("/about")) return "ABOUT";
         return "";
     };
 
     const active = pathToItem(location.pathname);
-    const navItems = ["HOME", "BOOKING", "MERCHANDISE", "GALLERY", "TESTIMONIALS", "ABOUT"];
+    const navItems = ["HOME", "BOOKING", "MERCHANDISE", "GALLERY", "reviews", "ABOUT"];
 
     // 🧠 Detect background brightness behind header
     useEffect(() => {
@@ -95,8 +95,8 @@ export default function Header() {
                                 return "/gallery";
                             case "MERCHANDISE":
                                 return "/merch";
-                            case "TESTIMONIALS":
-                                return "/testimonials";
+                            case "reviews":
+                                return "/reviews";
                             case "ABOUT":
                                 return "/about";
                             default:
