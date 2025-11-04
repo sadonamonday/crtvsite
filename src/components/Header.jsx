@@ -1,5 +1,4 @@
 import { useState, useContext, useEffect } from "react";
-import logo from "../assets/logo.png";
 import defaultProfilePic from "../assets/profile.png";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
@@ -78,7 +77,7 @@ export default function Header() {
                         isDark ? "bg-white/10" : "bg-black/5"
                     }`}
                 >
-                    <img src={logo} alt="Logo" className="w-full h-full object-contain" />
+                    <img src=/logo.png alt="Logo" className="w-full h-full object-contain" />
                 </div>
             </div>
 
