@@ -39,7 +39,7 @@ export default function Footer() {
                 {/* Logo and About */}
                 <div className="space-y-3">
                     <img
-                        src={logo}
+                        src="/logo.png"
                         alt="Logo"
                         className="w-16 h-16 object-contain"
                     />
