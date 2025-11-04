@@ -1,6 +1,4 @@
 import { useState, useContext, useEffect } from "react";
-import logo from "../assets/logo.png";
-import defaultProfilePic from "../assets/profile.png";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { useCart } from "../context/CartContext.jsx";
@@ -78,7 +76,7 @@ export default function Header() {
                         isDark ? "bg-white/10" : "bg-black/5"
                     }`}
                 >
-                    <img src={logo} alt="Logo" className="w-full h-full object-contain" />
+                    <img src="/Logo.png" alt="Logo" className="w-full h-full object-contain" />
                 </div>
             </div>
 
@@ -156,7 +154,7 @@ export default function Header() {
                 {user ? (
                     <div className="flex items-center space-x-2">
                         <img
-                            src={defaultProfilePic}
+                            src="/profile.png"
                             alt="Profile"
                             className={`h-8 w-8 rounded-full border transition ${
                                 isDark ? "border-white/40" : "border-black/40"
@@ -175,7 +173,7 @@ export default function Header() {
                 ) : (
                     <div className="flex items-center space-x-2">
                         <img
-                            src={defaultProfilePic}
+                            src="/profile.png"
                             alt="Profile"
                             className={`h-8 w-8 rounded-full border transition ${
                                 isDark ? "border-white/40" : "border-black/40"

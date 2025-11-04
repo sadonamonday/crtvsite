@@ -1,4 +1,3 @@
-import makoImg from "../assets/Mako-crtvshots.jpg";
 
 export default function About() {
     return (
@@ -36,7 +35,7 @@ export default function About() {
                     <div className="absolute -top-5 -left-5 w-full h-full bg-gray-200 rounded-3xl transform rotate-2 transition-transform duration-300 group-hover:rotate-0"></div>
 
                     <img
-                        src={makoImg}
+                        src="Mako-crtvshots.jpg"
                         alt="Mako - CRTV Shots"
                         className="relative w-full h-auto rounded-3xl shadow-xl object-cover"
                     />
