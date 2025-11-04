@@ -19,7 +19,7 @@ const Login = () => {
 
     try {
       const res = await fetch(
-        "http://localhost/crtvsite/backend/login/login.php",
+        "http://crtvshotss.atwebpages.com/login.php",
         {
           method: "POST",
           body: formData,
@@ -49,7 +49,7 @@ const Login = () => {
       const formData = new FormData();
       formData.append("user_email", email);
       const res = await fetch(
-        "http://localhost/crtvsite/backend/login/resend_verification.php",
+        "http://crtvshotss.atwebpages.com/resend_verification.php",
         {
           method: "POST",
           body: formData,
@@ -125,7 +125,7 @@ const Login = () => {
             <p>
               Don't have an account?{" "}
               <a
-                href="http://localhost/crtvsite/backend/login/signup.php"
+                href="http://crtvshotss.atwebpages.com/signup.php"
                 className="text-blue-600 hover:underline font-medium"
               >
                 Sign up
@@ -133,7 +133,7 @@ const Login = () => {
             </p>
             <p className="mt-2">
               <a
-                href="http://localhost/crtvsite/backend/login/forgot_password.php"
+                href="http://crtvshotss.atwebpages.com/forgot_password.php"
                 className="text-blue-600 hover:underline font-medium"
               >
                 Forgot Password?

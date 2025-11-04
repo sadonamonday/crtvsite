@@ -499,25 +499,25 @@ const Calendar = ({ selectedDate, onSelectDate }) => {
         <button
           type="button"
           onClick={prevMonth}
-          className="p-2 rounded transition-colors hover:bg-gray-100"
+          className="p-2 rounded transition-colors hover:bg-black"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={20} className="text-white" />
         </button>
-        <h3 className="text-lg font-semibold">
+        <h3 className="text-lg font-semibold text-white">
           {monthName} {year}
         </h3>
         <button
           type="button"
           onClick={nextMonth}
-          className="p-2 hover:bg-gray-100 rounded"
+          className="p-2 hover:bg-black rounded"
         >
-          <ChevronRight size={20} />
+          <ChevronRight size={20} className="text-white" />
         </button>
       </div>
 
       <div className="grid grid-cols-7 gap-1 mb-2">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="text-center text-sm py-1">
+          <div key={day} className="text-center text-sm py-1 text-white">
              {day}
            </div>
          ))}
@@ -539,7 +539,7 @@ const Calendar = ({ selectedDate, onSelectDate }) => {
                type="button"
                onClick={() => handleDateClick(date)}
                className={`p-2 rounded text-sm transition
-                ${isSelected ? 'bg-green-600 text-white' : 'hover:bg-gray-100'}
+                ${isSelected ? 'bg-green-600 text-white' : 'hover:bg-black text-white'}
               `}
              >
                <span>
@@ -621,16 +621,16 @@ const TimeDropdownSelector = ({ selectedTime, onTimeSelect }) => {
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-2">Start Time</label>
+          <label className="block text-sm font-medium mb-2 text-white">Start Time</label>
           <select
             value={startTime}
             onChange={handleStartTimeChange}
-            className="w-full p-3 border border-gray-300 rounded-lg bg-white focus:border-black-500 focus:ring-2 focus:ring-black-200 transition"
+            className="w-full p-3 border border-gray-600 rounded-lg bg-black text-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition"
             required
           >
-            <option value="">Select start time</option>
+            <option value="" className="text-gray-400">Select start time</option>
             {timeOptions.map(time => (
-              <option key={`start-${time}`} value={time}>
+              <option key={`start-${time}`} value={time} className="text-white bg-black">
                 {formatTimeForDisplay(time)}
               </option>
             ))}
@@ -638,17 +638,17 @@ const TimeDropdownSelector = ({ selectedTime, onTimeSelect }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">End Time</label>
+          <label className="block text-sm font-medium mb-2 text-white">End Time</label>
           <select
             value={endTime}
             onChange={handleEndTimeChange}
-            className="w-full p-3 border border-gray-300 rounded-lg bg-white focus:border-black-500 focus:ring-2 focus:ring-black-200 transition"
+            className="w-full p-3 border border-gray-600 rounded-lg bg-black text-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition"
             required
             disabled={!startTime}
           >
-            <option value="">Select end time</option>
+            <option value="" className="text-gray-400">Select end time</option>
             {getEndTimeOptions().map(time => (
-              <option key={`end-${time}`} value={time}>
+              <option key={`end-${time}`} value={time} className="text-white bg-black">
                 {formatTimeForDisplay(time)}
               </option>
             ))}
@@ -657,12 +657,12 @@ const TimeDropdownSelector = ({ selectedTime, onTimeSelect }) => {
       </div>
 
       {startTime && endTime && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div className="bg-black border border-gray-700 rounded-lg p-4">
           <div className="text-center">
-            <div className="text-lg font-semibold">
+            <div className="text-lg font-semibold text-white">
               {formatTimeForDisplay(startTime)} - {formatTimeForDisplay(endTime)}
             </div>
-            <div className="text-sm text-gray-600 mt-1">
+            <div className="text-sm text-gray-400 mt-1">
               Duration: {getDuration()}
             </div>
           </div>
@@ -969,8 +969,8 @@ export default function BookingPage() {
     return (
        <div className="fixed inset-0 z-50 flex items-center justify-center">
          <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-         <div className="relative w-full max-w-xl mx-4 bg-white rounded-lg p-6 shadow-lg border border-gray-200">
-           <h2 className="text-xl font-semibold mb-4">Custom Service Request</h2>
+         <div className="relative w-full max-w-xl mx-4 bg-black rounded-lg p-6 shadow-lg border border-gray-700">
+           <h2 className="text-xl font-semibold mb-4 text-white">Custom Service Request</h2>
            <form
              onSubmit={(e) => {
                e.preventDefault();
@@ -979,36 +979,36 @@ export default function BookingPage() {
              className="space-y-3"
            >
              <div>
-               <label className="block text-sm mb-1">Service Title *</label>
+               <label className="block text-sm mb-1 text-white">Service Title *</label>
                <input
                  required
                  value={form.title}
                  onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-                 className="w-full p-2 rounded bg-white border"
+                 className="w-full p-2 rounded bg-black border border-gray-600 text-white"
                  placeholder="e.g., Corporate Event Videography"
                />
              </div>
              <div>
-               <label className="block text-sm mb-1">Description *</label>
+               <label className="block text-sm mb-1 text-white">Description *</label>
                <textarea
                  required
                  value={form.description}
                  onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-                 className="w-full p-2 rounded bg-white border min-h-28"
+                 className="w-full p-2 rounded bg-black border border-gray-600 text-white min-h-28"
                  placeholder="Describe what you need, duration, locations, deliverables..."
                />
              </div>
              <div>
-               <label className="block text-sm mb-1">Budget (optional)</label>
+               <label className="block text-sm mb-1 text-white">Budget (optional)</label>
                <input
                  value={form.budget}
                  onChange={(e) => setForm((p) => ({ ...p, budget: e.target.value }))}
-                 className="w-full p-2 rounded bg-white border"
+                 className="w-full p-2 rounded bg-black border border-gray-600 text-white"
                  placeholder="e.g., R3000"
                />
              </div>
              <div className="flex justify-end gap-3">
-               <button type="button" onClick={onClose} className="px-4 py-2 border rounded hover:bg-gray-100">
+               <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-600 rounded hover:bg-gray-900 text-white">
                  Cancel
                </button>
                <button type="submit" className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-white">
@@ -1023,19 +1023,19 @@ export default function BookingPage() {
 
   const renderCustomRequestForm = () => (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-green-800 mb-2">Tell Us About Your Event</h3>
-        <p className="text-green-600">
+      <div className="bg-green-900 border border-green-700 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-green-200 mb-2">Tell Us About Your Event</h3>
+        <p className="text-green-300">
           Describe your specific event requirements and any special needs. We'll create a custom package just for you.
         </p>
       </div>
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <label className="block font-medium">Event Type *</label>
+          <label className="block font-medium text-white">Event Type *</label>
           <input
             type="text"
-            className="w-full p-3 border border-gray-300 rounded-lg bg-white"
+            className="w-full p-3 border border-gray-600 rounded-lg bg-black text-white"
             placeholder="e.g., Corporate Gala, Private Birthday, Product Launch, etc."
             value={customService.title}
             onChange={(e) => handleCustomServiceChange("title", e.target.value)}
@@ -1044,9 +1044,9 @@ export default function BookingPage() {
         </div>
         
         <div className="space-y-2">
-          <label className="block font-medium">Event Description & Requirements *</label>
+          <label className="block font-medium text-white">Event Description & Requirements *</label>
           <textarea
-            className="w-full p-3 border border-gray-300 rounded-lg min-h-32 bg-white"
+            className="w-full p-3 border border-gray-600 rounded-lg min-h-32 bg-black text-white"
             placeholder="Please describe your event in detail, including:
 • Number of guests
 • Specific shots or coverage needed
@@ -1060,9 +1060,9 @@ export default function BookingPage() {
         </div>
         
         <div className="space-y-2">
-          <label className="block font-medium">Preferred Service Type</label>
+          <label className="block font-medium text-white">Preferred Service Type</label>
           <select 
-            className="w-full p-3 border border-gray-300 rounded-lg bg-white"
+            className="w-full p-3 border border-gray-600 rounded-lg bg-black text-white"
             onChange={(e) => {
               if (e.target.value) {
                 setService(e.target.value);
@@ -1070,18 +1070,18 @@ export default function BookingPage() {
               }
             }}
           >
-            <option value="">Select if you have a preference</option>
-            <option value="photography">Photography Only</option>
-            <option value="videography">Videography Only</option>
-            <option value="combo">Both Photography & Videography</option>
+            <option value="" className="text-gray-400">Select if you have a preference</option>
+            <option value="photography" className="text-white bg-black">Photography Only</option>
+            <option value="videography" className="text-white bg-black">Videography Only</option>
+            <option value="combo" className="text-white bg-black">Both Photography & Videography</option>
           </select>
         </div>
         
         <div className="space-y-2">
-          <label className="block font-medium">Budget Estimate (Optional)</label>
+          <label className="block font-medium text-white">Budget Estimate (Optional)</label>
           <input
             type="text"
-            className="w-full p-3 border border-gray-300 rounded-lg bg-white"
+            className="w-full p-3 border border-gray-600 rounded-lg bg-black text-white"
             placeholder="e.g., R5000"
             value={customService.budget}
             onChange={(e) => handleCustomServiceChange("budget", e.target.value)}
@@ -1092,7 +1092,7 @@ export default function BookingPage() {
       <div className="flex justify-between pt-4">
         <button 
           type="button" 
-          className="px-6 py-3 border border-gray-600 text-gray-600 rounded-lg hover:bg-gray-600 hover:text-white transition"
+          className="px-6 py-3 border border-red-600 text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition"
           onClick={() => setActiveCategory("all")}
         >
           ← Back to Services
@@ -1115,7 +1115,7 @@ export default function BookingPage() {
   const renderServiceGrid = () => (
     <div className="space-y-6">
       {/* Category Tabs - Centered */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-700">
         <nav className="flex justify-center space-x-8 overflow-x-auto">
           {serviceCategories.map((category) => (
             <button
@@ -1123,8 +1123,8 @@ export default function BookingPage() {
               onClick={() => setActiveCategory(category.id)}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
                 activeCategory === category.id
-                  ? 'border-green-500 text-green-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-green-500 text-green-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-500'
               }`}
             >
               {category.name}
@@ -1134,8 +1134,8 @@ export default function BookingPage() {
       </div>
 
       {/* Category Description - Green Background */}
-      <div className="bg-green-50 rounded-lg p-4 mb-6">
-        <p className="text-green-800 text-center">
+      <div className="bg-green-900 rounded-lg p-4 mb-6">
+        <p className="text-green-200 text-center">
           {serviceCategories.find(cat => cat.id === activeCategory)?.description}
         </p>
       </div>
@@ -1152,11 +1152,11 @@ export default function BookingPage() {
               <div
                 key={s.id}
                 className={`flex flex-col border rounded-lg overflow-hidden transition-all duration-200 ${
-                  isExpanded ? "border-green-500 shadow-lg" : "border-gray-300 hover:shadow-md"
+                  isExpanded ? "border-green-500 shadow-lg" : "border-gray-700 hover:shadow-md"
                 }`}
               >
                 {/* Service Image */}
-                <div className="h-48 bg-gray-200 relative overflow-hidden">
+                <div className="h-48 bg-black relative overflow-hidden">
                    <img 
                      src={s.image} 
                      alt={s.name}
@@ -1174,14 +1174,14 @@ export default function BookingPage() {
                   </div>
 
                 {/* Service Content */}
-                <div className="p-4 flex-1 flex flex-col">
-                  <p className="text-gray-600 text-sm mb-4 flex-1">{s.description}</p>
+                <div className="p-4 flex-1 flex flex-col bg-black">
+                  <p className="text-gray-300 text-sm mb-4 flex-1">{s.description}</p>
                   
                   <div className="space-y-3">
                     <button
                       type="button"
                       onClick={() => handleServiceClick(s.id)}
-                      className="w-full text-left flex items-center justify-between text-green-600 hover:text-green-700 font-medium"
+                      className="w-full text-left flex items-center justify-between text-green-400 hover:text-green-300 font-medium"
                     >
                       <span>View Details</span>
                       <ChevronRight 
@@ -1191,11 +1191,11 @@ export default function BookingPage() {
                     </button>
 
                     {isExpanded && (
-                      <div className="space-y-4 pt-4 border-t border-gray-200">
+                      <div className="space-y-4 pt-4 border-t border-gray-700">
                         {/* What's Included */}
                         <div>
-                          <h4 className="font-semibold text-sm mb-2">What's Included:</h4>
-                          <ul className="text-sm text-gray-600 space-y-1">
+                          <h4 className="font-semibold text-sm mb-2 text-white">What's Included:</h4>
+                          <ul className="text-sm text-gray-300 space-y-1">
                             {s.includes.map((item, index) => (
                               <li key={index} className="flex items-start">
                                 <CheckCircle size={16} className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -1233,7 +1233,7 @@ export default function BookingPage() {
       case 1:
         return (
            <div className="space-y-6">
-             <h2 className="text-2xl font-bold text-center">
+             <h2 className="text-2xl font-bold text-center text-white">
                {service === "other" ? "Describe Your Custom Service Request" : "Choose Your Service"}
              </h2>
  
@@ -1245,15 +1245,14 @@ export default function BookingPage() {
            </div>
          );
 
-      // ... rest of the steps remain the same
       case 2:
         return (
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold">Select date & time</h2>
+            <h2 className="text-2xl font-bold text-white">Select date & time</h2>
             
             <div className="space-y-6">
               <div>
-                <label className="block mb-4 font-medium">Select Date</label>
+                <label className="block mb-4 font-medium text-white">Select Date</label>
                 <Calendar
                   selectedDate={date}
                   onSelectDate={setDate}
@@ -1261,7 +1260,7 @@ export default function BookingPage() {
               </div>
 
               <div>
-                <label className="block mb-4 font-medium">Select Time</label>
+                <label className="block mb-4 font-medium text-white">Select Time</label>
                 <TimeDropdownSelector 
                   selectedTime={time} 
                   onTimeSelect={setTime} 
@@ -1277,33 +1276,33 @@ export default function BookingPage() {
       case 3:
         return (
            <div className="space-y-4">
-             <h2 className="text-2xl font-bold">Your details</h2>
+             <h2 className="text-2xl font-bold text-white">Your details</h2>
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                <div className="space-y-2">
-                 <label className="block">Name *</label>
-                 <input type="text" name="name" className="w-full p-2 border rounded bg-white" value={details.name} onChange={handleInputChange} required />
+                 <label className="block text-white">Name *</label>
+                 <input type="text" name="name" className="w-full p-2 border border-gray-600 rounded bg-black text-white" value={details.name} onChange={handleInputChange} required />
                </div>
                <div className="space-y-2">
-                 <label className="block">Email *</label>
-                 <input type="email" name="email" className="w-full p-2 border rounded bg-white" value={details.email} onChange={handleInputChange} required />
+                 <label className="block text-white">Email *</label>
+                 <input type="email" name="email" className="w-full p-2 border border-gray-600 rounded bg-black text-white" value={details.email} onChange={handleInputChange} required />
                </div>
                <div className="space-y-2">
-                 <label className="block">Phone</label>
-                 <input type="tel" name="phone" className="w-full p-2 border rounded bg-white" value={details.phone} onChange={handleInputChange} />
+                 <label className="block text-white">Phone</label>
+                 <input type="tel" name="phone" className="w-full p-2 border border-gray-600 rounded bg-black text-white" value={details.phone} onChange={handleInputChange} />
                </div>
                <div className="sm:col-span-2 space-y-2">
-                 <label className="block">Address</label>
+                 <label className="block text-white">Address</label>
                  <textarea 
                    name="address" 
-                   className="w-full p-2 border rounded min-h-20 bg-white" 
+                   className="w-full p-2 border border-gray-600 rounded min-h-20 bg-black text-white" 
                    value={details.address} 
                    onChange={handleInputChange} 
                    placeholder="Enter your full address for service delivery or event location"
                  />
                </div>
                <div className="sm:col-span-2 space-y-2">
-                 <label className="block">Additional Notes</label>
-                 <textarea name="notes" className="w-full p-2 border rounded min-h-24 bg-white" value={details.notes} onChange={handleInputChange} placeholder={service === "other" ? "Any additional information about your custom request..." : "Any special requirements or questions..."} />
+                 <label className="block text-white">Additional Notes</label>
+                 <textarea name="notes" className="w-full p-2 border border-gray-600 rounded min-h-24 bg-black text-white" value={details.notes} onChange={handleInputChange} placeholder={service === "other" ? "Any additional information about your custom request..." : "Any special requirements or questions..."} />
                </div>
              </div>
            </div>
@@ -1312,74 +1311,74 @@ export default function BookingPage() {
       case 4:
         return (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Review & Confirm</h2>
-            <div className="space-y-4 p-4 border rounded">
+            <h2 className="text-2xl font-bold text-white">Review & Confirm</h2>
+            <div className="space-y-4 p-4 border border-gray-700 rounded bg-black">
               <div>
-                <span className="font-medium">Service:</span>
+                <span className="font-medium text-white">Service:</span>
                 <div className="mt-1">
                   {service === "other" ? (
-                    <div className="bg-green-50 rounded p-3">
-                      <div>
+                    <div className="bg-green-900 rounded p-3">
+                      <div className="text-white">
                         <strong>Event Type:</strong> {customService.title || "Not specified"}
                       </div>
-                      <div>
+                      <div className="text-white">
                         <strong>Description:</strong> {customService.description || "Not specified"}
                       </div>
                       {customService.budget && (
-                        <div>
-                          <strong>Budget:</strong> <span className="text-green-600">{customService.budget}</span>
+                        <div className="text-white">
+                          <strong>Budget:</strong> <span className="text-green-400">{customService.budget}</span>
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="bg-green-50 rounded p-3">{servicePricing[service]?.name || service}</div>
+                    <div className="bg-green-900 rounded p-3 text-white">{servicePricing[service]?.name || service}</div>
                   )}
                 </div>
               </div>
 
-              <div className="flex justify-between">
+              <div className="flex justify-between text-white">
                 <span className="font-medium">Date:</span>
                 <span>{date || "Not specified"}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-white">
                 <span className="font-medium">Time:</span>
                 <span>
                   {time ? `${formatTimeForDisplay(time.split('-')[0])} - ${formatTimeForDisplay(time.split('-')[1])}` : "Not specified"}
                 </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-white">
                 <span className="font-medium">Name:</span>
                 <span>{details.name || "Not specified"}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-white">
                 <span className="font-medium">Email:</span>
                 <span>{details.email || "Not specified"}</span>
               </div>
               {details.phone && (
-                <div className="flex justify-between">
+                <div className="flex justify-between text-white">
                   <span className="font-medium">Phone:</span>
                   <span>{details.phone}</span>
                 </div>
               )}
               {details.address && (
                 <div>
-                  <span className="font-medium">Address:</span>
-                  <div className="mt-1 bg-gray-50 rounded p-3">{details.address}</div>
+                  <span className="font-medium text-white">Address:</span>
+                  <div className="mt-1 bg-gray-900 rounded p-3 text-white">{details.address}</div>
                 </div>
               )}
               {details.notes && (
                 <div>
-                  <span className="font-medium">Additional Notes:</span>
-                  <div className="mt-1 bg-gray-50 rounded p-3">{details.notes}</div>
+                  <span className="font-medium text-white">Additional Notes:</span>
+                  <div className="mt-1 bg-gray-900 rounded p-3 text-white">{details.notes}</div>
                 </div>
               )}
             </div>
 
             {service === "other" && (
-              <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
-                <p className="font-medium">We will contact you to discuss details and provide a tailored quote.</p>
-                <p className="text-sm mt-1">NO PAYMENT IS REQUIRED NOW.</p>
-                <p className="font-medium">Please confirm your request below</p>
+              <div className="bg-black border border-gray-700 rounded-lg p-4">
+                <p className="font-medium text-white">We will contact you to discuss details and provide a tailored quote.</p>
+                <p className="text-sm mt-1 text-gray-400">NO PAYMENT IS REQUIRED NOW.</p>
+                <p className="font-medium text-white">Please confirm your request below</p>
               </div>
             )}
           </div>
@@ -1388,11 +1387,11 @@ export default function BookingPage() {
       case 5:
         return (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Payment Options</h2>
+            <h2 className="text-2xl font-bold text-white">Payment Options</h2>
 
-            <div className="border rounded-lg p-6 mb-6">
-              <h4 className="text-lg font-semibold mb-4">Booking Summary</h4>
-              <div className="space-y-3">
+            <div className="border border-gray-700 rounded-lg p-6 mb-6 bg-black">
+              <h4 className="text-lg font-semibold mb-4 text-white">Booking Summary</h4>
+              <div className="space-y-3 text-white">
                 <div className="flex justify-between">
                   <span>Service:</span>
                   <span>{getServiceDisplayName()}</span>
@@ -1404,24 +1403,24 @@ export default function BookingPage() {
                   </span>
                 </div>
                 {service !== "other" && paymentAmounts.full > 0 && (
-                  <div className="flex justify-between text-lg font-semibold mt-4 pt-4 border-t border-gray-300">
+                  <div className="flex justify-between text-lg font-semibold mt-4 pt-4 border-t border-gray-600">
                     <span>Total Amount:</span>
-                    <span className="text-green-600">R{paymentAmounts.full}</span>
+                    <span className="text-green-400">R{paymentAmounts.full}</span>
                   </div>
                 )}
                 {service === "other" && customService.budget && (
-                  <div className="flex justify-between text-lg font-semibold mt-4 pt-4 border-t border-gray-300">
+                  <div className="flex justify-between text-lg font-semibold mt-4 pt-4 border-t border-gray-600">
                     <span>Estimated Budget:</span>
-                    <span className="text-green-600">{customService.budget}</span>
+                    <span className="text-green-400">{customService.budget}</span>
                   </div>
                 )}
               </div>
             </div>
 
             {service === "other" ? (
-              <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
-                <p className="font-medium">Custom service — no online payment here.</p>
-                <p className="text-sm mt-1">We will contact you to agree final details and payment terms.</p>
+              <div className="bg-black border border-gray-700 rounded-lg p-4">
+                <p className="font-medium text-white">Custom service — no online payment here.</p>
+                <p className="text-sm mt-1 text-gray-400">We will contact you to agree final details and payment terms.</p>
               </div>
             ) : (
               <>
@@ -1429,27 +1428,27 @@ export default function BookingPage() {
                   <button
                     type="button"
                     onClick={() => setPaymentOption("full")}
-                    className={`border-2 rounded-lg p-6 text-left transition ${paymentOption === "full" ? "border-green-500 bg-green-50" : "border-green-300 hover:border-green-400"}`}
+                    className={`border-2 rounded-lg p-6 text-left transition ${paymentOption === "full" ? "border-green-500 bg-green-900" : "border-green-700 hover:border-green-500 bg-black"}`}
                   >
-                    <h4 className="text-lg font-semibold mb-2">Pay Full Amount</h4>
-                    <div className="text-2xl font-bold text-green-600 mb-2">R{paymentAmounts.full || "TBD"}</div>
-                    <p className="text-gray-600 text-sm">Secure your booking with full payment</p>
+                    <h4 className="text-lg font-semibold mb-2 text-white">Pay Full Amount</h4>
+                    <div className="text-2xl font-bold text-green-400 mb-2">R{paymentAmounts.full || "TBD"}</div>
+                    <p className="text-gray-300 text-sm">Secure your booking with full payment</p>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setPaymentOption("deposit")}
-                    className={`border-2 rounded-lg p-6 text-left transition ${paymentOption === "deposit" ? "border-green-500 bg-green-50" : "border-green-300 hover:border-green-400"}`}
+                    className={`border-2 rounded-lg p-6 text-left transition ${paymentOption === "deposit" ? "border-green-500 bg-green-900" : "border-green-700 hover:border-green-500 bg-black"}`}
                   >
-                    <h4 className="text-lg font-semibold mb-2">Pay 50% Deposit</h4>
-                    <div className="text-2xl font-bold text-green-600 mb-2">R{paymentAmounts.deposit || "TBD"}</div>
-                    <p className="text-gray-600 text-sm">Pay half now, balance due before service</p>
+                    <h4 className="text-lg font-semibold mb-2 text-white">Pay 50% Deposit</h4>
+                    <div className="text-2xl font-bold text-green-400 mb-2">R{paymentAmounts.deposit || "TBD"}</div>
+                    <p className="text-gray-300 text-sm">Pay half now, balance due before service</p>
                   </button>
                 </div>
 
-                <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 mb-6">
-                  <h4 className="font-semibold mb-2">Payment Information</h4>
-                  <p className="text-gray-600 text-sm">
+                <div className="bg-black border border-gray-700 rounded-lg p-4 mb-6">
+                  <h4 className="font-semibold mb-2 text-white">Payment Information</h4>
+                  <p className="text-gray-300 text-sm">
                     {paymentOption === "deposit"
                       ? `50% deposit of R${paymentAmounts.deposit} is required to secure your booking. The remaining balance will be due before the service date.`
                       : "Full payment secures your booking and ensures availability for your selected date and time."}
@@ -1466,16 +1465,16 @@ export default function BookingPage() {
   };
 
   return (
-    <div className="bg-white flex flex-col min-h-screen">
+    <div className="bg-black flex flex-col min-h-screen">
       <Header />
 
       <main className="flex-grow pt-30t md:pt-32 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold mb-2 text-center">Book Services</h1>
-          <p className="text-red-600 text-center mb-10">Capture your special moments ONE SHOT AT A TIME</p>
+          <h1 className="text-4xl font-bold mb-2 text-center text-white">Book Services</h1>
+          <p className="text-red-400 text-center mb-10">Capture your special moments ONE SHOT AT A TIME</p>
 
           <div className="mb-8">
-            <div className="flex justify-between bg-white rounded-lg p-3 border border-gray-300">
+            <div className="flex justify-between bg-black rounded-lg p-3 border border-gray-700">
                {steps
                  .filter((s) => !(s.id === 5 && service === "other"))
                  .map((step) => {
@@ -1485,29 +1484,29 @@ export default function BookingPage() {
                     <div key={step.id} className="flex flex-col items-center">
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${
-                          active ? "border-green-500 bg-green-600 text-white" : "border-gray-400 bg-white text-gray-600"
+                          active ? "border-green-500 bg-green-600 text-white" : completed ? "border-green-500 bg-green-500 text-white" : "border-gray-600 bg-gray-900 text-gray-400"
                         }`}
                       >
                         {completed ? (
-                          <CheckCircle size={18} className="text-green-600" />
+                          <CheckCircle size={18} className="text-white" />
                         ) : (
-                          <span className={active ? "text-white" : "text-gray-600"}>{step.id}</span>
+                          <span className={active ? "text-white" : "text-white-400"}>{step.id}</span>
                         )}
                       </div>
-                      <span className={`text-sm mt-1 text-gray-600`}>{step.name}</span>
+                      <span className={`text-sm mt-1 ${active || completed ? "text-white" : "text-gray-500"}`}>{step.name}</span>
                      </div>
                    );
                  })}
              </div>
            </div>
  
-          <div className="bg-white rounded-lg p-6 mb-8 border border-gray-300">{renderStep()}</div>
+          <div className="bg-black rounded-lg p-6 mb-8 border border-gray-700">{renderStep()}</div>
 
           <div className="flex justify-between">
             <button 
               onClick={prevStep} 
               type="button" 
-              className={`px-4 py-2 border border-red-600 text-red-600 rounded hover:bg-red-600 hover:text-white transition ${currentStep === 1 ? "invisible" : ""}`}
+              className={`px-4 py-2 border border-red-600 text-red-400 rounded hover:bg-red-600 hover:text-white transition ${currentStep === 1 ? "invisible" : ""}`}
             >
               Previous
             </button>
@@ -1551,7 +1550,7 @@ export default function BookingPage() {
         </div>
       </main>
       
-      <div className="bg-white">
+      <div className="bg-black">
         <Footer />
       </div>
     </div>
