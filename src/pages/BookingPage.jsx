@@ -749,6 +749,17 @@ export default function BookingPage() {
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
 
+  // Add this useEffect to handle category changes
+  useEffect(() => {
+    // When switching to custom category, set service to "other" if custom form is filled
+    if (activeCategory === "custom" && customService.title && customService.description) {
+      setService("other");
+    } else if (activeCategory === "custom") {
+      // Reset service when switching to custom category but form isn't filled yet
+      setService("");
+    }
+  }, [activeCategory, customService]);
+
   const servicePricing = {
     // Photography
     "matric-dance-photo": { name: "Matric Dance Photography", price: 1800, type: "fixed" },
@@ -909,7 +920,10 @@ export default function BookingPage() {
 
   const validateStep = (step = currentStep) => {
     if (step === 1) {
-      if (service === "other") return !!customService.title.trim() && !!customService.description.trim();
+      if (service === "other") {
+        // For custom service, check if both title and description are filled
+        return !!customService.title.trim() && !!customService.description.trim();
+      }
       return !!service;
     }
     if (step === 2) {
@@ -1170,7 +1184,13 @@ export default function BookingPage() {
             className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-800"
             placeholder="e.g., Corporate Gala, Private Birthday, Product Launch, etc."
             value={customService.title}
-            onChange={(e) => handleCustomServiceChange("title", e.target.value)}
+            onChange={(e) => {
+              handleCustomServiceChange("title", e.target.value);
+              // Auto-set service to "other" when title is filled
+              if (e.target.value.trim() && customService.description.trim()) {
+                setService("other");
+              }
+            }}
             required
           />
         </div>
@@ -1186,7 +1206,13 @@ export default function BookingPage() {
 • Any unique aspects of your event
 • Timeline and key moments to capture"
             value={customService.description}
-            onChange={(e) => handleCustomServiceChange("description", e.target.value)}
+            onChange={(e) => {
+              handleCustomServiceChange("description", e.target.value);
+              // Auto-set service to "other" when description is filled
+              if (customService.title.trim() && e.target.value.trim()) {
+                setService("other");
+              }
+            }}
             required
           />
         </div>
@@ -1199,6 +1225,9 @@ export default function BookingPage() {
               if (e.target.value) {
                 setService(e.target.value);
                 setExpandedService(e.target.value);
+                setActiveCategory(e.target.value === "photography" ? "photography" : 
+                                e.target.value === "videography" ? "videography" : 
+                                e.target.value === "combo" ? "combo" : "custom");
               }
             }}
           >
@@ -1228,7 +1257,11 @@ export default function BookingPage() {
         <button 
           type="button" 
           className="px-6 py-3 border border-red-600 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition"
-          onClick={() => setActiveCategory("all")}
+          onClick={() => {
+            setActiveCategory("all");
+            setService("");
+            setCustomService({ title: "", description: "", budget: "" });
+          }}
         >
           ← Back to Services
         </button>
@@ -1249,28 +1282,30 @@ export default function BookingPage() {
 
   const renderServiceGrid = () => (
     <div className="space-y-6">
-      {/* Category Tabs - Centered */}
-      <div className="border-b border-gray-300">
-        <nav className="flex justify-center space-x-8 overflow-x-auto">
+      {/* Category Tabs - Gallery Style */}
+      <div className="filter-tabs-container">
+        <div className="filter-tabs">
           {serviceCategories.map((category) => (
             <button
               key={category.id}
-              onClick={() => setActiveCategory(category.id)}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                activeCategory === category.id
-                  ? 'border-green-500 text-green-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-400'
-              }`}
+              onClick={() => {
+                setActiveCategory(category.id);
+                // Reset service when switching categories (except when going to custom with filled form)
+                if (category.id !== "custom" || !customService.title || !customService.description) {
+                  setService("");
+                }
+              }}
+              className={`tab ${activeCategory === category.id ? "active" : ""}`}
             >
               {category.name}
             </button>
           ))}
-        </nav>
+        </div>
       </div>
 
       {/* Category Description - Green Background */}
-      <div className="bg-green-100 rounded-lg p-4 mb-6">
-        <p className="text-green-800 text-center">
+      <div className="category-description">
+        <p className="description-text">
           {serviceCategories.find(cat => cat.id === activeCategory)?.description}
         </p>
       </div>
@@ -1366,10 +1401,10 @@ export default function BookingPage() {
         return (
            <div className="space-y-6">
              <h2 className="text-2xl font-bold text-center text-gray-800">
-               {service === "other" ? "Describe Your Custom Service Request" : "Choose Your Service"}
+               {service === "other" || activeCategory === "custom" ? "Describe Your Custom Service Request" : "Choose Your Service"}
              </h2>
  
-             {service === "other" ? (
+             {service === "other" || activeCategory === "custom" ? (
                renderCustomRequestForm()
              ) : (
                renderServiceGrid()
@@ -1660,9 +1695,14 @@ export default function BookingPage() {
 
       <main className="flex-grow pt-30t md:pt-32 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold mb-2 text-center text-gray-800">Book Services</h1>
+          {/* Updated Title with Underline like Gallery */}
+          <div className="page-header">
+            <h1 className="page-title">Book Services</h1>
+            <div className="title-underline"></div>
+          </div>
           <p className="text-red-600 text-center mb-10">Capture your special moments ONE SHOT AT A TIME</p>
 
+          {/* Reverted to original step section */}
           <div className="mb-8">
             <div className="flex justify-between bg-white rounded-lg p-3 border border-gray-300">
                {steps
@@ -1702,7 +1742,11 @@ export default function BookingPage() {
             </button>
 
             {currentStep < 4 ? (
-              <button onClick={nextStep} type="button" className={`px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition ${!validateStep(currentStep) ? "opacity-50 pointer-events-none" : ""}`}>
+              <button 
+                onClick={nextStep} 
+                type="button" 
+                className={`px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition ${!validateStep(currentStep) ? "opacity-50 pointer-events-none" : ""}`}
+              >
                 Next
               </button>
             ) : currentStep === 4 ? (
@@ -1743,6 +1787,89 @@ export default function BookingPage() {
       <div className="bg-white">
         <Footer />
       </div>
+
+      <style jsx>{`
+        /* Page Header with Underline like Gallery */
+        .page-header {
+          text-align: center;
+          padding: 0 20px 30px;
+          color: #1a1a1a;
+        }
+
+        .page-title {
+          font-size: 2.5rem;
+          margin: 0 0 1rem 0;
+          font-weight: bold;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          color: #1a1a1a;
+        }
+
+        .title-underline {
+          width: 60px;
+          height: 2px;
+          background: #4CAF50;
+          margin: 0 auto;
+        }
+
+        /* Gallery Style Tabs for Service Categories with Light Background */
+        .filter-tabs-container {
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+
+        .filter-tabs {
+          display: flex;
+          gap: 0.8rem;
+          justify-content: center;
+          flex-wrap: wrap;
+          margin: 0;
+        }
+
+        .tab {
+          padding: 0.7rem 1.8rem;
+          border: 1px solid #ddd;
+          background: #f8f9fa;
+          color: #333;
+          border-radius: 20px;
+          cursor: pointer;
+          font-weight: 500;
+          font-size: 0.9rem;
+          transition: all 0.3s ease;
+        }
+
+        .tab.active {
+          background: #4CAF50;
+          border-color: #4CAF50;
+          color: white;
+        }
+
+        .tab:hover {
+          border-color: #4CAF50;
+          background: #e9ecef;
+        }
+
+        .tab:focus {
+          outline: 2px solid #4CAF50;
+          outline-offset: 2px;
+        }
+
+        /* Category Description */
+        .category-description {
+          background: #d4edda;
+          border: 1px solid #c3e6cb;
+          border-radius: 8px;
+          padding: 1rem;
+          margin-bottom: 2rem;
+        }
+
+        .description-text {
+          color: #155724;
+          text-align: center;
+          margin: 0;
+          font-size: 0.95rem;
+        }
+      `}</style>
     </div>
   );
 }
