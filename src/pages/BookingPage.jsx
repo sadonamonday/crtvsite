@@ -862,7 +862,7 @@ export default function BookingPage() {
     console.log('Service value being sent:', JSON.stringify(service));
     console.log('Service type:', typeof service);
     console.log('Service length:', service ? service.length : 'null/undefined');
-    console.log('About to make fetch request to: https://crtvshots.atwebpages.com/form_booking.php');
+    console.log('About to make fetch request to: https://crtvshotss.atwebpages.com/form_booking.php');
     
     try {
       const response = await fetch('https://crtvshotss.atwebpages.com/form_booking.php', {
