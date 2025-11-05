@@ -101,8 +101,8 @@
   max-width: 540px !important;
   min-width: 326px !important;
   padding: 0 !important;
-  width: 99.375% !important;
-  width: -webkit-calc(100% - 2px) !important;
+  /*width: 99.375% !important;*/
+  /*width: -webkit-calc(100% - 2px) !important;*/
   width: calc(100% - 2px) !important;
 }
 

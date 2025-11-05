@@ -1,5 +1,5 @@
 import { useState, useContext, useEffect } from "react";
-import logo from "../assets/logo.png";
+import logo from "../assets/Logo.png";
 import defaultProfilePic from "../assets/profile.png";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingCartIcon, Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
