@@ -3,6 +3,7 @@ import Header from "../components/Header.jsx";
 import { motion, AnimatePresence } from "framer-motion";
 import VideoModal from "../components/VideoModal";
 import "./Gallery.css";
+import { reels } from "../data/reels";
 
 // YouTube API config (same source as Home page MusicCarousel)
 const API_KEY = "AIzaSyBtwoYiS91VUqmFVAgBVhhQOEZaxhQqtQ4";
@@ -111,17 +112,6 @@ const portfolioData = {
     { id: "service16", type: "image", src: "/Images/services/services/weddingvideo.jpg", caption: "Wedding Photography", category: "services", aspect: "portrait", comingSoon: false },
     { id: "service17", type: "image", src: "/Images/services/services/matricdance.jpg", caption: "Matric Dance Photography", category: "services", aspect: "portrait", comingSoon: false },
   ],
-
-  reels: [
-    { id: "reel1", type: "reel", platform: "instagram", url: "https://www.instagram.com/reel/DND4yeZtDTf/", embedUrl: "https://www.instagram.com/reel/DND4yeZtDTf/embed/", caption: "CRTVSHOTS INTRO", category: "bts", thumbnail: "https://i.pinimg.com/736x/0b/36/1b/0b361b0bd9a37a8dbc503d87b771bb.jpg", duration: "0:45", comingSoon: false, aspect: "portrait" },
-    { id: "reel2", type: "reel", platform: "instagram", url: "https://www.instagram.com/reel/DQZlbBBDUI8/", embedUrl: "https://www.instagram.com/reel/DQZlbBBDUI8/embed/", caption: "STOP SCROLLING", category: "bts", thumbnail: "https://i.pinimg.com/736x/ca/4c/3d/ca4c3d99ec1f11829085f297e181e.jpg", duration: "0:30", comingSoon: false, aspect: "portrait" },
-    { id: "reel3", type: "reel", platform: "instagram", url: "https://www.instagram.com/reel/DQUqdejiATl/", embedUrl: "https://www.instagram.com/reel/DQUqdejiATl/embed/", caption: "Creative Process", category: "process", thumbnail: "https://i.pinimg.com/736x/78/c9/ea/78c9eaf18]b002f146c8418ace92178.jpg", duration: "0:55", comingSoon: false, aspect: "portrait" },
-    { id: "reel4", type: "reel", platform: "instagram", url: "https://www.instagram.com/reel/DQT4Z94jU5r/", embedUrl: "https://www.instagram.com/reel/DQT4Z94jU5r/embed/", caption: "Before and After Color grading", category: "colorGrading", thumbnail: "https://i.pinimg.com/736x/8/63/0a/e8630a10e1df8d8d92c734b75bbde035.jpg", duration: "0:40", comingSoon: false, aspect: "portrait" },
-    { id: "reel5", type: "reel", platform: "instagram", url: "https://www.instagram.com/reel/DQGvPfyjanE/", embedUrl: "https://www.instagram.com/reel/DQGvPfyjanE/embed/", caption: "Who knew cameras could do this", category: "edits", thumbnail: "https://i.pinimg.com/736;x/9b/77/c2/9b77c2c303bb2b825d3d834422b891.jpg", duration: "0:35", comingSoon: false, aspect: "portrait" },
-    { id: "reel6", type: "reel", platform: "instagram", url: "https://www.instagram.com/reel/DQE1dc-CEMe/", embedUrl: "https://www.instagram.com/reel/DQE1dc-CEMe/embed/", caption: "Editing Session", category: "edits", thumbnail: "https://i.pinimg.com/736x/35/45/91/35491ef4d5d1b3f69245dfc2de629.jpg", duration: "0:50", comingSoon: false, aspect: "portrait" },
-    { id: "reel7", type: "reel", platform: "instagram", url: "https://www.instagram.com/reel/DP_QuEkCIid/", embedUrl: "https://www.instagram.com/reel/DP_QuEkCIid/embed/", caption: "Before and After Color", category: "colorGrading", thumbnail: "https://i.pinimg.com/73/4c/69/3e/4c693e419bbe537d5cadb06287de2b.jpg", duration: "0:25", comingSoon: false, aspect: "portrait" },
-    { id: "reel8", type: "reel", platform: "instagram", url: "https://www.instagram.com/reel/DPjdcv5iOgb/", embedUrl: "https://www.instagram.com/reel/DPjdcv5iOgb/embed/", caption: "Chioma MD", category: "bts", thumbnail: "https://i.pinimg.com/736x/d1/c6/c3/d1c6c343c3b226b55e]689638eecf56.jpg", duration: "0:38", comingSoon: false, aspect: "portrait" }
-  ],
  videography: [
   { id: "music1", type: "video", youtubeId: "AtvnwGUUL-s", caption: "BROTHERKUPA - CUPS AND FEELS (DIR, CRTVSHOTS)", category: "music", thumbnail: "https://i.ytimg.com/vi/AtvnwGUUL-s/hqdefault.jpg", duration: "2:26", aspect: "wide", comingSoon: false },
   { id: "music2", type: "video", youtubeId: "A2Nukp8GxA4", caption: "MASONCARTERX - STAR PLAYA (DIR, CRTVSHOTS)", category: "music", thumbnail: "https://i.ytimg.com/vi/A2Nukp8GxA4/hqdefault.jpg", duration: "1:34", aspect: "wide", comingSoon: false },
@@ -208,7 +198,7 @@ const getCurrentContent = () => {
       
       return {
         images: allShowcaseImages, 
-        reels: portfolioData.reels.slice(0, 4),
+        reels: reels.slice(0, 4),
         videos: showcaseVideos 
       };
     
@@ -228,7 +218,7 @@ const getCurrentContent = () => {
     case "VIDEOGRAPHY":
       return {
         images: [],
-        reels: portfolioData.reels, 
+        reels: reels, 
         videos: (ytVideos && ytVideos.length > 0) ? ytVideos : portfolioData.videography 
       };
     
