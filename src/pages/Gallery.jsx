@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/Header.jsx";
-import { motion, AnimatePresence } from "framer-motion";
+//import { motion, AnimatePresence } from "framer-motion";
 import VideoModal from "../components/VideoModal";
 import "./Gallery.css";
 import { reels } from "../data/reels";
