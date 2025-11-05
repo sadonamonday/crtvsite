@@ -22,12 +22,12 @@ const ProductDetail = () => {
     const fetchProduct = async () => {
       try {
         const res = await fetch(
-          `http://localhost/crtvsite/backend/products/get_product.php?id=${id}`
+          `http://crtvshotss.atwebpages.com/products/get_product.php?id=${id}`
         );
         const data = await res.json();
         if (data.error) {
           alert(data.error);
-          navigate("/shop");
+          navigate("/merch");
         } else {
           setProduct(data);
         }
