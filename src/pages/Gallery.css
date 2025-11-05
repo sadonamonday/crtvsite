@@ -1,148 +1,453 @@
-
-
 .gallery-page {
-  display: flex;
-  flex-direction: column;
   min-height: 100vh;
-  width: 100%;
-  background: #000;
-  box-sizing: border-box;
-  padding-top: 80px; /* Account for fixed header */
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+  padding-top: 80px;
+  position: relative;
+  z-index: 1;
 }
 
-.gallery-grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  grid-auto-rows: 250px;
-  gap: 24px;
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 40px 60px 60px;
-  box-sizing: border-box;
-}
-
-/* Header */
+/* Header Section */
 .gallery-header {
+  text-align: center;
+  padding: 40px 20px 30px;
+  color: white;
+}
+
+.gallery-title {
+  font-size: 2.5rem;
+  margin: 0 0 1rem 0;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: white;
+}
+
+.title-underline {
+  width: 60px;
+  height: 2px;
+  background: #4CAF50;
+  margin: 0 auto 2rem auto;
+}
+
+/* Tabs */
+.filter-tabs {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.tab {
+  padding: 0.7rem 1.8rem;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: white;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.tab.active {
+  background: #4CAF50;
+  border-color: #4CAF50;
+}
+
+.tab:hover {
+  border-color: #4CAF50;
+  background: #2a2a2a;
+}
+
+.tab:focus {
+  outline: 2px solid #4CAF50;
+  outline-offset: 2px;
+}
+
+/* Content */
+.gallery-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px 40px;
+}
+
+/* Category Sections */
+.category-section {
+  margin-bottom: 4rem;
+}
+
+.category-title {
+  font-size: 1.4rem;
+  color: white;
+  margin: 0 0 2rem 0;
+  text-align: center;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.category-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: #4CAF50;
+}
+
+.video-section-title {
+  font-size: 1.3rem;
+  color: white;
+  margin: 3rem 0 1.5rem 0;
+  text-align: center;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Image Grid */
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.showcase-grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.image-card {
+  background: #1a1a1a;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  border: 1px solid #2a2a2a;
+  break-inside: avoid;
+}
+
+.image-card:hover {
+  transform: translateY(-8px);
+  border-color: #4CAF50;
+  box-shadow: 0 12px 30px rgba(76, 175, 80, 0.15);
+}
+
+.image-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #2a2a2a;
+}
+
+.image-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.4s ease;
+  background: #2a2a2a;
+}
+
+.image-card:hover .image-container img {
+  transform: scale(1.08);
+}
+
+.image-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+  color: white;
+  padding: 1.5rem 1rem 1rem;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  backdrop-filter: blur(5px);
+}
+
+.image-card:hover .image-overlay {
+  transform: translateY(0);
+}
+
+.image-overlay p {
+  margin: 0;
+  font-size: 0.85rem;
+  text-align: center;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Coming Soon Placeholder */
+.coming-soon-placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  position: relative;
-  padding: 40px 20px 20px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.gallery-header h1 {
-  margin: 0;
-  color: white;
-  font-size: 3rem;
-  font-weight: bold;
-  letter-spacing: 4px;
-  text-align: center;
-}
-
-
-
-
-/* Artsy grid variation - restored with better centering */
-.gallery-item:nth-child(3n) {
-  grid-row: span 2;
-  grid-column: span 1;
-}
-.gallery-item:nth-child(4n) {
-  grid-row: span 1;
-  grid-column: span 2;
-}
-.gallery-item:nth-child(5n) {
-  grid-row: span 2;
-  grid-column: span 2;
-}
-
-/* Ensure all gallery items fill their grid space properly */
-.gallery-item {
   width: 100%;
   height: 100%;
-  display: block;
+  background: #2a2a2a;
+  color: #666;
 }
 
-.gallery-item img {
+.camera-emoji {
+  font-size: 2rem;
+  margin-bottom: 0.8rem;
+}
+
+.coming-soon-text {
+  margin: 0;
+  font-size: 0.8rem;
+  text-align: center;
+  color: #666;
+}
+
+/* Grid REELS */
+.reels-grid {
+   display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 reels per row */
+  grid-auto-rows: auto;
+  gap: 25px; /* slightly larger gap for visual balance */
+  max-width: 1200px;
+  margin: 0 auto 40px;
+}
+
+.reels-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.reel-card {
+  background: #1a1a1a;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #2a2a2a;
+  transition: all 0.3s ease;
+}
+.reel-card:hover {
+  transform: translateY(-6px);
+  border-color: #4CAF50;
+  box-shadow: 0 10px 25px rgba(76, 175, 80, 0.2); 
+}
+.reel-card img {
+  width: 100%;
+  aspect-ratio: 9/16; 
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.reel-card:hover {
+  transform: scale(1.05);
+}
+
+.reel-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9/16;
+  overflow: hidden;
+  background: #2a2a2a;
+}
+
+.reel-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  background: #111;
-  transition: all 0.3s ease;
-  cursor: pointer;
 }
 
-.gallery-item img:hover {
-  transform: scale(1.05);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-  border-radius: 12px;
-}
-
-/* Footer. Cant find global css so i put footer in my pages code. move to global css whne added*/
-.full-width-footer {
-  background-color: #1a1a1a;
+.reel-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #4CAF50;
   color: white;
-  border-top: 1px solid #333;
-  padding: 1.5rem 0;
-  margin-top: auto; 
-  width: 100%;
-  z-index: 10;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.6rem;
+  font-weight: 600;
 }
 
-/* Responsive Design - Artsy layout maintained */
+.reel-info {
+   padding: 0.6rem 0.5rem;
+  text-align: center;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.reel-info p {
+  color: white;
+  font-size: 0.8rem;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Wide Video Grid */
+.video-grid-wide {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 25px;
+}
+
+.video-card-wide {
+  background: #1a1a1a;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #2a2a2a;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.video-card-wide:hover {
+  transform: translateY(-6px);
+  border-color: #4CAF50;
+  box-shadow: 0 10px 25px rgba(76, 175, 80, 0.2);
+}
+
+.video-thumb-wide {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #2a2a2a;
+  overflow: hidden;
+}
+
+.video-thumb-wide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-info-wide {
+  padding: 1rem;
+  text-align: center;
+}
+
+.video-info-wide p {
+  margin: 0;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Video Modal */
+.video-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 15px;
+}
+
+.video-modal-content {
+  background: #1a1a1a;
+  border-radius: 8px;
+  overflow: hidden;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+  border: 1px solid #4CAF50;
+}
+
+.video-wrapper {
+  width: 100%;
+  aspect-ratio: 16/9;
+}
+
+.video-wrapper iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.close-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #4CAF50;
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.close-button:hover {
+  background: #45a049;
+}
+
+.video-info-modal {
+  padding: 12px;
+  text-align: center;
+  background: #1a1a1a;
+}
+
+.video-info-modal h4 {
+  color: white;
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .gallery-header h1 {
+  .gallery-title {
     font-size: 2rem;
-    letter-spacing: 2px;
   }
-  
-  .gallery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    grid-auto-rows: 200px;
-    gap: 16px;
-    padding: 20px 40px 40px;
-    max-width: 1000px;
+
+  .reel-card {
+    flex: 0 0 140px;
   }
-  
-  /* Maintain artsy variations on tablet */
-  .gallery-item:nth-child(3n) {
-    grid-row: span 2;
-    grid-column: span 1;
-  }
-  .gallery-item:nth-child(4n) {
-    grid-row: span 1;
-    grid-column: span 2;
-  }
-  
-  .gallery-page {
-    padding-top: 70px;
+
+  .video-grid-wide {
+    grid-template-columns: 1fr;
+    gap: 18px;
   }
 }
 
 @media (max-width: 480px) {
-  .gallery-header h1 {
-    font-size: 1.5rem;
-    letter-spacing: 1px;
+  .reel-card {
+    flex: 0 0 120px;
   }
-  
-  .gallery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    grid-auto-rows: 150px;
-    gap: 12px;
-    padding: 15px 30px 30px;
-    max-width: 800px;
+
+  .video-grid-wide {
+    grid-template-columns: 1fr;
+    gap: 15px;
   }
-  
-  /* Simplified artsy variations on mobile */
-  .gallery-item:nth-child(3n) {
-    grid-row: span 2;
-    grid-column: span 1;
+}
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .reels-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .reels-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .reels-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
   }
 }
