@@ -4,6 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import VideoModal from "../components/VideoModal";
 import "./Gallery.css";
 
+// YouTube API config (same source as Home page MusicCarousel)
+const API_KEY = "AIzaSyBtwoYiS91VUqmFVAgBVhhQOEZaxhQqtQ4";
+const PLAYLIST_ID = "PLt0fJ93Y4T4or_SqF7GybIBGZGjK8HG8t";
+
 const portfolioData = {
   photography: {
     street: [
@@ -135,6 +139,7 @@ const Gallery = () => {
   const [activeTab, setActiveTab] = useState("SHOWCASE");
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [reelsLoaded, setReelsLoaded] = useState(false);
+  const [ytVideos, setYtVideos] = useState([]);
 
   useEffect(() => {
     const loadInstagram = () => {
@@ -159,17 +164,52 @@ const Gallery = () => {
     }
   }, [activeTab]);
 
+  // Fetch YouTube playlist (same as Home) and map to gallery video items
+  useEffect(() => {
+    async function fetchPlaylistVideos() {
+      try {
+        const res = await fetch(
+          `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=10&playlistId=${PLAYLIST_ID}&key=${API_KEY}`
+        );
+        const data = await res.json();
+        const items = (data.items || []).map((video, idx) => {
+          const vid = video.snippet?.resourceId?.videoId;
+          const title = video.snippet?.title || "Untitled";
+          const thumb = video.snippet?.thumbnails?.high?.url || video.snippet?.thumbnails?.medium?.url || video.snippet?.thumbnails?.default?.url || `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`;
+          return {
+            id: vid || `yt-${idx}`,
+            type: "video",
+            youtubeId: vid,
+            caption: title,
+            category: "music",
+            thumbnail: thumb,
+            duration: "", // Not available from this endpoint; hide badge when empty
+            aspect: "wide",
+            comingSoon: false,
+          };
+        }).filter(v => !!v.youtubeId);
+        setYtVideos(items);
+      } catch (err) {
+        console.error("Error fetching YouTube playlist for Gallery:", err);
+        setYtVideos([]);
+      }
+    }
+    fetchPlaylistVideos();
+  }, []);
+
 const getCurrentContent = () => {
   switch (activeTab) {
     case "SHOWCASE":
       // For showcase: Show ALL services images + some skateCulture images
       const skateCultureImages = portfolioData.photography.skateCulture.slice(0, 7);
       const allShowcaseImages = [...portfolioData.servicesShowcase, ...skateCultureImages];
+      // Prefer YouTube API videos from Home playlist; fallback to static videography
+      const showcaseVideos = (ytVideos && ytVideos.length > 0) ? ytVideos.slice(0, 6) : portfolioData.videography.slice(0, 6);
       
       return {
         images: allShowcaseImages, 
         reels: portfolioData.reels.slice(0, 4),
-        videos: portfolioData.videography.slice(0, 6) 
+        videos: showcaseVideos 
       };
     
     case "PHOTOGRAPHY":
@@ -189,7 +229,7 @@ const getCurrentContent = () => {
       return {
         images: [],
         reels: portfolioData.reels, 
-        videos: portfolioData.videography 
+        videos: (ytVideos && ytVideos.length > 0) ? ytVideos : portfolioData.videography 
       };
     
     default:
@@ -237,7 +277,9 @@ const getCurrentContent = () => {
       >
         <div className="video-thumb-wide">
           <img src={item.thumbnail} alt={item.caption} />
-          <div className="duration-badge">{item.duration}</div>
+          {item.duration ? (
+            <div className="duration-badge">{item.duration}</div>
+          ) : null}
         </div>
         <div className="video-info-wide">
           <p>{item.caption}</p>
