@@ -34,7 +34,7 @@ const formatDateString = (date) => {
 };
 
 // Calendar Component for setting availability
-const AvailabilityCalendar = ({ availableDates, onDateSelect, onTimeSlotAdd, onTimeSlotRemove }) => {
+const AvailabilityCalendar = ({ availableDates, draftDates, onDateSelect, onTimeSlotAdd, onTimeSlotRemove }) => {
   const [currentMonth, setCurrentMonth] = useState(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -110,16 +110,21 @@ const AvailabilityCalendar = ({ availableDates, onDateSelect, onTimeSlotAdd, onT
         {Array.from({ length: daysInMonth }).map((_, index) => {
           const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index + 1);
           const dateString = formatDateString(date);
-          const isAvailable = availableDates.some(d => d.date === dateString);
+          const isSaved = availableDates.some(d => d.date === dateString);
+          const isDraft = !isSaved && draftDates.includes(dateString);
 
           return (
             <button
               key={index}
               type="button"
               onClick={() => onDateSelect(dateString)}
-              className={`p-2 rounded text-sm transition
-                ${isAvailable ? 'bg-red-600 text-white' : 'hover:bg-gray-100 text-black border border-gray-300'}
-              `}
+              className={`p-2 rounded text-sm transition ${
+                isSaved
+                  ? 'bg-red-600 text-white'
+                  : isDraft
+                    ? 'bg-red-300 text-black'
+                    : 'hover:bg-gray-100 text-black border border-gray-300'
+              }`}
             >
               <span>{index + 1}</span>
             </button>
@@ -212,7 +217,35 @@ const TimeSlotManager = ({ date, timeSlots, onAddSlot, onRemoveSlot }) => {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("bookings");
+  // Admin data stores (mock) for CRUD sections
+  const [orders, setOrders] = useState([
+    { id: 101, user: "john@example.com", total: 1500, status: "paid", createdAt: "2024-12-10" },
+    { id: 102, user: "jane@example.com", total: 2200, status: "pending", createdAt: "2024-12-12" }
+  ]);
+  const [users, setUsers] = useState([
+    { id: 1, name: "John Doe", email: "john@example.com", role: "customer" },
+    { id: 2, name: "Jane Smith", email: "jane@example.com", role: "customer" }
+  ]);
+  const [reviews, setReviews] = useState([
+    { id: 1, user: "john@example.com", rating: 5, comment: "Amazing!", approved: true },
+    { id: 2, user: "mike@example.com", rating: 4, comment: "Great work", approved: false }
+  ]);
+  const [galleryImages, setGalleryImages] = useState([
+    { id: 1, url: "/Images/services/services/birthdayparty.jpg", title: "Birthday Photography", visible: true, category: "services" },
+    { id: 2, url: "/Images/services/services/fashionshowvideo.jpg", title: "Fashion Show Photography", visible: true, category: "services" },
+    { id: 3, url: "/Images/sample1.jpg", title: "Urban Portrait", visible: false, category: "photography" }
+  ]);
+  // selections for bulk actions
+  const [selectedOrderIds, setSelectedOrderIds] = useState(new Set());
+  const [selectedUserIds, setSelectedUserIds] = useState(new Set());
+  const [selectedReviewIds, setSelectedReviewIds] = useState(new Set());
+  const [selectedGalleryIds, setSelectedGalleryIds] = useState(new Set());
+  const [galleryVisibilityFilter, setGalleryVisibilityFilter] = useState("all"); // all | visible | hidden
+  const [gallerySearch, setGallerySearch] = useState("");
+  const [availabilityMessage, setAvailabilityMessage] = useState("");
+  const [availabilitySaving, setAvailabilitySaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
+  const [draftTimeSlotsByDate, setDraftTimeSlotsByDate] = useState({}); // { [date]: string[] }
   
   // Mock bookings data
   const [bookings, setBookings] = useState([
@@ -251,38 +284,201 @@ const AdminDashboard = () => {
     }
   ]);
 
-  // Mock available dates with time slots
-  const [availableDates, setAvailableDates] = useState([
-    { date: "2024-12-15", timeSlots: ["08:00-10:00", "10:00-12:00", "14:00-16:00"] },
-    { date: "2024-12-18", timeSlots: ["14:00-16:00", "16:00-18:00"] },
-    { date: "2024-12-20", timeSlots: ["09:00-11:00", "13:00-15:00"] }
-  ]);
+  // Available dates loaded from backend
+  const [availableDates, setAvailableDates] = useState([]);
 
   const handleDateSelect = (dateString) => {
-    setSelectedDate(dateString);
-    // Ensure date exists in availableDates
-    if (!availableDates.find(d => d.date === dateString)) {
-      setAvailableDates([...availableDates, { date: dateString, timeSlots: [] }]);
+    const exists = availableDates.find(d => d.date === dateString);
+    if (exists) {
+      // Saved date: do not toggle off on click; just select for editing
+      setSelectedDate(dateString);
+      return;
     }
+    // Not saved: toggle draft selection
+    setSelectedDate(dateString);
+    setDraftTimeSlotsByDate(prev => {
+      const isDraft = Object.prototype.hasOwnProperty.call(prev, dateString);
+      if (isDraft) {
+        // remove draft selection entirely
+        const next = { ...prev };
+        delete next[dateString];
+        return next;
+      }
+      return { ...prev, [dateString]: [] };
+    });
   };
 
   const handleAddTimeSlot = (date, timeSlot) => {
-    setAvailableDates(availableDates.map(d => 
-      d.date === date 
-        ? { ...d, timeSlots: [...d.timeSlots, timeSlot] }
-        : d
-    ));
+    const isSaved = availableDates.some(d => d.date === date);
+    if (isSaved) {
+      setAvailableDates(availableDates.map(d => 
+        d.date === date 
+          ? { ...d, timeSlots: [...d.timeSlots, timeSlot] }
+          : d
+      ));
+    } else {
+      setDraftTimeSlotsByDate(prev => ({
+        ...prev,
+        [date]: [...(prev[date] || []), timeSlot]
+      }));
+    }
   };
 
   const handleRemoveTimeSlot = (date, timeSlot) => {
-    setAvailableDates(availableDates.map(d => 
-      d.date === date 
-        ? { ...d, timeSlots: d.timeSlots.filter(s => s !== timeSlot) }
-        : d
-    ));
+    const isSaved = availableDates.some(d => d.date === date);
+    if (isSaved) {
+      setAvailableDates(availableDates.map(d => 
+        d.date === date 
+          ? { ...d, timeSlots: d.timeSlots.filter(s => s !== timeSlot) }
+          : d
+      ));
+    } else {
+      setDraftTimeSlotsByDate(prev => ({
+        ...prev,
+        [date]: (prev[date] || []).filter(s => s !== timeSlot)
+      }));
+    }
   };
 
-  const currentDateSlots = availableDates.find(d => d.date === selectedDate)?.timeSlots || [];
+  const currentDateSaved = availableDates.find(d => d.date === selectedDate);
+  const currentDateSlots = currentDateSaved ? (currentDateSaved.timeSlots || []) : (draftTimeSlotsByDate[selectedDate] || []);
+
+
+  React.useEffect(() => {
+    if (activeTab !== "availability") return;
+    (async () => {
+      try {
+        setAvailabilityMessage("");
+        const res = await fetch("https://crtvshotss.atwebpages.com/save_availability.php?action=list");
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setAvailableDates(data);
+        }
+      } catch (e) {
+        setAvailabilityMessage("Failed to load availability from server");
+      }
+    })();
+  }, [activeTab]);
+
+  const handleSaveAvailability = async () => {
+    try {
+      setAvailabilitySaving(true);
+      setAvailabilityMessage("");
+      const draftEntries = Object.entries(draftTimeSlotsByDate)
+        .filter(([, slots]) => Array.isArray(slots) && slots.length > 0)
+        .map(([date, slots]) => ({ date, timeSlots: slots }));
+      const payload = { availableDates: [...availableDates, ...draftEntries] };
+
+      const res = await fetch("https://crtvshotss.atwebpages.com/save_availability.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        setAvailabilityMessage("Availability saved successfully");
+        // Clear drafts and reload from server so UI reflects DB
+        setDraftTimeSlotsByDate({});
+        try {
+          const listRes = await fetch("https://crtvshotss.atwebpages.com/save_availability.php?action=list");
+          const listData = await listRes.json();
+          if (Array.isArray(listData)) setAvailableDates(listData);
+        } catch {}
+      } else {
+        setAvailabilityMessage(data && data.message ? data.message : "Failed to save availability");
+      }
+    } catch (e) {
+      setAvailabilityMessage("Error saving availability: " + e.message);
+    } finally {
+      setAvailabilitySaving(false);
+    }
+  };
+
+  const handleDeleteAvailability = async (dateString) => {
+    try {
+      setAvailabilityMessage("");
+      const res = await fetch("https://crtvshotss.atwebpages.com/save_availability.php?action=delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: dateString })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        const listRes = await fetch("https://crtvshotss.atwebpages.com/save_availability.php?action=list");
+        const listData = await listRes.json();
+        if (Array.isArray(listData)) setAvailableDates(listData);
+        setAvailabilityMessage("Date deleted");
+      } else {
+        setAvailabilityMessage(data && data.message ? data.message : "Failed to delete date");
+      }
+    } catch (e) {
+      setAvailabilityMessage("Error deleting: " + e.message);
+    }
+  };
+
+  // Inline forms for CRUD sections
+  const OrderForm = ({ onCreate }) => {
+    const [email, setEmail] = useState("");
+    const [total, setTotal] = useState("");
+    const [status, setStatus] = useState("pending");
+    return (
+      <div className="entity-form-grid">
+        <input className="settings-input" placeholder="User Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input className="settings-input" placeholder="Total (R)" type="number" value={total} onChange={(e) => setTotal(Number(e.target.value))} />
+        <select className="settings-input" value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="pending">pending</option>
+          <option value="paid">paid</option>
+          <option value="refunded">refunded</option>
+        </select>
+        <button className="btn-primary" onClick={() => {
+          if (!email || !total) return;
+          onCreate({ user: email, total: Number(total), status, createdAt: new Date().toISOString().slice(0,10) });
+          setEmail(""); setTotal(""); setStatus("pending");
+        }}>Create</button>
+      </div>
+    );
+  };
+
+  const UserForm = ({ onCreate }) => {
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [role, setRole] = useState("customer");
+    return (
+      <div className="entity-form-grid">
+        <input className="settings-input" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} />
+        <input className="settings-input" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <select className="settings-input" value={role} onChange={(e) => setRole(e.target.value)}>
+          <option value="customer">customer</option>
+          <option value="admin">admin</option>
+        </select>
+        <button className="btn-primary" onClick={() => {
+          if (!name || !email) return;
+          onCreate({ name, email, role });
+          setName(""); setEmail(""); setRole("customer");
+        }}>Create</button>
+      </div>
+    );
+  };
+
+  const ReviewForm = ({ onCreate }) => {
+    const [email, setEmail] = useState("");
+    const [rating, setRating] = useState(5);
+    const [comment, setComment] = useState("");
+    return (
+      <div className="entity-form-grid">
+        <input className="settings-input" placeholder="User Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <select className="settings-input" value={rating} onChange={(e) => setRating(Number(e.target.value))}>
+          {[5,4,3,2,1].map(n => <option key={n} value={n}>{n}</option>)}
+        </select>
+        <input className="settings-input" placeholder="Comment" value={comment} onChange={(e) => setComment(e.target.value)} />
+        <button className="btn-primary" onClick={() => {
+          if (!email || !comment) return;
+          onCreate({ user: email, rating, comment });
+          setEmail(""); setRating(5); setComment("");
+        }}>Add</button>
+      </div>
+    );
+  };
 
   return (
     <div className="admin-dashboard">
@@ -301,6 +497,22 @@ const AdminDashboard = () => {
             <span>Bookings</span>
           </button>
           
+        <button
+          onClick={() => setActiveTab("orders")}
+          className={`nav-item ${activeTab === "orders" ? "active" : ""}`}
+        >
+          <Calendar size={20} />
+          <span>Orders</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("users")}
+          className={`nav-item ${activeTab === "users" ? "active" : ""}`}
+        >
+          <Settings size={20} />
+          <span>Users</span>
+        </button>
+
           <button
             onClick={() => setActiveTab("availability")}
             className={`nav-item ${activeTab === "availability" ? "active" : ""}`}
@@ -313,6 +525,30 @@ const AdminDashboard = () => {
         <PlusCircle size={20} /><span>Add Product</span>
         </button>
           
+        <button
+          onClick={() => setActiveTab("reviews")}
+          className={`nav-item ${activeTab === "reviews" ? "active" : ""}`}
+        >
+          <Settings size={20} />
+          <span>Reviews</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("sales")}
+          className={`nav-item ${activeTab === "sales" ? "active" : ""}`}
+        >
+          <Settings size={20} />
+          <span>Sales</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("gallery")}
+          className={`nav-item ${activeTab === "gallery" ? "active" : ""}`}
+        >
+          <Settings size={20} />
+          <span>Gallery</span>
+        </button>
+
           <button
             onClick={() => setActiveTab("settings")}
             className={`nav-item ${activeTab === "settings" ? "active" : ""}`}
@@ -408,11 +644,22 @@ const AdminDashboard = () => {
           {activeTab === "availability" && (
             <div className="availability-view">
               <h1 className="page-title">Set Availability</h1>
+              <div className="sync-bar">
+                <div className={`sync-message ${availabilityMessage ? (availabilityMessage.toLowerCase().includes("success") ? 'success' : 'error') : ''}`}>
+                  {availabilityMessage}
+                </div>
+                <div className="sync-actions">
+                  <button type="button" className="btn-primary" onClick={handleSaveAvailability} disabled={availabilitySaving}>
+                    {availabilitySaving ? "Saving..." : "Save Availability"}
+                  </button>
+                </div>
+              </div>
               
               <div className="availability-content">
                 <div className="calendar-section">
                   <AvailabilityCalendar
                     availableDates={availableDates}
+                    draftDates={Object.keys(draftTimeSlotsByDate)}
                     onDateSelect={handleDateSelect}
                     onTimeSlotAdd={handleAddTimeSlot}
                     onTimeSlotRemove={handleRemoveTimeSlot}
@@ -434,14 +681,22 @@ const AdminDashboard = () => {
                     {availableDates.length > 0 ? (
                       availableDates.map(dateObj => (
                         <div key={dateObj.date} className="availability-item">
-                          <div className="availability-date-header">
+                          <div className="availability-date-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                             <span className="font-semibold text-black">{dateObj.date}</span>
-                            <button
-                              onClick={() => setSelectedDate(dateObj.date)}
-                              className="text-sm text-red-600 hover:text-red-800"
-                            >
-                              Edit
-                            </button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <button
+                                onClick={() => setSelectedDate(dateObj.date)}
+                                className="btn-secondary"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteAvailability(dateObj.date)}
+                                className="btn-danger"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </div>
                           <div className="availability-time-slots">
                             {dateObj.timeSlots.length > 0 ? (
@@ -466,6 +721,334 @@ const AdminDashboard = () => {
           )}
 
           {activeTab === "products" && <AdminAddProduct />}
+
+          {activeTab === "orders" && (
+            <div className="orders-view">
+              <h1 className="page-title">Orders</h1>
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <div className="stat-value">{orders.length}</div>
+                  <div className="stat-label">Total Orders</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">{orders.filter(o => o.status === "paid").length}</div>
+                  <div className="stat-label">Paid</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">{orders.filter(o => o.status === "pending").length}</div>
+                  <div className="stat-label">Pending</div>
+                </div>
+              </div>
+
+              <div className="bulk-bar">
+                <div>
+                  <button className="btn-secondary" onClick={() => {
+                    const next = new Set(orders.map(o => o.id));
+                    setSelectedOrderIds(next);
+                  }}>Select All</button>
+                  <button className="btn-secondary" onClick={() => setSelectedOrderIds(new Set())}>Clear</button>
+                </div>
+                <div className="bulk-actions">
+                  <button className="btn-primary" onClick={() => setOrders(orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "paid" } : o))}>Mark Paid</button>
+                  <button className="btn-secondary" onClick={() => setOrders(orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "refunded" } : o))}>Mark Refunded</button>
+                  <button className="btn-danger" onClick={() => setOrders(orders.filter(o => !selectedOrderIds.has(o.id)))}>Delete</button>
+                </div>
+              </div>
+
+              <div className="bookings-table-container">
+                <table className="bookings-table">
+                  <thead>
+                    <tr>
+                      <th><input type="checkbox" onChange={(e) => {
+                        if (e.target.checked) setSelectedOrderIds(new Set(orders.map(o => o.id)));
+                        else setSelectedOrderIds(new Set());
+                      }} /></th>
+                      <th>ID</th>
+                      <th>User</th>
+                      <th>Total</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders.map(order => (
+                      <tr key={order.id}>
+                        <td><input type="checkbox" checked={selectedOrderIds.has(order.id)} onChange={(e) => {
+                          const next = new Set(selectedOrderIds);
+                          if (e.target.checked) next.add(order.id); else next.delete(order.id);
+                          setSelectedOrderIds(next);
+                        }} /></td>
+                        <td className="text-black">#{order.id}</td>
+                        <td className="text-black">{order.user}</td>
+                        <td className="text-black">R{order.total}</td>
+                        <td className="text-black">{order.status}</td>
+                        <td className="text-black">{order.createdAt}</td>
+                        <td>
+                          <div className="table-actions">
+                            <button className="btn-secondary" onClick={() => setOrders(orders.map(o => o.id === order.id ? { ...o, status: o.status === "paid" ? "refunded" : "paid" } : o))}>
+                              Toggle Paid
+                            </button>
+                            <button className="btn-danger" onClick={() => setOrders(orders.filter(o => o.id !== order.id))}>Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="entity-form">
+                <h3 className="section-title">Create Order</h3>
+                <OrderForm onCreate={(newOrder) => setOrders([{ ...newOrder, id: Date.now() }, ...orders])} />
+              </div>
+            </div>
+          )}
+
+          {activeTab === "users" && (
+            <div className="users-view">
+              <h1 className="page-title">Users</h1>
+              <div className="bulk-bar">
+                <div>
+                  <button className="btn-secondary" onClick={() => setSelectedUserIds(new Set(users.map(u => u.id)))}>Select All</button>
+                  <button className="btn-secondary" onClick={() => setSelectedUserIds(new Set())}>Clear</button>
+                </div>
+                <div className="bulk-actions">
+                  <button className="btn-primary" onClick={() => setUsers(users.map(u => selectedUserIds.has(u.id) ? { ...u, role: "admin" } : u))}>Make Admin</button>
+                  <button className="btn-secondary" onClick={() => setUsers(users.map(u => selectedUserIds.has(u.id) ? { ...u, role: "customer" } : u))}>Make Customer</button>
+                  <button className="btn-danger" onClick={() => setUsers(users.filter(u => !selectedUserIds.has(u.id)))}>Delete</button>
+                </div>
+              </div>
+
+              <div className="bookings-table-container">
+                <table className="bookings-table">
+                  <thead>
+                    <tr>
+                      <th><input type="checkbox" onChange={(e) => {
+                        if (e.target.checked) setSelectedUserIds(new Set(users.map(u => u.id)));
+                        else setSelectedUserIds(new Set());
+                      }} /></th>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map(u => (
+                      <tr key={u.id}>
+                        <td><input type="checkbox" checked={selectedUserIds.has(u.id)} onChange={(e) => {
+                          const next = new Set(selectedUserIds);
+                          if (e.target.checked) next.add(u.id); else next.delete(u.id);
+                          setSelectedUserIds(next);
+                        }} /></td>
+                        <td className="text-black">{u.id}</td>
+                        <td className="text-black">{u.name}</td>
+                        <td className="text-black">{u.email}</td>
+                        <td className="text-black">{u.role}</td>
+                        <td>
+                          <div className="table-actions">
+                            <button className="btn-secondary" onClick={() => setUsers(users.map(x => x.id === u.id ? { ...x, role: x.role === "admin" ? "customer" : "admin" } : x))}>Toggle Admin</button>
+                            <button className="btn-danger" onClick={() => setUsers(users.filter(x => x.id !== u.id))}>Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="entity-form">
+                <h3 className="section-title">Create User</h3>
+                <UserForm onCreate={(newUser) => setUsers([{ ...newUser, id: Date.now() }, ...users])} />
+              </div>
+            </div>
+          )}
+
+          {activeTab === "reviews" && (
+            <div className="reviews-view">
+              <h1 className="page-title">Reviews</h1>
+              <div className="bulk-bar">
+                <div>
+                  <button className="btn-secondary" onClick={() => setSelectedReviewIds(new Set(reviews.map(r => r.id)))}>Select All</button>
+                  <button className="btn-secondary" onClick={() => setSelectedReviewIds(new Set())}>Clear</button>
+                </div>
+                <div className="bulk-actions">
+                  <button className="btn-primary" onClick={() => setReviews(reviews.map(r => selectedReviewIds.has(r.id) ? { ...r, approved: true } : r))}>Approve</button>
+                  <button className="btn-secondary" onClick={() => setReviews(reviews.map(r => selectedReviewIds.has(r.id) ? { ...r, approved: false } : r))}>Unapprove</button>
+                  <button className="btn-danger" onClick={() => setReviews(reviews.filter(r => !selectedReviewIds.has(r.id)))}>Delete</button>
+                </div>
+              </div>
+
+              <div className="bookings-table-container">
+                <table className="bookings-table">
+                  <thead>
+                    <tr>
+                      <th><input type="checkbox" onChange={(e) => {
+                        if (e.target.checked) setSelectedReviewIds(new Set(reviews.map(r => r.id)));
+                        else setSelectedReviewIds(new Set());
+                      }} /></th>
+                      <th>ID</th>
+                      <th>User</th>
+                      <th>Rating</th>
+                      <th>Comment</th>
+                      <th>Approved</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reviews.map(r => (
+                      <tr key={r.id}>
+                        <td><input type="checkbox" checked={selectedReviewIds.has(r.id)} onChange={(e) => {
+                          const next = new Set(selectedReviewIds);
+                          if (e.target.checked) next.add(r.id); else next.delete(r.id);
+                          setSelectedReviewIds(next);
+                        }} /></td>
+                        <td className="text-black">{r.id}</td>
+                        <td className="text-black">{r.user}</td>
+                        <td className="text-black">{r.rating}</td>
+                        <td className="text-black">{r.comment}</td>
+                        <td className="text-black">{r.approved ? "Yes" : "No"}</td>
+                        <td>
+                          <div className="table-actions">
+                            <button className="btn-secondary" onClick={() => setReviews(reviews.map(x => x.id === r.id ? { ...x, approved: !x.approved } : x))}>Toggle Approve</button>
+                            <button className="btn-danger" onClick={() => setReviews(reviews.filter(x => x.id !== r.id))}>Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="entity-form">
+                <h3 className="section-title">Add Review</h3>
+                <ReviewForm onCreate={(newReview) => setReviews([{ ...newReview, id: Date.now(), approved: false }, ...reviews])} />
+              </div>
+            </div>
+          )}
+
+          {activeTab === "sales" && (
+            <div className="sales-view">
+              <h1 className="page-title">Sales Overview</h1>
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <div className="stat-value">R{orders.reduce((sum, o) => sum + (o.status === "paid" ? o.total : 0), 0)}</div>
+                  <div className="stat-label">Total Paid Revenue</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">{orders.filter(o => o.status === "paid").length}</div>
+                  <div className="stat-label">Paid Orders</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">{orders.filter(o => o.status !== "paid").length}</div>
+                  <div className="stat-label">Unpaid/Other</div>
+                </div>
+              </div>
+
+              <div className="bulk-bar">
+                <div>
+                  <button className="btn-secondary" onClick={() => setSelectedOrderIds(new Set(orders.map(o => o.id)))}>Select All</button>
+                  <button className="btn-secondary" onClick={() => setSelectedOrderIds(new Set())}>Clear</button>
+                </div>
+                <div className="bulk-actions">
+                  <button className="btn-primary" onClick={() => setOrders(orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "paid" } : o))}>Mark Paid</button>
+                  <button className="btn-secondary" onClick={() => setOrders(orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "refunded" } : o))}>Mark Refunded</button>
+                  <button className="btn-danger" onClick={() => setOrders(orders.filter(o => !selectedOrderIds.has(o.id)))}>Delete</button>
+                </div>
+              </div>
+
+              <div className="sales-table-container bookings-table-container">
+                <table className="bookings-table">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>Order</th>
+                      <th>User</th>
+                      <th>Status</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders.map(o => (
+                      <tr key={o.id}>
+                        <td><input type="checkbox" checked={selectedOrderIds.has(o.id)} onChange={(e) => {
+                          const next = new Set(selectedOrderIds);
+                          if (e.target.checked) next.add(o.id); else next.delete(o.id);
+                          setSelectedOrderIds(next);
+                        }} /></td>
+                        <td className="text-black">#{o.id}</td>
+                        <td className="text-black">{o.user}</td>
+                        <td className="text-black">{o.status}</td>
+                        <td className="text-black">R{o.total}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "gallery" && (
+            <div className="gallery-view">
+              <h1 className="page-title">Gallery</h1>
+              <div className="bulk-bar">
+                <div className="gallery-controls">
+                  <select className="settings-input" value={galleryVisibilityFilter} onChange={(e) => setGalleryVisibilityFilter(e.target.value)}>
+                    <option value="all">All</option>
+                    <option value="visible">Visible</option>
+                    <option value="hidden">Hidden</option>
+                  </select>
+                  <input className="settings-input" placeholder="Search title..." value={gallerySearch} onChange={(e) => setGallerySearch(e.target.value)} />
+                </div>
+                <div>
+                  <button className="btn-secondary" onClick={() => setSelectedGalleryIds(new Set(galleryImages.map(g => g.id)))}>Select All</button>
+                  <button className="btn-secondary" onClick={() => setSelectedGalleryIds(new Set())}>Clear</button>
+                </div>
+                <div className="bulk-actions">
+                  <button className="btn-primary" onClick={() => setGalleryImages(galleryImages.map(g => selectedGalleryIds.has(g.id) ? { ...g, visible: true } : g))}>Show</button>
+                  <button className="btn-secondary" onClick={() => setGalleryImages(galleryImages.map(g => selectedGalleryIds.has(g.id) ? { ...g, visible: false } : g))}>Hide</button>
+                  <button className="btn-danger" onClick={() => setGalleryImages(galleryImages.filter(g => !selectedGalleryIds.has(g.id)))}>Delete</button>
+                </div>
+              </div>
+
+              <div className="image-grid">
+                {galleryImages.filter(g => (galleryVisibilityFilter === 'all' || (galleryVisibilityFilter === 'visible' ? g.visible : !g.visible)) && g.title.toLowerCase().includes(gallerySearch.toLowerCase())).length === 0 && (
+                  <p className="text-gray-500">No images in gallery.</p>
+                )}
+                {galleryImages
+                  .filter(img => (galleryVisibilityFilter === 'all' || (galleryVisibilityFilter === 'visible' ? img.visible : !img.visible)))
+                  .filter(img => img.title.toLowerCase().includes(gallerySearch.toLowerCase()))
+                  .map(img => (
+                  <div key={img.id} className={`image-card ${!img.visible ? 'image-card-hidden' : ''}`}>
+                    <div className="image-container">
+                      <img src={img.url} alt={img.title} />
+                      <div className="image-overlay">
+                        <p>{img.title}</p>
+                      </div>
+                      <span className={`visibility-badge ${img.visible ? 'visible' : 'hidden'}`}>{img.visible ? 'VISIBLE' : 'HIDDEN'}</span>
+                      <label className="image-select">
+                        <input type="checkbox" checked={selectedGalleryIds.has(img.id)} onChange={(e) => {
+                          const next = new Set(selectedGalleryIds);
+                          if (e.target.checked) next.add(img.id); else next.delete(img.id);
+                          setSelectedGalleryIds(next);
+                        }} />
+                      </label>
+                    </div>
+                    <div className="image-meta">
+                      <div className="text-black font-medium">{img.title}</div>
+                      <div className="table-actions">
+                        <button className="btn-secondary" onClick={() => setGalleryImages(galleryImages.map(x => x.id === img.id ? { ...x, visible: !x.visible } : x))}>{img.visible ? 'Hide' : 'Show'}</button>
+                        <button className="btn-secondary" onClick={() => setGalleryImages(galleryImages.map(x => x.id === img.id ? { ...x, title: prompt("Rename image title", x.title) || x.title } : x))}>Rename</button>
+                        <button className="btn-danger" onClick={() => setGalleryImages(galleryImages.filter(x => x.id !== img.id))}>Delete</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {activeTab === "settings" && (
             <div className="settings-view">
