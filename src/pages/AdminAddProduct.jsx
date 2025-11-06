@@ -49,34 +49,51 @@ const AdminAddProduct = () => {
 
   return (
     <div className="products-view">
-      <h1 className="page-title text-black mb-4">Add New Product</h1>
+      <h1 className="page-title">Add New Product</h1>
       {message && (
-        <p className={`mb-4 text-center ${message.includes('success') ? 'text-green-400' : 'text-red-400'}`}>
-          {message}
-        </p>
+        <div className={`product-message ${message.includes('success') ? 'success' : 'error'}`}>{message}</div>
       )}
-      <form onSubmit={handleSubmit} className="space-y-4 bg-gray-100 p-6 rounded-lg shadow-md max-w-lg mx-auto">
-        <input type="text" placeholder="Product Title" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full p-3 rounded border" required />
-        <input type="number" placeholder="Price (R)" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full p-3 rounded border" required />
-        <textarea placeholder="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full p-3 rounded border" />
-        <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full p-3 rounded border" required>
-          <option value="">-- Select Category --</option>
-          <option value="Tracksuits">Tracksuits</option>
-          <option value="Hoodies">Hoodies</option>
-          <option value="T-Shirts">T-Shirts</option>
-          <option value="Sweatshirts">Sweatshirts</option>
-          <option value="Pants">Pants</option>
-          <option value="Shorts">Shorts</option>
-          <option value="Jackets">Jackets</option>
-          <option value="Sneakers">Sneakers</option>
-          <option value="Caps">Caps</option>
-          <option value="Accessories">Accessories</option>
-        </select>
-        <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files[0])} required />
-        <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded font-semibold">
-          Add Product
-        </button>
-      </form>
+      <div className="settings-card">
+        <form onSubmit={handleSubmit} className="product-form">
+          <div className="product-form-grid">
+            <div>
+              <label className="settings-label">Title</label>
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="settings-input" placeholder="Product Title" required />
+            </div>
+            <div>
+              <label className="settings-label">Price (R)</label>
+              <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} className="settings-input" placeholder="0" required />
+            </div>
+            <div className="full-row">
+              <label className="settings-label">Description</label>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="settings-input" placeholder="Description (optional)" />
+            </div>
+            <div>
+              <label className="settings-label">Category</label>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className="settings-input" required>
+                <option value="">-- Select Category --</option>
+                <option value="Tracksuits">Tracksuits</option>
+                <option value="Hoodies">Hoodies</option>
+                <option value="T-Shirts">T-Shirts</option>
+                <option value="Sweatshirts">Sweatshirts</option>
+                <option value="Pants">Pants</option>
+                <option value="Shorts">Shorts</option>
+                <option value="Jackets">Jackets</option>
+                <option value="Sneakers">Sneakers</option>
+                <option value="Caps">Caps</option>
+                <option value="Accessories">Accessories</option>
+              </select>
+            </div>
+            <div>
+              <label className="settings-label">Product Image</label>
+              <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files && e.target.files[0])} className="settings-input" required />
+            </div>
+            <div className="full-row">
+              <button type="submit" className="btn-primary" style={{ width: '100%' }}>Add Product</button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
