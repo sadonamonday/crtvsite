@@ -54,7 +54,7 @@ const ProductDetail = () => {
   return (
     <div className="bg-gray-50 flex flex-col min-h-screen">
       <Header />
-
+      <div className="h-24"></div>
       <div className="flex flex-col md:flex-row items-start justify-center pt-20 pb-10 px-4 sm:px-6 lg:px-8 gap-10">
         {/* Product Image */}
         <img

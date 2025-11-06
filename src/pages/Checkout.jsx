@@ -69,7 +69,7 @@ const Checkout = () => {
     try {
       setSubmitting(true);
       const response = await fetch(
-        "http://localhost/crtvsite/backend/orders/place_order.php",
+      "https://crtvshotss.atwebpages.com/orders/place_order.php",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

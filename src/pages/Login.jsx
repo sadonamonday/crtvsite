@@ -67,7 +67,7 @@ const Login = () => {
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
       {/* Header */}
       <Header />
-
+      <div className="h-34"></div>
       {/* Main Login Form */}
       <main className="flex-grow flex flex-col justify-center items-center px-4">
         <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8">
