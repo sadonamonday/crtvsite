@@ -148,7 +148,7 @@ const About = () => {
           </div>
           
           <div className="gallery-item">
-            <img src="\Images\services\services\corporatevideo.webp" alt="Clothing Brand Campaign" />
+            <img src="\Images\services\services\summit.jpg" alt="Clothing Brand Campaign" />
             <div className="gallery-caption">Brand Campaign</div>
           </div>
           <div className="gallery-item">
