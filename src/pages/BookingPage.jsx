@@ -749,16 +749,15 @@ export default function BookingPage() {
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
 
-  // Add this useEffect to handle category changes
+  // Add this useEffect to automatically set service when custom form is completed
   useEffect(() => {
-    // When switching to custom category, set service to "other" if custom form is filled
-    if (activeCategory === "custom" && customService.title && customService.description) {
+    if (activeCategory === "custom" && 
+        customService.title.trim() && 
+        customService.description.trim() && 
+        service !== "other") {
       setService("other");
-    } else if (activeCategory === "custom") {
-      // Reset service when switching to custom category but form isn't filled yet
-      setService("");
     }
-  }, [activeCategory, customService]);
+  }, [customService, activeCategory, service]);
 
   const servicePricing = {
     // Photography
@@ -908,7 +907,7 @@ export default function BookingPage() {
     const budgetValidationError = validateBudget(form.budget);
     if (budgetValidationError) {
       setBudgetError(budgetValidationError);
-      return; // Don't save if budget is invalid
+      return;
     }
     
     setCustomService(form);
@@ -918,11 +917,14 @@ export default function BookingPage() {
     setBudgetError("");
   };
 
+  // Fix: Update validateStep to handle custom service properly
   const validateStep = (step = currentStep) => {
     if (step === 1) {
-      if (service === "other") {
-        // For custom service, check if both title and description are filled
-        return !!customService.title.trim() && !!customService.description.trim();
+      if (activeCategory === "custom") {
+        // For custom service, check if both title and description are filled AND service is set to "other"
+        const hasCustomContent = !!customService.title.trim() && !!customService.description.trim();
+        const hasServiceSet = service === "other";
+        return hasCustomContent && hasServiceSet;
       }
       return !!service;
     }
@@ -939,7 +941,21 @@ export default function BookingPage() {
   };
 
   const nextStep = () => {
-    if (!validateStep(currentStep)) return;
+    if (!validateStep(currentStep)) {
+      console.log('Validation failed:', {
+        currentStep,
+        service,
+        activeCategory,
+        customService,
+        validateStep: validateStep(currentStep)
+      });
+      return;
+    }
+    
+    // Fix: Ensure service is set for custom requests
+    if (currentStep === 1 && activeCategory === "custom" && !service) {
+      setService("other");
+    }
     
     if (currentStep === 4 && service === "other") {
       handleConfirmCustom();
@@ -973,10 +989,6 @@ export default function BookingPage() {
     };
     
     console.log('Booking data:', bookingData);
-    console.log('Service value being sent:', JSON.stringify(service));
-    console.log('Service type:', typeof service);
-    console.log('Service length:', service ? service.length : 'null/undefined');
-    console.log('About to make fetch request to: https://crtvshotss.atwebpages.com/form_booking.php');
     
     try {
       const response = await fetch('https://crtvshotss.atwebpages.com/form_booking.php', {
@@ -1074,7 +1086,13 @@ export default function BookingPage() {
     const [form, setForm] = useState(initial || { title: "", description: "", budget: "" });
     const [localBudgetError, setLocalBudgetError] = useState("");
     
-    useEffect(() => setForm(initial || { title: "", description: "", budget: "" }), [initial, open]);
+    // Fixed useEffect - only reset when modal opens with new initial data
+    useEffect(() => {
+      if (open) {
+        setForm(initial || { title: "", description: "", budget: "" });
+      }
+    }, [open, initial]);
+
     useEffect(() => {
       if (!open) return;
       const onKey = (e) => e.key === "Escape" && onClose();
@@ -1184,13 +1202,7 @@ export default function BookingPage() {
             className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-800"
             placeholder="e.g., Corporate Gala, Private Birthday, Product Launch, etc."
             value={customService.title}
-            onChange={(e) => {
-              handleCustomServiceChange("title", e.target.value);
-              // Auto-set service to "other" when title is filled
-              if (e.target.value.trim() && customService.description.trim()) {
-                setService("other");
-              }
-            }}
+            onChange={(e) => handleCustomServiceChange("title", e.target.value)}
             required
           />
         </div>
@@ -1206,13 +1218,7 @@ export default function BookingPage() {
 • Any unique aspects of your event
 • Timeline and key moments to capture"
             value={customService.description}
-            onChange={(e) => {
-              handleCustomServiceChange("description", e.target.value);
-              // Auto-set service to "other" when description is filled
-              if (customService.title.trim() && e.target.value.trim()) {
-                setService("other");
-              }
-            }}
+            onChange={(e) => handleCustomServiceChange("description", e.target.value)}
             required
           />
         </div>
@@ -1223,11 +1229,13 @@ export default function BookingPage() {
             className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-800"
             onChange={(e) => {
               if (e.target.value) {
+                // If user selects a specific service type, switch to that category
                 setService(e.target.value);
-                setExpandedService(e.target.value);
-                setActiveCategory(e.target.value === "photography" ? "photography" : 
-                                e.target.value === "videography" ? "videography" : 
-                                e.target.value === "combo" ? "combo" : "custom");
+                setActiveCategory(
+                  e.target.value === "photography" ? "photography" : 
+                  e.target.value === "videography" ? "videography" : 
+                  e.target.value === "combo" ? "combo" : "custom"
+                );
               }
             }}
           >
@@ -1269,8 +1277,22 @@ export default function BookingPage() {
           type="button"
           className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
           onClick={() => {
+            // FIX: Ensure service is set to "other" and validate before proceeding
+            if (!customService.title.trim() || !customService.description.trim() || budgetError) {
+              return;
+            }
+            
+            // Explicitly set service to "other" for custom requests
             setService("other");
-            nextStep();
+            
+            // Use setTimeout to ensure state is updated before validation
+            setTimeout(() => {
+              if (validateStep(1)) {
+                setCurrentStep(2);
+              } else {
+                console.log('Validation failed after setting service');
+              }
+            }, 0);
           }}
           disabled={!customService.title.trim() || !customService.description.trim() || budgetError}
         >
@@ -1290,9 +1312,10 @@ export default function BookingPage() {
               key={category.id}
               onClick={() => {
                 setActiveCategory(category.id);
-                // Reset service when switching categories (except when going to custom with filled form)
-                if (category.id !== "custom" || !customService.title || !customService.description) {
+                // Fix: Reset service when switching to non-custom categories
+                if (category.id !== "custom") {
                   setService("");
+                  setCustomService({ title: "", description: "", budget: "" });
                 }
               }}
               className={`tab ${activeCategory === category.id ? "active" : ""}`}
@@ -1395,16 +1418,17 @@ export default function BookingPage() {
     </div>
   );
 
+  // Fix: Update the step 1 rendering logic
   const renderStep = () => {
     switch (currentStep) {
       case 1:
         return (
            <div className="space-y-6">
              <h2 className="text-2xl font-bold text-center text-gray-800">
-               {service === "other" || activeCategory === "custom" ? "Describe Your Custom Service Request" : "Choose Your Service"}
+               {activeCategory === "custom" ? "Describe Your Custom Service Request" : "Choose Your Service"}
              </h2>
  
-             {service === "other" || activeCategory === "custom" ? (
+             {activeCategory === "custom" ? (
                renderCustomRequestForm()
              ) : (
                renderServiceGrid()
@@ -1702,7 +1726,7 @@ export default function BookingPage() {
           </div>
           <p className="text-red-600 text-center mb-10">Capture your special moments ONE SHOT AT A TIME</p>
 
-          {/* Reverted to original step section */}
+          {/* Steps Section */}
           <div className="mb-8">
             <div className="flex justify-between bg-white rounded-lg p-3 border border-gray-300">
                {steps
@@ -1806,7 +1830,7 @@ export default function BookingPage() {
         }
 
         .title-underline {
-          width: 60px;
+          width: 250px;
           height: 2px;
           background: #4CAF50;
           margin: 0 auto;
