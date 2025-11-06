@@ -22,7 +22,7 @@ const ProductDetail = () => {
     const fetchProduct = async () => {
       try {
         const res = await fetch(
-          `http://crtvshotss.atwebpages.com/products/get_product.php?id=${id}`
+          `https://crtvshotss.atwebpages.com/products/get_product.php?id=${id}`
         );
         const data = await res.json();
         if (data.error) {

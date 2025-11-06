@@ -128,7 +128,7 @@ a:hover {
 }
 
 .gallery-item img {
-  width: 100%;
+  width: 100%; 
   display: block;
   transition: transform 0.3s ease;
 }
