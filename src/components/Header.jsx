@@ -59,7 +59,7 @@ export default function Header() {
 
     const handleLogout = async () => {
         try {
-            await fetch("http://localhost/crtvsite/backend/users/logout.php", {
+            await fetch("https://crtvshotss.atwebpages.com/logout.php", {
                 method: "POST",
                 credentials: "include",
             });
