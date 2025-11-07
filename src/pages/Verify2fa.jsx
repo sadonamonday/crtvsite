@@ -64,7 +64,7 @@ const Verify2FA = () => {
       formData.append("user_email", email);
 
       const res = await fetch(
-        "http://crtvshotss.atwebpages.com/resend_2fa.php",
+        "https://crtvshotss.atwebpages.com/resend_2fa.php",
         {
           method: "POST",
           body: formData,
