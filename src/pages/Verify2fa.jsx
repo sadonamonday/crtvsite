@@ -27,7 +27,7 @@ const Verify2FA = () => {
 
     try {
       const res = await fetch(
-        "http://crtvshotss.atwebpages.com/verify_2fa.php",
+        "https://crtvshotss.atwebpages.com/verify_2fa.php",
         {
           method: "POST",
           body: formData,
