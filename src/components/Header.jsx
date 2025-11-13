@@ -28,7 +28,6 @@ export default function Header() {
     const active = pathToItem(location.pathname);
     const navItems = ["HOME", "BOOKING", "MERCHANDISE", "GALLERY", "REVIEWS", "ABOUT"];
 
-    // 🧠 Detect background brightness behind header
     useEffect(() => {
         const detectBackground = () => {
             const header = document.querySelector("header");
@@ -106,7 +105,7 @@ export default function Header() {
                         <Link
                             key={item}
                             to={getPath(item)}
-                            className={`relative text-xs lg:text-sm font-semibold tracking-wide uppercase transition-all ${
+                            className={`relative text-xs lg:text-sm font-semibold tracking-wide uppercase transition-transform duration-200 ${
                                 active === item
                                     ? isDark
                                         ? "text-red-800"
@@ -114,21 +113,14 @@ export default function Header() {
                                     : isDark
                                         ? "text-red-800 hover:text-white"
                                         : "text-gray-700 hover:text-black"
-                            }`}
+                            } hover:scale-110`} // ✨ scale on hover
                         >
                             {item}
-                            {active === item && (
-                                <span
-                                    className={`absolute left-1/2 -bottom-1 w-4 h-[2px] transform -translate-x-1/2 ${
-                                        isDark ? "bg-red-800" : "bg-black"
-                                    }`}
-                                />
-                            )}
                         </Link>
                     ))}
                 </nav>
 
-                {/* Right side (cart + profile) */}
+                {/* Right side */}
                 <div className="hidden md:flex items-center space-x-6 relative">
                     {/* Cart */}
                     <button
@@ -145,33 +137,33 @@ export default function Header() {
                         )}
                     </button>
 
-                    {/* Profile dropdown */}
-                    <div
-                        className="relative"
-                        onMouseEnter={() => setShowDropdown(true)}
-                        onMouseLeave={() => setShowDropdown(false)}
-                    >
-                        <button
-                            className={`flex items-center space-x-2 p-2 rounded-full transition ${
-                                isDark ? "bg-white/10 hover:bg-white/20" : "bg-black/10 hover:bg-black/20"
-                            }`}
+                    {/* Profile or Login */}
+                    {user ? (
+                        <div
+                            className="relative"
+                            onMouseEnter={() => setShowDropdown(true)}
+                            onMouseLeave={() => setShowDropdown(false)}
                         >
-                            <img
-                                src={defaultProfilePic}
-                                alt="Profile"
-                                className={`h-8 w-8 rounded-full border ${isDark ? "border-white/40" : "border-black/40"}`}
-                            />
-                        </button>
-
-                        {showDropdown && (
-                            <div
-                                className={`absolute right-0 mt-2 w-40 rounded-lg shadow-lg border backdrop-blur-md ${
-                                    isDark
-                                        ? "bg-black/80 border-white/10 text-white"
-                                        : "bg-white/80 border-black/10 text-black"
+                            <button
+                                className={`flex items-center space-x-2 p-2 rounded-full transition ${
+                                    isDark ? "bg-white/10 hover:bg-white/20" : "bg-black/10 hover:bg-black/20"
                                 }`}
                             >
-                                {user ? (
+                                <img
+                                    src={defaultProfilePic}
+                                    alt="Profile"
+                                    className={`h-8 w-8 rounded-full border ${isDark ? "border-white/40" : "border-black/40"}`}
+                                />
+                            </button>
+
+                            {showDropdown && (
+                                <div
+                                    className={`absolute right-0 mt-2 w-40 rounded-lg shadow-lg border backdrop-blur-md ${
+                                        isDark
+                                            ? "bg-black/80 border-white/10 text-white"
+                                            : "bg-white/80 border-black/10 text-black"
+                                    }`}
+                                >
                                     <div className="py-2 text-sm">
                                         <Link
                                             to="/profile"
@@ -186,19 +178,33 @@ export default function Header() {
                                             Logout
                                         </button>
                                     </div>
-                                ) : (
-                                    <div className="py-2 text-sm">
-                                        <Link
-                                            to="/login"
-                                            className="block px-4 py-2 hover:bg-white/10"
-                                        >
-                                            Login / Signup
-                                        </Link>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="flex items-center space-x-4">
+                            <Link
+                                to="/login"
+                                className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${
+                                    isDark
+                                        ? "bg-white/10 hover:bg-white/20 text-white"
+                                        : "bg-black/10 hover:bg-black/20 text-black"
+                                }`}
+                            >
+                                Login
+                            </Link>
+                            <Link
+                                to="/signup"
+                                className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${
+                                    isDark
+                                        ? "bg-red-800 hover:bg-red-700 text-white"
+                                        : "bg-red-800 hover:bg-red-700 text-white"
+                                }`}
+                            >
+                                Sign Up
+                            </Link>
+                        </div>
+                    )}
                 </div>
 
                 {/* Mobile actions */}
@@ -249,7 +255,7 @@ export default function Header() {
                                 <Link
                                     key={item}
                                     to={getPath(item)}
-                                    className={`block rounded-md px-3 py-2 text-sm font-semibold uppercase transition ${
+                                    className={`block rounded-md px-3 py-2 text-sm font-semibold uppercase transition-transform duration-200 hover:scale-105 ${
                                         active === item
                                             ? isDark
                                                 ? "bg-white/10 text-white"
@@ -263,6 +269,31 @@ export default function Header() {
                                 </Link>
                             ))}
                         </div>
+
+                        {!user && (
+                            <div className="pt-3 border-t border-black/10 dark:border-white/10 flex space-x-3">
+                                <Link
+                                    to="/login"
+                                    className={`flex-1 text-center px-3 py-2 rounded-md text-sm font-semibold transition-all ${
+                                        isDark
+                                            ? "bg-white/10 hover:bg-white/20 text-white"
+                                            : "bg-black/10 hover:bg-black/20 text-black"
+                                    }`}
+                                >
+                                    Login
+                                </Link>
+                                <Link
+                                    to="/signup"
+                                    className={`flex-1 text-center px-3 py-2 rounded-md text-sm font-semibold transition-all ${
+                                        isDark
+                                            ? "bg-red-800 hover:bg-red-700 text-white"
+                                            : "bg-red-800 hover:bg-red-700 text-white"
+                                    }`}
+                                >
+                                    Sign Up
+                                </Link>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

@@ -969,118 +969,95 @@ export default function BookingPage() {
     setCurrentStep((p) => Math.max(p - 1, 1));
   };
 
-  const handlePay = async () => {
-    if (!validateStep(5)) {
-      alert('Please select a payment option (Full Payment or Deposit)');
-      return;
-    }
-    
-    setIsProcessing(true);
-    
-    const bookingData = {
-      service: service,
-      customer_name: details.name,
-      customer_email: details.email,
-      customer_phone: details.phone || '',
-      customer_address: details.address || '',
-      amount: paymentAmounts[paymentOption] || 0,
-      item_name: getServiceDisplayName(),
-      item_description: `${getServiceDisplayName()} - ${date} ${time} - ${paymentOption === 'full' ? 'Full Payment' : '50% Deposit'}`
-    };
-    
-    console.log('Booking data:', bookingData);
-    
-    try {
-      const response = await fetch('https://crtvshotss.atwebpages.com/form_booking.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(bookingData)
-      });
-      
-      const responseText = await response.text();
-      
-      if (response.ok) {
-        const result = JSON.parse(responseText);
-        
-        if (result.success && result.redirectUrl) {
-          window.location.href = result.redirectUrl;
-        } else {
-          alert('Invalid response from server: ' + JSON.stringify(result));
-          setIsProcessing(false);
+    const handlePay = async () => {
+        if (!validateStep(5)) {
+            alert("Please select a payment option");
+            return;
         }
-      } else {
-        alert('Payment processing failed: ' + responseText.substring(0, 200));
-        setIsProcessing(false);
-      }
-    } catch (error) {
-      alert('Network error: ' + error.message);
-      setIsProcessing(false);
-    }
-  };
 
-  const handleConfirmCustom = async () => {
-    setIsProcessing(true);
-    
-    // Prepare booking data for new backend structure (custom service)
-    const bookingData = {
-      service: service,
-      customer_name: details.name,
-      customer_email: details.email,
-      customer_phone: details.phone || '',
-      amount: parseBudgetNumber(customService.budget) || 1, // Minimum amount for PayFast
-      item_name: customService.title || 'Custom Service',
-      item_description: `${customService.title} - ${customService.description} - Custom Service Request`
-    };
-    
-    console.log('Custom service booking data:', bookingData);
-    
-    try {
-      const response = await fetch('https://crtvshots.atwebpages.com/form_booking.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(bookingData)
-      });
-      
-      console.log('Custom service response status:', response.status);
-      
-      // Get response text first to debug
-      const responseText = await response.text();
-      console.log('Custom service raw response text:', responseText);
-      
-      if (response.ok) {
+        setIsProcessing(true);
+
+        const bookingData = {
+            service: service,
+            customer_name: details.name,
+            customer_email: details.email,
+            customer_phone: details.phone || "",
+            customer_address: details.address || "",
+            notes: details.notes || "",
+            amount: paymentAmounts[paymentOption] || 0,
+            item_name: getServiceDisplayName(),
+            item_description: `${getServiceDisplayName()} - ${date} ${time} - ${
+                paymentOption === "full" ? "Full Payment" : "50% Deposit"
+            }`,
+            date: date,
+            time: time,
+        };
+
         try {
-          const result = JSON.parse(responseText);
-          console.log('Custom service parsed JSON response:', result);
-          
-          if (result.success && result.redirectUrl) {
-            console.log('Custom service redirecting to PayFast:', result.redirectUrl);
-            window.location.href = result.redirectUrl;
-          } else {
-            console.error('Invalid custom service response:', result);
-            alert('Invalid response from server: ' + JSON.stringify(result));
+            const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(bookingData),
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert("✅ Booking saved successfully!");
+                console.log("Booking saved:", data);
+                setIsProcessing(false);
+                resetToServiceSelection();
+            } else {
+                alert("❌ Failed to save booking: " + data.message);
+                setIsProcessing(false);
+            }
+        } catch (err) {
+            alert("Network error: " + err.message);
             setIsProcessing(false);
-          }
-        } catch (jsonError) {
-          console.error('Custom service JSON parse error:', jsonError);
-          console.error('Custom service response was not valid JSON:', responseText);
-          alert('Server returned invalid JSON: ' + responseText.substring(0, 200));
-          setIsProcessing(false);
         }
-      } else {
-        console.error('Custom service error response:', responseText);
-        alert('Custom service submission failed: ' + responseText.substring(0, 200));
-        setIsProcessing(false);
-      }
-    } catch (error) {
-      console.error('Custom service fetch error:', error);
-      alert('Network error: ' + error.message);
-      setIsProcessing(false);
-    }
-  };
+    };
+
+
+    const handleConfirmCustom = async () => {
+        setIsProcessing(true);
+
+        const bookingData = {
+            service: "other",
+            customer_name: details.name,
+            customer_email: details.email,
+            customer_phone: details.phone || "",
+            customer_address: details.address || "",
+            notes: details.notes || "",
+            amount: parseBudgetNumber(customService.budget) || 0,
+            item_name: customService.title || "Custom Service",
+            item_description: customService.description || "",
+            date: date,
+            time: time,
+        };
+
+        try {
+            const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(bookingData),
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert("✅ Custom booking saved successfully!");
+                console.log("Custom booking saved:", data);
+                setIsProcessing(false);
+                resetToServiceSelection();
+            } else {
+                alert("❌ Failed to save booking: " + data.message);
+                setIsProcessing(false);
+            }
+        } catch (err) {
+            alert("Network error: " + err.message);
+            setIsProcessing(false);
+        }
+    };
 
   const CustomServiceModal = ({ open, onClose, initial, onSave }) => {
     const [form, setForm] = useState(initial || { title: "", description: "", budget: "" });
