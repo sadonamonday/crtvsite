@@ -773,11 +773,30 @@ export default function BookingPage() {
       try {
         setServicesLoading(true);
         setServicesError("");
-        const res = await fetch("https://crtvshotss.atwebpages.com/services_list.php", {
-          method: "GET",
-          headers: { "Accept": "application/json" },
-          signal: controller.signal,
-        });
+        const res = await fetch("https://crtvshotss.atwebpages.com/services_list.php");
+const json = await res.json();
+
+// Validate structure
+if (!json.success || !Array.isArray(json.data)) {
+  throw new Error("Invalid services response");
+}
+
+// Use json.data as the array of services
+const services = json.data;
+
+// Continue processing images
+const normalizedServices = services.map((service) => {
+  let image = service.image || "";
+
+  if (image && !/^https?:\/\//i.test(image)) {
+    image = `https://crtvshotss.atwebpages.com/${image.replace(/^\/+/, "")}`;
+  }
+
+  return { ...service, image };
+});
+
+setServicesList(normalizedServices);
+setFilteredServices(normalizedServices);
         if (!res.ok) throw new Error(`Failed to fetch services: ${res.status}`);
         const data = await res.json();
         if (!Array.isArray(data)) throw new Error("Invalid services payload");
