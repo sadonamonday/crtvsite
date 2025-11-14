@@ -1081,19 +1081,17 @@ setFilteredServices(normalizedServices);
         const { start: time_start, end: time_end } = parseTimeRange(time);
 
         const bookingData = {
-            service: "other",
-            item_name: customService.title || "Custom Service",
-            item_description: customService.description || "",
-            date: date,
-            time_start: time_start || undefined,
-            time_end: time_end || undefined,
-            customer_name: details.name,
-            customer_email: details.email,
-            customer_phone: details.phone || "",
-            customer_address: details.address || "",
-            notes: details.notes || "",
-            // omit amount/currency/payment fields; backend computes pricing
-        };
+    service: 0,  // backend expects a numeric service_id
+    item_name: customService.title || "Custom Service",
+    item_description: customService.description || "",
+    date: date,
+    time: `${time_start}-${time_end}`, // backend requires this exact field
+    customer_name: details.name,
+    customer_email: details.email,
+    customer_phone: details.phone || "",
+    customer_address: details.address || "",
+    notes: details.notes || "",
+};
 
         try {
             const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
