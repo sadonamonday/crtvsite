@@ -748,83 +748,116 @@ export default function BookingPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
+  // Services fetched from backend (initialized with static fallback)
+  const [servicesList, setServicesList] = useState([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
+  const [servicesError, setServicesError] = useState("");
 
   // Add this useEffect to automatically set service when custom form is completed
   useEffect(() => {
     if (activeCategory === "custom" && 
         customService.title.trim() && 
         customService.description.trim() && 
-        service !== "other") {
-      setService("other");
+        service !== "") {
+      setService("");
     }
   }, [customService, activeCategory, service]);
 
-  const servicePricing = {
-    // Photography
-    "matric-dance-photo": { name: "Matric Dance Photography", price: 1800, type: "fixed" },
-    "wedding-photo": { name: "Wedding Photography", price: 8500, type: "fixed" },
-    "corporate-photo": { name: "Corporate Events Photography", price: 1200, type: "hourly" },
-    "birthday-photo": { name: "Birthday Party Photography", price: 1500, type: "fixed" },
-    "commercial-photo": { name: "Commercial Photography", price: 2500, type: "hourly" },
-    "fashion-photo": { name: "Fashion Show Photography", price: 2000, type: "hourly" },
-    "personal-single-photo": { name: "Personal Photo Shoot - Single", price: 1200, type: "fixed" },
-    "personal-family-photo": { name: "Personal Photo Shoot - Family", price: 1800, type: "fixed" },
 
-    
-    // Videography
-    "matric-dance-video": { name: "Matric Dance Videography", price: 2200, type: "fixed" },
-    "wedding-video": { name: "Wedding Videography", price: 9500, type: "fixed" },
-    "corporate-video": { name: "Corporate Event Videography", price: 1500, type: "hourly" },
-    "birthday-video": { name: "Birthday Party Videography", price: 1800, type: "fixed" },
-    "commercial-video": { name: "Commercial Videography", price: 3000, type: "hourly" },
-    "fashion-video": { name: "Fashion Show Videography", price: 2500, type: "hourly" },
-    "music-video": { name: "Music Video DJI Osmo(Visualizer)", price: 5000, type: "fixed" }, 
-    "reel-video": { name: "Music Video Reels(DJI Osmo)", price: 3500, type: "fixed" },
-    "music-video-editing": { name: "Music Video Editing", price: 3000, type: "fixed" },
-    "color-grading": { name: "Professional Color Grading", price: 3000, type: "fixed" }, 
-    
-    // Combo
-    "matric-dance-combo": { name: "Matric Dance Combo", price: 3500, type: "fixed" },
-    "wedding-combo": { name: "Wedding Combo Package", price: 15000, type: "fixed" },
-    "corporate-combo": { name: "Corporate Event Combo", price: 2200, type: "hourly" },
-    "music-video-combo": { name: "Complete Music Video Package", price: 12500, type: "fixed" }
-  };
+  // Fetch services from backend once on mount
+  useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
+    async function loadServices() {
+      try {
+        setServicesLoading(true);
+        setServicesError("");
+        const res = await fetch("https://crtvshotss.atwebpages.com/services_list.php", {
+          method: "GET",
+          headers: { "Accept": "application/json" },
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`Failed to fetch services: ${res.status}`);
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error("Invalid services payload");
+
+        // Normalize incoming items to expected shape
+        const normalized = data.map((item, idx) => {
+          const rawIncludes = item.includes || item.included || item.features || "";
+          const includesArr = Array.isArray(rawIncludes)
+            ? rawIncludes
+            : String(rawIncludes)
+                .split(/[,\n]/)
+                .map((s) => s.trim())
+                .filter(Boolean);
+
+          const category = (item.category || item.type || "").toString().toLowerCase();
+          const mapCategory =
+            category.includes("photo")
+              ? "photography"
+              : category.includes("video")
+              ? "videography"
+              : category.includes("combo")
+              ? "combo"
+              : category || "photography";
+
+          const priceNumber = Number(item.price || item.amount || 0);
+          const priceText = item.priceText || item.price_label || (priceNumber ? `R${priceNumber}` : String(item.price || "").trim() || "");
+
+          // Image URL normalization
+          let image = item.image || item.image_url || item.thumbnail || "";
+          if (image && !/^https?:\/\//i.test(image)) {
+            image = `https://crtvshotss.atwebpages.com/${image.replace(/^\/+/, "")}`;
+          }
+
+          return {
+            id: item.id || item.slug || item.code || `svc-${idx}`,
+            name: item.name || item.title || "Service",
+            category: mapCategory,
+            price: priceText || "",
+            price_type: (item.price_type || item.type || "").toString().toLowerCase(),
+            description: item.description || item.desc || "",
+            includes: includesArr.length ? includesArr : ["Professional service", "Edited deliverables"],
+            image: image || "/Images/services/services/default.jpg",
+          };
+        });
+
+        if (isMounted) setServicesList(normalized);
+      } catch (err) {
+        console.error(err);
+        if (isMounted) setServicesError(err.message || "Failed to load services");
+      } finally {
+        if (isMounted) setServicesLoading(false);
+      }
+    }
+
+    loadServices();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, []);
 
   // Filter services based on active category
   const filteredServices = useMemo(() => {
-    if (activeCategory === "all") return services;
-    return services.filter(service => service.category === activeCategory);
-  }, [activeCategory]);
+    if (activeCategory === "all") return servicesList;
+    return servicesList.filter(service => service.category === activeCategory);
+  }, [activeCategory, servicesList]);
 
-  // Calculate payment amounts based on service type and selected hours
-  const paymentAmounts = useMemo(() => {
-    if (service === "other") {
-      const customPrice = parseBudgetNumber(customService.budget);
-      return { full: customPrice || 0, deposit: Math.round((customPrice || 0) * 0.5) };
-    }
-    
-    const info = servicePricing[service];
-    if (!info) return { full: 0, deposit: 0 };
-    
-    if (info.type === "hourly") {
-      // Calculate based on selected hours
-      let hours = 2; // Default to 2 hours
-      
-      if (time) {
-        const [startTime, endTime] = time.split('-');
-        hours = calculateHoursBetweenTimes(startTime, endTime);
-        // Minimum 1 hour charge
-        hours = Math.max(hours, 1);
-      }
-      
-      const full = Math.round(info.price * hours);
-      return { full, deposit: Math.round(full * 0.5) };
-    } else {
-      // Fixed price service
-      const full = info.price;
-      return { full, deposit: Math.round(full * 0.5) };
-    }
-  }, [service, customService, time]);
+  // Helpers derived from selected service
+  const findService = (id) => servicesList.find((s) => String(s.id) === String(id));
+  const selectedService = useMemo(() => findService(service), [service, servicesList]);
+  const isHourlyService = (selectedService?.price_type || selectedService?.type || "").toString().toLowerCase() === "hourly";
+
+  const parseTimeRange = (str) => {
+    if (!str) return { start: null, end: null };
+    const range = String(str).match(/(\d{1,2}:\d{2}).*?(\d{1,2}:\d{2})/);
+    if (range) return { start: range[1], end: range[2] };
+    const single = String(str).match(/(\d{1,2}:\d{2})/);
+    return { start: single?.[1] || null, end: null };
+  };
 
   const parseBudgetNumber = (txt) => {
     if (!txt) return 0;
@@ -834,7 +867,7 @@ export default function BookingPage() {
 
   const getServiceDisplayName = () => {
     if (service === "other") return customService.title || "Custom Service";
-    return servicePricing[service]?.name || service || "—";
+    return selectedService?.name || service || "—";
   };
 
   // Email validation function
@@ -977,20 +1010,22 @@ export default function BookingPage() {
 
         setIsProcessing(true);
 
+        const { start: time_start, end: time_end } = parseTimeRange(time);
+        const displayName = getServiceDisplayName();
+
         const bookingData = {
-            service: service,
+            service: service, // backend expects 'service'
+            item_name: displayName,
+            item_description: `${displayName} - ${date}${time ? ` ${time}` : ""}`,
+            date: date,
+            time_start: time_start || undefined,
+            time_end: time_end || undefined,
             customer_name: details.name,
             customer_email: details.email,
             customer_phone: details.phone || "",
             customer_address: details.address || "",
             notes: details.notes || "",
-            amount: paymentAmounts[paymentOption] || 0,
-            item_name: getServiceDisplayName(),
-            item_description: `${getServiceDisplayName()} - ${date} ${time} - ${
-                paymentOption === "full" ? "Full Payment" : "50% Deposit"
-            }`,
-            date: date,
-            time: time,
+            // omit amount/currency/payment fields; backend computes pricing
         };
 
         try {
@@ -1000,15 +1035,18 @@ export default function BookingPage() {
                 body: JSON.stringify(bookingData),
             });
 
-            const data = await res.json();
+            let data;
+            try { data = await res.json(); } catch { data = { success: res.ok, message: res.statusText }; }
 
             if (data.success) {
                 alert("✅ Booking saved successfully!");
                 console.log("Booking saved:", data);
                 setIsProcessing(false);
+                // If backend returns a payfast_url in future, redirect:
+                // if (data.payfast_url) window.location.href = data.payfast_url;
                 resetToServiceSelection();
             } else {
-                alert("❌ Failed to save booking: " + data.message);
+                alert("❌ Failed to save booking: " + (data.message || "Unknown error"));
                 setIsProcessing(false);
             }
         } catch (err) {
@@ -1021,18 +1059,21 @@ export default function BookingPage() {
     const handleConfirmCustom = async () => {
         setIsProcessing(true);
 
+        const { start: time_start, end: time_end } = parseTimeRange(time);
+
         const bookingData = {
             service: "other",
+            item_name: customService.title || "Custom Service",
+            item_description: customService.description || "",
+            date: date,
+            time_start: time_start || undefined,
+            time_end: time_end || undefined,
             customer_name: details.name,
             customer_email: details.email,
             customer_phone: details.phone || "",
             customer_address: details.address || "",
             notes: details.notes || "",
-            amount: parseBudgetNumber(customService.budget) || 0,
-            item_name: customService.title || "Custom Service",
-            item_description: customService.description || "",
-            date: date,
-            time: time,
+            // omit amount/currency/payment fields; backend computes pricing
         };
 
         try {
@@ -1042,7 +1083,8 @@ export default function BookingPage() {
                 body: JSON.stringify(bookingData),
             });
 
-            const data = await res.json();
+            let data;
+            try { data = await res.json(); } catch { data = { success: res.ok, message: res.statusText }; }
 
             if (data.success) {
                 alert("✅ Custom booking saved successfully!");
@@ -1050,7 +1092,7 @@ export default function BookingPage() {
                 setIsProcessing(false);
                 resetToServiceSelection();
             } else {
-                alert("❌ Failed to save booking: " + data.message);
+                alert("❌ Failed to save booking: " + (data.message || "Unknown error"));
                 setIsProcessing(false);
             }
         } catch (err) {
@@ -1202,15 +1244,15 @@ export default function BookingPage() {
         
         <div className="space-y-2">
           <label className="block font-medium text-gray-800">Preferred Service Type</label>
-          <select 
+          <select
             className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-800"
             onChange={(e) => {
               if (e.target.value) {
                 // If user selects a specific service type, switch to that category
                 setService(e.target.value);
                 setActiveCategory(
-                  e.target.value === "photography" ? "photography" : 
-                  e.target.value === "videography" ? "videography" : 
+                  e.target.value === "photography" ? "photography" :
+                  e.target.value === "videography" ? "videography" :
                   e.target.value === "combo" ? "combo" : "custom"
                 );
               }
@@ -1438,14 +1480,10 @@ export default function BookingPage() {
                 </p>
                 
                 {/* Show calculated price for hourly services */}
-                {service && servicePricing[service]?.type === "hourly" && time && (
+                {isHourlyService && time && (
                   <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-green-800 mb-2">Price Calculation</h4>
+                    <h4 className="font-semibold text-green-800 mb-2">Hourly booking</h4>
                     <div className="text-sm text-green-700">
-                      <div className="flex justify-between">
-                        <span>Hourly Rate:</span>
-                        <span>R{servicePricing[service].price}/hour</span>
-                      </div>
                       <div className="flex justify-between">
                         <span>Duration:</span>
                         <span>
@@ -1455,9 +1493,8 @@ export default function BookingPage() {
                           })()}
                         </span>
                       </div>
-                      <div className="flex justify-between font-semibold mt-1 pt-1 border-t border-green-200">
-                        <span>Total Price:</span>
-                        <span>R{paymentAmounts.full}</span>
+                      <div className="mt-2 text-green-800">
+                        Pricing is calculated by the backend at checkout.
                       </div>
                     </div>
                   </div>
@@ -1538,15 +1575,11 @@ export default function BookingPage() {
                     </div>
                   ) : (
                     <div className="bg-green-100 rounded p-3 text-gray-800">
-                      {servicePricing[service]?.name || service}
-                      {servicePricing[service]?.type === "hourly" && (
-                        <div className="text-sm mt-1">
-                          <span className="font-medium">Calculated Price:</span> R{paymentAmounts.full} 
-                          {time && (
-                            <span className="text-gray-600 ml-2">
-                              ({calculateHoursBetweenTimes(time.split('-')[0], time.split('-')[1]).toFixed(1)} hours × R{servicePricing[service].price}/hour)
-                            </span>
-                          )}
+                      {getServiceDisplayName()}
+                      {isHourlyService && time && (
+                        <div className="text-sm mt-1 text-gray-700">
+                          <span className="font-medium">Duration:</span>
+                          {` ${calculateHoursBetweenTimes(time.split('-')[0], time.split('-')[1]).toFixed(1)} hours`}
                         </div>
                       )}
                     </div>
@@ -1620,7 +1653,7 @@ export default function BookingPage() {
                     {date || "—"} {time ? `at ${formatTimeForDisplay(time.split('-')[0])} - ${formatTimeForDisplay(time.split('-')[1])}` : ""}
                   </span>
                 </div>
-                {service !== "other" && servicePricing[service]?.type === "hourly" && time && (
+                {service !== "other" && isHourlyService && time && (
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Duration:</span>
                     <span>
@@ -1628,12 +1661,7 @@ export default function BookingPage() {
                     </span>
                   </div>
                 )}
-                {service !== "other" && paymentAmounts.full > 0 && (
-                  <div className="flex justify-between text-lg font-semibold mt-4 pt-4 border-t border-gray-300">
-                    <span>Total Amount:</span>
-                    <span className="text-green-600">R{paymentAmounts.full}</span>
-                  </div>
-                )}
+                {/* Amount is calculated by the backend; no client-side total here */}
                 {service === "other" && customService.budget && (
                   <div className="flex justify-between text-lg font-semibold mt-4 pt-4 border-t border-gray-300">
                     <span>Estimated Budget:</span>
@@ -1657,7 +1685,7 @@ export default function BookingPage() {
                     className={`border-2 rounded-lg p-6 text-left transition ${paymentOption === "full" ? "border-green-500 bg-green-100" : "border-green-300 hover:border-green-500 bg-white"}`}
                   >
                     <h4 className="text-lg font-semibold mb-2 text-gray-800">Pay Full Amount</h4>
-                    <div className="text-2xl font-bold text-green-600 mb-2">R{paymentAmounts.full || "TBD"}</div>
+                    <div className="text-2xl font-bold text-green-600 mb-2">Calculated at checkout</div>
                     <p className="text-gray-600 text-sm">Secure your booking with full payment</p>
                   </button>
 
@@ -1667,7 +1695,7 @@ export default function BookingPage() {
                     className={`border-2 rounded-lg p-6 text-left transition ${paymentOption === "deposit" ? "border-green-500 bg-green-100" : "border-green-300 hover:border-green-500 bg-white"}`}
                   >
                     <h4 className="text-lg font-semibold mb-2 text-gray-800">Pay 50% Deposit</h4>
-                    <div className="text-2xl font-bold text-green-600 mb-2">R{paymentAmounts.deposit || "TBD"}</div>
+                    <div className="text-2xl font-bold text-green-600 mb-2">Calculated at checkout</div>
                     <p className="text-gray-600 text-sm">Pay half now, balance due before service</p>
                   </button>
                 </div>
@@ -1676,7 +1704,7 @@ export default function BookingPage() {
                   <h4 className="font-semibold mb-2 text-gray-800">Payment Information</h4>
                   <p className="text-gray-600 text-sm">
                     {paymentOption === "deposit"
-                      ? `50% deposit of R${paymentAmounts.deposit} is required to secure your booking. The remaining balance will be due before the service date.`
+                      ? "A 50% deposit is required to secure your booking. The remaining balance will be due before the service date."
                       : "Full payment secures your booking and ensures availability for your selected date and time."}
                    </p>
                  </div>
@@ -1774,7 +1802,7 @@ export default function BookingPage() {
                     onClick={handlePay}
                     disabled={!paymentOption || isProcessing}
                   >
-                    {isProcessing ? "Processing..." : `Pay Now - R${paymentOption === "full" ? paymentAmounts.full : paymentAmounts.deposit}`}
+                    {isProcessing ? "Processing..." : "Pay Now"}
                   </button>
                 </div>
               )
