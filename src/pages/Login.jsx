@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import { Link, useNavigate } from "react-router-dom";
+import logo from "/Logo.png";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -64,10 +63,16 @@ const Login = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
-      {/* Header */}
-      <Header />
-      <div className="h-34"></div>
+    <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900 relative">
+      <div className="absolute top-6 left-6">
+        <Link to="/" aria-label="Back to home">
+          <img
+            src={logo}
+            alt="CRTVisuals logo"
+            className="w-24 h-auto object-contain"
+          />
+        </Link>
+      </div>
       {/* Main Login Form */}
       <main className="flex-grow flex flex-col justify-center items-center px-4">
         <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8">
@@ -143,8 +148,6 @@ const Login = () => {
         </div>
       </main>
 
-      {/* Footer */}
-      <Footer />
     </div>
   );
 };

@@ -304,6 +304,65 @@
   background: #f9fafb;
 }
 
+.users-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.users-error {
+  color: #b91c1c;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.users-table-wrapper {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+.users-table {
+  width: 100%;
+  min-width: 1200px;
+  border-collapse: collapse;
+}
+
+.users-table thead {
+  background: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.users-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #374151;
+}
+
+.users-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 13px;
+  color: #111827;
+  white-space: nowrap;
+}
+
+.users-status {
+  padding: 12px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
 .badge {
   display: inline-block;
   padding: 4px 12px;

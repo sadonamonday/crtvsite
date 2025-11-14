@@ -18,10 +18,11 @@ import AdminDashboard from './pages/AdminDashboard.jsx';
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
-  
+  const hideHeader = isAdminRoute || location.pathname === '/login';
+
   return (
     <div className="relative min-h-screen">
-      {!isAdminRoute && <Header />}
+      {!hideHeader && <Header />}
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
