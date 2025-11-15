@@ -33,6 +33,30 @@ const formatDateString = (date) => {
   return `${year}-${month}-${day}`;
 };
 
+// Available service images
+const availableImages = [
+  "backend.jpg",
+  "birthdayparty.jpg",
+  "birthdaypartyvideo.webp",
+  "birthdayphotoshoot.jpg",
+  "birthdayshoot.jpg",
+  "birthshoot.jpg",
+  "colourgrading.jpg",
+  "commercialphoto.jpg",
+  "commercialvideo.jpg",
+  "corporatecombo.jpg",
+  "corporatevideo.webp",
+  "familyphoto.webp",
+  "fashion show.webp",
+  "fashionshowvideo.jpg",
+  "groomsmen.jpg",
+  "hicking.jpg",
+  "highlightreel.webp",
+  "matric-dance.jpg",
+  "matricdancecombo.jpg",
+  "matricdancefarewell.jpg"
+];
+
 // Calendar Component for setting availability
 const AvailabilityCalendar = ({ availableDates, draftDates, onDateSelect, onTimeSlotAdd, onTimeSlotRemove }) => {
   const [currentMonth, setCurrentMonth] = useState(() => {
@@ -230,18 +254,16 @@ const AdminDashboard = () => {
     { id: 1, user: "john@example.com", rating: 5, comment: "Amazing!", approved: true },
     { id: 2, user: "mike@example.com", rating: 4, comment: "Great work", approved: false }
   ]);
-  const [galleryImages, setGalleryImages] = useState([
-    { id: 1, url: "/Images/services/services/birthdayparty.jpg", title: "Birthday Photography", visible: true, category: "services" },
-    { id: 2, url: "/Images/services/services/fashionshowvideo.jpg", title: "Fashion Show Photography", visible: true, category: "services" },
-    { id: 3, url: "/Images/sample1.jpg", title: "Urban Portrait", visible: false, category: "photography" }
-  ]);
+  // Services state
+  const [services, setServices] = useState([]);
+  const [servicesLoading, setServicesLoading] = useState(false);
+  const [servicesMessage, setServicesMessage] = useState("");
+  const [editingService, setEditingService] = useState(null);
   // selections for bulk actions
   const [selectedOrderIds, setSelectedOrderIds] = useState(new Set());
   const [selectedUserIds, setSelectedUserIds] = useState(new Set());
   const [selectedReviewIds, setSelectedReviewIds] = useState(new Set());
-  const [selectedGalleryIds, setSelectedGalleryIds] = useState(new Set());
-  const [galleryVisibilityFilter, setGalleryVisibilityFilter] = useState("all"); // all | visible | hidden
-  const [gallerySearch, setGallerySearch] = useState("");
+  const [selectedServiceIds, setSelectedServiceIds] = useState(new Set());
   const [availabilityMessage, setAvailabilityMessage] = useState("");
   const [availabilitySaving, setAvailabilitySaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
@@ -349,13 +371,37 @@ const AdminDashboard = () => {
     (async () => {
       try {
         setAvailabilityMessage("");
-        const res = await fetch("https://crtvshotss.atwebpages.com/save_availability.php?action=list");
+        const res = await fetch("https://crtvshotss.atwebpages.com/save_availability.php?action=list", {
+          credentials: "include"
+        });
         const data = await res.json();
         if (Array.isArray(data)) {
           setAvailableDates(data);
         }
       } catch (e) {
         setAvailabilityMessage("Failed to load availability from server");
+      }
+    })();
+  }, [activeTab]);
+
+  // Load services when services tab is active
+  React.useEffect(() => {
+    if (activeTab !== "services") return;
+    (async () => {
+      try {
+        setServicesLoading(true);
+        setServicesMessage("");
+        const res = await fetch("https://crtvshotss.atwebpages.com/services_list.php");
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setServices(json.data);
+        } else {
+          setServicesMessage("Failed to load services");
+        }
+      } catch (e) {
+        setServicesMessage("Error loading services: " + e.message);
+      } finally {
+        setServicesLoading(false);
       }
     })();
   }, [activeTab]);
@@ -372,6 +418,7 @@ const AdminDashboard = () => {
       const res = await fetch("https://crtvshotss.atwebpages.com/save_availability.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload)
       });
       const data = await res.json();
@@ -380,7 +427,9 @@ const AdminDashboard = () => {
         // Clear drafts and reload from server so UI reflects DB
         setDraftTimeSlotsByDate({});
         try {
-          const listRes = await fetch("https://crtvshotss.atwebpages.com/save_availability.php?action=list");
+          const listRes = await fetch("https://crtvshotss.atwebpages.com/save_availability.php?action=list", {
+            credentials: "include"
+          });
           const listData = await listRes.json();
           if (Array.isArray(listData)) setAvailableDates(listData);
         } catch {}
@@ -400,11 +449,14 @@ const AdminDashboard = () => {
       const res = await fetch("https://crtvshotss.atwebpages.com/save_availability.php?action=delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ date: dateString })
       });
       const data = await res.json();
       if (data && data.success) {
-        const listRes = await fetch("https://crtvshotss.atwebpages.com/save_availability.php?action=list");
+        const listRes = await fetch("https://crtvshotss.atwebpages.com/save_availability.php?action=list", {
+          credentials: "include"
+        });
         const listData = await listRes.json();
         if (Array.isArray(listData)) setAvailableDates(listData);
         setAvailabilityMessage("Date deleted");
@@ -480,6 +532,206 @@ const AdminDashboard = () => {
     );
   };
 
+  // Service form component
+  const ServiceForm = ({ service, onSave, onCancel, onMessage, onLoading }) => {
+    const [id, setId] = useState(service?.id || "");
+    const [name, setName] = useState(service?.name || "");
+    const [category, setCategory] = useState(service?.category || "photography");
+    const [price, setPrice] = useState(service?.price || 0);
+    const [priceType, setPriceType] = useState(service?.price_type || "fixed");
+    const [description, setDescription] = useState(service?.description || "");
+    const [includes, setIncludes] = useState(service?.includes ? (Array.isArray(service.includes) ? service.includes.join("\n") : (typeof service.includes === 'string' ? (service.includes.startsWith('[') ? JSON.parse(service.includes || "[]").join("\n") : service.includes) : "")) : "");
+    const [image, setImage] = useState("");
+    const [isActive, setIsActive] = useState(service?.is_active !== undefined ? service.is_active : 1);
+    const [formLoading, setFormLoading] = useState(false);
+
+    const handleSubmit = async () => {
+      if (!id || !name || !category) {
+        onMessage("ID, name, and category are required");
+        return;
+      }
+
+      const includesArray = includes.split("\n").map(s => s.trim()).filter(Boolean);
+
+      const payload = {
+        id,
+        name,
+        category,
+        price: Number(price) || 0,
+        price_type: priceType,
+        description: description || null,
+        includes: includesArray.length > 0 ? includesArray : null,
+        image: image || null,
+        is_active: isActive ? 1 : 0
+      };
+
+      try {
+        setFormLoading(true);
+        onLoading(true);
+        onMessage("");
+        const endpoint = service ? "services_update.php" : "services_create.php";
+        const res = await fetch(`https://crtvshotss.atwebpages.com/admin/${endpoint}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include", // Send PHP session cookie for authentication
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          onMessage("Service " + (service ? "updated" : "created") + " successfully");
+          onSave();
+          if (!service) {
+            setId(""); setName(""); setCategory("photography"); setPrice(0);
+            setPriceType("fixed"); setDescription(""); setIncludes(""); setImage(""); setIsActive(1);
+          }
+        } else {
+          onMessage(data.message || "Failed to save service");
+        }
+      } catch (e) {
+        onMessage("Error: " + e.message);
+      } finally {
+        setFormLoading(false);
+        onLoading(false);
+      }
+    };
+
+    return (
+      <div className="service-form">
+        <div className="product-form-grid">
+          <div>
+            <label className="settings-label">Service ID *</label>
+            <input className="settings-input" value={id} onChange={(e) => setId(e.target.value)} disabled={!!service} placeholder="e.g., service-001" />
+          </div>
+          <div>
+            <label className="settings-label">Name *</label>
+            <input className="settings-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Service name" />
+          </div>
+          <div>
+            <label className="settings-label">Category *</label>
+            <select className="settings-input" value={category} onChange={(e) => setCategory(e.target.value)}>
+              <option value="photography">Photography</option>
+              <option value="videography">Videography</option>
+              <option value="combo">Combo</option>
+            </select>
+          </div>
+          <div>
+            <label className="settings-label">Price</label>
+            <input className="settings-input" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" />
+          </div>
+          <div>
+            <label className="settings-label">Price Type</label>
+            <select className="settings-input" value={priceType} onChange={(e) => setPriceType(e.target.value)}>
+              <option value="fixed">Fixed</option>
+              <option value="starting">Starting From</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div>
+            <label className="settings-label">Active</label>
+            <select className="settings-input" value={isActive} onChange={(e) => setIsActive(Number(e.target.value))}>
+              <option value={1}>Yes</option>
+              <option value={0}>No</option>
+            </select>
+          </div>
+          <div className="full-row">
+            <label className="settings-label">Description</label>
+            <textarea className="settings-input" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Service description" />
+          </div>
+          <div className="full-row">
+            <label className="settings-label">Includes (one per line)</label>
+            <textarea className="settings-input" value={includes} onChange={(e) => setIncludes(e.target.value)} placeholder="Feature 1&#10;Feature 2&#10;Feature 3" />
+          </div>
+          <div className="full-row">
+            <label className="settings-label">Image</label>
+            <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+              <select 
+                className="settings-input" 
+                value={(() => {
+                  if (!image) return "";
+                  const imageName = image.split("/").pop();
+                  return availableImages.includes(imageName) ? imageName : "";
+                })()}
+                onChange={(e) => {
+                  const selected = e.target.value;
+                  if (selected) {
+                    setImage(`https://crtvshotss.atwebpages.com/bookings/${selected}`);
+                  } else {
+                    setImage("");
+                  }
+                }}
+                style={{ flex: 1 }}
+              >
+                <option value="">Select an image...</option>
+                {availableImages.map(img => (
+                  <option key={img} value={img}>{img}</option>
+                ))}
+              </select>
+              <input 
+                className="settings-input" 
+                value={image} 
+                onChange={(e) => setImage(e.target.value)} 
+                placeholder="Or enter full URL: https://crtvshotss.atwebpages.com/bookings/..." 
+                style={{ flex: 2 }}
+              />
+            </div>
+            {image && (
+              <div style={{ marginTop: "8px", padding: "8px", background: "#f9fafb", borderRadius: "4px", border: "1px solid #e5e7eb" }}>
+                <img 
+                  src={(() => {
+                    if (!image) return "";
+                    if (/^https?:\/\//i.test(image)) return image;
+                    return `https://crtvshotss.atwebpages.com/${image.replace(/^\/+/, "")}`;
+                  })()}
+                  alt="Preview" 
+                  style={{ maxWidth: "200px", maxHeight: "150px", objectFit: "contain", borderRadius: "4px" }}
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    if (e.target.nextSibling) {
+                      e.target.nextSibling.style.display = "block";
+                    }
+                  }}
+                />
+                <div style={{ display: "none", color: "#6b7280", fontSize: "12px", marginTop: "4px" }}>Image not found</div>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="form-actions">
+          <button className="btn-primary" onClick={handleSubmit} disabled={formLoading}>
+            {formLoading ? "Saving..." : (service ? "Update Service" : "Create Service")}
+          </button>
+          {service && <button className="btn-secondary" onClick={onCancel}>Cancel</button>}
+        </div>
+      </div>
+    );
+  };
+
+  const handleDeleteService = async (serviceId) => {
+    if (!confirm("Are you sure you want to delete this service?")) return;
+    try {
+      setServicesLoading(true);
+      setServicesMessage("");
+      const res = await fetch("https://crtvshotss.atwebpages.com/admin/services_delete.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // Send PHP session cookie for authentication
+        body: JSON.stringify({ id: serviceId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setServicesMessage("Service deleted successfully");
+        setServices(services.filter(s => s.id !== serviceId));
+        setEditingService(null);
+      } else {
+        setServicesMessage(data.message || "Failed to delete service");
+      }
+    } catch (e) {
+      setServicesMessage("Error: " + e.message);
+    } finally {
+      setServicesLoading(false);
+    }
+  };
+
   return (
     <div className="admin-dashboard">
       {/* Sidebar */}
@@ -542,11 +794,11 @@ const AdminDashboard = () => {
         </button>
 
         <button
-          onClick={() => setActiveTab("gallery")}
-          className={`nav-item ${activeTab === "gallery" ? "active" : ""}`}
+          onClick={() => setActiveTab("services")}
+          className={`nav-item ${activeTab === "services" ? "active" : ""}`}
         >
           <Settings size={20} />
-          <span>Gallery</span>
+          <span>Add Services</span>
         </button>
 
           <button
@@ -990,63 +1242,140 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {activeTab === "gallery" && (
-            <div className="gallery-view">
-              <h1 className="page-title">Gallery</h1>
-              <div className="bulk-bar">
-                <div className="gallery-controls">
-                  <select className="settings-input" value={galleryVisibilityFilter} onChange={(e) => setGalleryVisibilityFilter(e.target.value)}>
-                    <option value="all">All</option>
-                    <option value="visible">Visible</option>
-                    <option value="hidden">Hidden</option>
-                  </select>
-                  <input className="settings-input" placeholder="Search title..." value={gallerySearch} onChange={(e) => setGallerySearch(e.target.value)} />
+          {activeTab === "services" && (
+            <div className="services-view">
+              <h1 className="page-title">Services Management</h1>
+              
+              {servicesMessage && (
+                <div className={`product-message ${servicesMessage.toLowerCase().includes("success") ? "success" : "error"}`}>
+                  {servicesMessage}
                 </div>
-                <div>
-                  <button className="btn-secondary" onClick={() => setSelectedGalleryIds(new Set(galleryImages.map(g => g.id)))}>Select All</button>
-                  <button className="btn-secondary" onClick={() => setSelectedGalleryIds(new Set())}>Clear</button>
-                </div>
-                <div className="bulk-actions">
-                  <button className="btn-primary" onClick={() => setGalleryImages(galleryImages.map(g => selectedGalleryIds.has(g.id) ? { ...g, visible: true } : g))}>Show</button>
-                  <button className="btn-secondary" onClick={() => setGalleryImages(galleryImages.map(g => selectedGalleryIds.has(g.id) ? { ...g, visible: false } : g))}>Hide</button>
-                  <button className="btn-danger" onClick={() => setGalleryImages(galleryImages.filter(g => !selectedGalleryIds.has(g.id)))}>Delete</button>
-                </div>
-              </div>
+              )}
 
-              <div className="image-grid">
-                {galleryImages.filter(g => (galleryVisibilityFilter === 'all' || (galleryVisibilityFilter === 'visible' ? g.visible : !g.visible)) && g.title.toLowerCase().includes(gallerySearch.toLowerCase())).length === 0 && (
-                  <p className="text-gray-500">No images in gallery.</p>
-                )}
-                {galleryImages
-                  .filter(img => (galleryVisibilityFilter === 'all' || (galleryVisibilityFilter === 'visible' ? img.visible : !img.visible)))
-                  .filter(img => img.title.toLowerCase().includes(gallerySearch.toLowerCase()))
-                  .map(img => (
-                  <div key={img.id} className={`image-card ${!img.visible ? 'image-card-hidden' : ''}`}>
-                    <div className="image-container">
-                      <img src={img.url} alt={img.title} />
-                      <div className="image-overlay">
-                        <p>{img.title}</p>
-                      </div>
-                      <span className={`visibility-badge ${img.visible ? 'visible' : 'hidden'}`}>{img.visible ? 'VISIBLE' : 'HIDDEN'}</span>
-                      <label className="image-select">
-                        <input type="checkbox" checked={selectedGalleryIds.has(img.id)} onChange={(e) => {
-                          const next = new Set(selectedGalleryIds);
-                          if (e.target.checked) next.add(img.id); else next.delete(img.id);
-                          setSelectedGalleryIds(next);
-                        }} />
-                      </label>
+              {editingService ? (
+                <div className="settings-card">
+                  <h3 className="section-title">Edit Service</h3>
+                  <ServiceForm
+                    service={editingService}
+                    onSave={() => {
+                      setEditingService(null);
+                      // Reload services
+                      (async () => {
+                        try {
+                          const res = await fetch("https://crtvshotss.atwebpages.com/services_list.php");
+                          const json = await res.json();
+                          if (json.success && Array.isArray(json.data)) {
+                            setServices(json.data);
+                          }
+                        } catch (e) {
+                          console.error(e);
+                        }
+                      })();
+                    }}
+                    onCancel={() => setEditingService(null)}
+                    onMessage={setServicesMessage}
+                    onLoading={setServicesLoading}
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="bulk-bar">
+                    <div>
+                      <button className="btn-secondary" onClick={() => setSelectedServiceIds(new Set(services.map(s => s.id)))}>Select All</button>
+                      <button className="btn-secondary" onClick={() => setSelectedServiceIds(new Set())}>Clear</button>
                     </div>
-                    <div className="image-meta">
-                      <div className="text-black font-medium">{img.title}</div>
-                      <div className="table-actions">
-                        <button className="btn-secondary" onClick={() => setGalleryImages(galleryImages.map(x => x.id === img.id ? { ...x, visible: !x.visible } : x))}>{img.visible ? 'Hide' : 'Show'}</button>
-                        <button className="btn-secondary" onClick={() => setGalleryImages(galleryImages.map(x => x.id === img.id ? { ...x, title: prompt("Rename image title", x.title) || x.title } : x))}>Rename</button>
-                        <button className="btn-danger" onClick={() => setGalleryImages(galleryImages.filter(x => x.id !== img.id))}>Delete</button>
-                      </div>
+                    <div className="bulk-actions">
+                      <button className="btn-danger" onClick={async () => {
+                        if (selectedServiceIds.size === 0) return;
+                        if (!confirm(`Delete ${selectedServiceIds.size} service(s)?`)) return;
+                        for (const id of selectedServiceIds) {
+                          await handleDeleteService(id);
+                        }
+                        setSelectedServiceIds(new Set());
+                      }}>Delete Selected</button>
                     </div>
                   </div>
-                ))}
-              </div>
+
+                  <div className="bookings-table-container">
+                    <table className="bookings-table">
+                      <thead>
+                        <tr>
+                          <th><input type="checkbox" onChange={(e) => {
+                            if (e.target.checked) setSelectedServiceIds(new Set(services.map(s => s.id)));
+                            else setSelectedServiceIds(new Set());
+                          }} /></th>
+                          <th>ID</th>
+                          <th>Name</th>
+                          <th>Category</th>
+                          <th>Price</th>
+                          <th>Price Type</th>
+                          <th>Active</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {servicesLoading ? (
+                          <tr>
+                            <td colSpan="8" className="text-black text-center">Loading services...</td>
+                          </tr>
+                        ) : services.length === 0 ? (
+                          <tr>
+                            <td colSpan="8" className="text-black text-center">No services found. Create one below.</td>
+                          </tr>
+                        ) : (
+                          services.map(service => (
+                            <tr key={service.id}>
+                              <td><input type="checkbox" checked={selectedServiceIds.has(service.id)} onChange={(e) => {
+                                const next = new Set(selectedServiceIds);
+                                if (e.target.checked) next.add(service.id); else next.delete(service.id);
+                                setSelectedServiceIds(next);
+                              }} /></td>
+                              <td className="text-black">{service.id}</td>
+                              <td className="text-black font-semibold">{service.name}</td>
+                              <td className="text-black">{service.category}</td>
+                              <td className="text-black">R{service.price || 0}</td>
+                              <td className="text-black">{service.price_type || "fixed"}</td>
+                              <td>
+                                <span className={`badge ${service.is_active ? "badge-confirmed" : "badge-pending"}`}>
+                                  {service.is_active ? "Active" : "Inactive"}
+                                </span>
+                              </td>
+                              <td>
+                                <div className="table-actions">
+                                  <button className="btn-secondary" onClick={() => setEditingService(service)}>Edit</button>
+                                  <button className="btn-danger" onClick={() => handleDeleteService(service.id)}>Delete</button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="entity-form">
+                    <h3 className="section-title">Create New Service</h3>
+                    <ServiceForm
+                      onSave={() => {
+                        // Reload services
+                        (async () => {
+                          try {
+                            const res = await fetch("https://crtvshotss.atwebpages.com/services_list.php");
+                            const json = await res.json();
+                            if (json.success && Array.isArray(json.data)) {
+                              setServices(json.data);
+                            }
+                          } catch (e) {
+                            console.error(e);
+                          }
+                        })();
+                      }}
+                      onMessage={setServicesMessage}
+                      onLoading={setServicesLoading}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           )}
 
