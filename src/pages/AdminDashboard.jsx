@@ -757,6 +757,30 @@ const AdminDashboard = () => {
           <span>Orders</span>
         </button>
 
+         <button
+          onClick={() => setActiveTab("services")}
+          className={`nav-item ${activeTab === "services" ? "active" : ""}`}
+        >
+          <PlusCircle size={20} />
+          <span>Add Services</span>
+        </button>
+
+
+        <button
+            onClick={() => setActiveTab("availability")}
+            className={`nav-item ${activeTab === "availability" ? "active" : ""}`}
+          >
+            <Calendar size={20} />
+            <span>Availability</span>
+          </button>
+
+
+          <button onClick={() => setActiveTab("products")} className={`nav-item ${activeTab === "products" ? "active" : ""}`}>
+        <PlusCircle size={20} /><span>Add Product</span>
+        </button>
+
+
+
         <button
           onClick={() => setActiveTab("users")}
           className={`nav-item ${activeTab === "users" ? "active" : ""}`}
@@ -765,17 +789,7 @@ const AdminDashboard = () => {
           <span>Users</span>
         </button>
 
-          <button
-            onClick={() => setActiveTab("availability")}
-            className={`nav-item ${activeTab === "availability" ? "active" : ""}`}
-          >
-            <Calendar size={20} />
-            <span>Availability</span>
-          </button>
-
-          <button onClick={() => setActiveTab("products")} className={`nav-item ${activeTab === "products" ? "active" : ""}`}>
-        <PlusCircle size={20} /><span>Add Product</span>
-        </button>
+          
 
         <button
           onClick={() => setActiveTab("reviews")}
@@ -793,21 +807,8 @@ const AdminDashboard = () => {
           <span>Sales</span>
         </button>
 
-        <button
-          onClick={() => setActiveTab("services")}
-          className={`nav-item ${activeTab === "services" ? "active" : ""}`}
-        >
-          <Settings size={20} />
-          <span>Add Services</span>
-        </button>
 
-          <button
-            onClick={() => setActiveTab("settings")}
-            className={`nav-item ${activeTab === "settings" ? "active" : ""}`}
-          >
-            <Settings size={20} />
-            <span>Settings</span>
-          </button>
+ 
         </nav>
 
         <div className="sidebar-footer">
