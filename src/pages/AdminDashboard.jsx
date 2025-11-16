@@ -503,9 +503,6 @@ const AdminDashboard = () => {
   const [reviewsPage, setReviewsPage] = useState(1);
   const [reviewsSortField, setReviewsSortField] = useState(null);
   const [reviewsSortDirection, setReviewsSortDirection] = useState('asc');
-  const [salesPage, setSalesPage] = useState(1);
-  const [salesSortField, setSalesSortField] = useState(null);
-  const [salesSortDirection, setSalesSortDirection] = useState('asc');
   
   const ITEMS_PER_PAGE = 10;
 
@@ -846,24 +843,6 @@ const AdminDashboard = () => {
   }, [sortedReviews, reviewsPage]);
   
   const totalReviewsPages = Math.ceil(sortedReviews.length / ITEMS_PER_PAGE);
-  
-  // Sales sorting and pagination
-  const handleSalesSort = (field, direction) => {
-    setSalesSortField(field);
-    setSalesSortDirection(direction);
-    setSalesPage(1);
-  };
-  
-  const sortedSales = useMemo(() => {
-    return sortData(orders, salesSortField, salesSortDirection);
-  }, [orders, salesSortField, salesSortDirection]);
-  
-  const paginatedSales = useMemo(() => {
-    const startIndex = (salesPage - 1) * ITEMS_PER_PAGE;
-    return sortedSales.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [sortedSales, salesPage]);
-  
-  const totalSalesPages = Math.ceil(sortedSales.length / ITEMS_PER_PAGE);
 
   const handleSaveAvailability = async () => {
     try {
@@ -1257,15 +1236,6 @@ const AdminDashboard = () => {
           <Settings size={20} />
           <span>Reviews</span>
         </button>
-
-        <button
-          onClick={() => setActiveTab("sales")}
-          className={`nav-item ${activeTab === "sales" ? "active" : ""}`}
-        >
-          <Settings size={20} />
-          <span>Sales</span>
-        </button>
-
 
  
         </nav>
@@ -1924,108 +1894,6 @@ const AdminDashboard = () => {
                   currentPage={reviewsPage}
                   totalPages={totalReviewsPages}
                   onPageChange={setReviewsPage}
-                />
-              )}
-
-              <div className="entity-form">
-                <h3 className="section-title">Add Review</h3>
-                <ReviewForm onCreate={(newReview) => setReviews([{ ...newReview, id: Date.now(), approved: false }, ...reviews])} />
-              </div>
-            </div>
-          )}
-
-          {activeTab === "sales" && (
-            <div className="sales-view">
-              <h1 className="page-title">Sales Overview</h1>
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-value">R{sortedSales.reduce((sum, o) => sum + (o.status === "paid" ? o.total : 0), 0)}</div>
-                  <div className="stat-label">Total Paid Revenue</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-value">{sortedSales.filter(o => o.status === "paid").length}</div>
-                  <div className="stat-label">Paid Orders</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-value">{sortedSales.filter(o => o.status !== "paid").length}</div>
-                  <div className="stat-label">Unpaid/Other</div>
-                </div>
-              </div>
-
-              <div className="bulk-bar">
-                <div>
-                  <button className="btn-secondary" onClick={() => setSelectedOrderIds(new Set(sortedSales.map(o => o.id)))}>Select All</button>
-                  <button className="btn-secondary" onClick={() => setSelectedOrderIds(new Set())}>Clear</button>
-                </div>
-                <div className="bulk-actions">
-                  <button className="btn-primary" onClick={() => setOrders(orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "paid" } : o))}>Mark Paid</button>
-                  <button className="btn-secondary" onClick={() => setOrders(orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "refunded" } : o))}>Mark Refunded</button>
-                  <button className="btn-danger" onClick={() => setOrders(orders.filter(o => !selectedOrderIds.has(o.id)))}>Delete</button>
-                </div>
-              </div>
-
-              <div className="sales-table-container bookings-table-container">
-                <table className="bookings-table">
-                  <thead>
-                    <tr>
-                      <th></th>
-                      <SortableHeader
-                        field="id"
-                        currentSortField={salesSortField}
-                        currentSortDirection={salesSortDirection}
-                        onSort={handleSalesSort}
-                      >
-                        Order
-                      </SortableHeader>
-                      <SortableHeader
-                        field="user"
-                        currentSortField={salesSortField}
-                        currentSortDirection={salesSortDirection}
-                        onSort={handleSalesSort}
-                      >
-                        User
-                      </SortableHeader>
-                      <SortableHeader
-                        field="status"
-                        currentSortField={salesSortField}
-                        currentSortDirection={salesSortDirection}
-                        onSort={handleSalesSort}
-                      >
-                        Status
-                      </SortableHeader>
-                      <SortableHeader
-                        field="total"
-                        currentSortField={salesSortField}
-                        currentSortDirection={salesSortDirection}
-                        onSort={handleSalesSort}
-                      >
-                        Total
-                      </SortableHeader>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedSales.map(o => (
-                      <tr key={o.id}>
-                        <td><input type="checkbox" checked={selectedOrderIds.has(o.id)} onChange={(e) => {
-                          const next = new Set(selectedOrderIds);
-                          if (e.target.checked) next.add(o.id); else next.delete(o.id);
-                          setSelectedOrderIds(next);
-                        }} /></td>
-                        <td className="text-black">#{o.id}</td>
-                        <td className="text-black">{o.user}</td>
-                        <td className="text-black">{o.status}</td>
-                        <td className="text-black">R{o.total}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {sortedSales.length > ITEMS_PER_PAGE && (
-                <Pagination
-                  currentPage={salesPage}
-                  totalPages={totalSalesPages}
-                  onPageChange={setSalesPage}
                 />
               )}
             </div>
