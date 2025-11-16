@@ -474,10 +474,7 @@ const AdminDashboard = () => {
     { id: 1, name: "John Doe", email: "john@example.com", role: "customer" },
     { id: 2, name: "Jane Smith", email: "jane@example.com", role: "customer" }
   ]);
-  const [reviews, setReviews] = useState([
-    { id: 1, user: "john@example.com", rating: 5, comment: "Amazing!", approved: true },
-    { id: 2, user: "mike@example.com", rating: 4, comment: "Great work", approved: false }
-  ]);
+  const [reviews, setReviews] = useState([]);
   // Services state
   const [services, setServices] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(false);
@@ -693,6 +690,57 @@ const AdminDashboard = () => {
         }
       } catch (e) {
         setServicesMessage("Error loading users: " + e.message);
+      } finally {
+        setServicesLoading(false);
+      }
+    })();
+  }, [activeTab]);
+
+  // Load reviews when reviews tab is active (admin view: all reviews)
+  React.useEffect(() => {
+    if (activeTab !== 'reviews') return;
+    (async () => {
+      try {
+        setServicesLoading(true);
+        setServicesMessage('');
+
+        // Fetch services (to map service_id -> name) and reviews in parallel
+        const [servicesRes, reviewsRes] = await Promise.all([
+          fetch('https://crtvshotss.atwebpages.com/services_list.php'),
+          fetch('https://crtvshotss.atwebpages.com/reviews_admin_list.php', { credentials: 'include' })
+        ]);
+
+        const servicesJson = await servicesRes.json().catch(() => ({}));
+        const reviewsJson = await reviewsRes.json();
+
+        const serviceMap = {};
+        if (servicesJson && servicesJson.success && Array.isArray(servicesJson.data)) {
+          servicesJson.data.forEach(s => { serviceMap[s.id] = s.name; });
+          setServices(servicesJson.data);
+        }
+
+        if (reviewsJson && reviewsJson.success && Array.isArray(reviewsJson.data)) {
+          const mapped = reviewsJson.data.map(r => ({
+            id: r.id,
+            user: r.name || r.user || r.email || '',
+            name: r.name || r.user || r.email || '',
+            email: r.email || '',
+            comment: r.quote || r.comment || '',
+            rating: r.rating || 0,
+            approved: r.is_approved ? true : false,
+            service_id: r.service_id || 0,
+            service_name: serviceMap[r.service_id] || (r.service_name || '—'),
+            created_at: r.created_at || ''
+          }));
+
+          setReviews(mapped);
+          setSelectedReviewIds(new Set());
+          setReviewsPage(1);
+        } else {
+          setServicesMessage('Failed to load reviews');
+        }
+      } catch (e) {
+        setServicesMessage('Error loading reviews: ' + e.message);
       } finally {
         setServicesLoading(false);
       }
@@ -1156,17 +1204,17 @@ const AdminDashboard = () => {
             onClick={() => setActiveTab("bookings")}
             className={`nav-item ${activeTab === "bookings" ? "active" : ""}`}
           >
-            <CalendarDays size={20} />
+            <Calendar size={20} />
             <span>Orders</span>
           </button>
 
-        <button
-          onClick={() => setActiveTab("orders")}
-          className={`nav-item ${activeTab === "orders" ? "active" : ""}`}
-        >
-          <Calendar size={20} />
-          <span>Bookings</span>
-        </button>
+          <button
+            onClick={() => setActiveTab("orders")}
+            className={`nav-item ${activeTab === "orders" ? "active" : ""}`}
+          >
+            <CalendarDays size={20} />
+            <span>Bookings</span>
+          </button>
 
          <button
           onClick={() => setActiveTab("services")}
@@ -1241,7 +1289,7 @@ const AdminDashboard = () => {
       <main className="admin-main">
         <div className="admin-content">
           {activeTab === "bookings" && (
-            <div className="orders-view">
+            <div className="bookings-view">
               <h1 className="page-title">Orders</h1>
               <div className="stats-grid">
                 <div className="stat-card">
@@ -1268,13 +1316,13 @@ const AdminDashboard = () => {
                 </div>
                 <div className="bulk-actions">
                   <button className="btn-primary" onClick={() => {
-                    alert("Sample orders are read-only. Use the Bookings tab for database orders.");
+                    alert("Sample orders are read-only. Use the Orders tab for database orders.");
                   }}>Mark Paid</button>
                   <button className="btn-secondary" onClick={() => {
-                    alert("Sample orders are read-only. Use the Bookings tab for database orders.");
+                    alert("Sample orders are read-only. Use the Orders tab for database orders.");
                   }}>Mark Refunded</button>
                   <button className="btn-danger" onClick={() => {
-                    alert("Sample orders are read-only. Use the Bookings tab for database orders.");
+                    alert("Sample orders are read-only. Use the Orders tab for database orders.");
                   }}>Delete</button>
                 </div>
               </div>
@@ -1358,9 +1406,9 @@ const AdminDashboard = () => {
                           <td className="text-black text-ellipsis" style={{ maxWidth: '250px' }} title={order.service}>{order.service}</td>
                           <td className="text-black font-semibold">R{parseFloat(order.amount).toFixed(2)}</td>
                           <td>
-                            <span className={`badge ${order.status === "paid" ? "badge-confirmed" : "badge-pending"}`}>
-                              {order.status === "paid" ? "Paid" : "Failed"}
-                            </span>
+                            <span className={`badge ${order.status === "paid" ? "badge-confirmed" : "badge-yellow"}`}>
+                                {order.status === "paid" ? "Paid" : "50% Deposit"}
+                              </span>
                           </td>
                           <td className="text-black text-sm">{order.created_at}</td>
                         </tr>
@@ -1581,8 +1629,8 @@ const AdminDashboard = () => {
                         <td className="text-black text-ellipsis" style={{ maxWidth: '250px' }} title={order.service}>{order.service}</td>
                         <td className="text-black font-semibold">R{parseFloat(order.amount).toFixed(2)}</td>
                         <td>
-                          <span className={`badge ${order.status === "paid" ? "badge-confirmed" : "badge-pending"}`}>
-                            {order.status === "paid" ? "Paid" : "Failed"}
+                          <span className={`badge ${order.status === "paid" ? "badge-confirmed" : "badge-yellow"}`}>
+                            {order.status === "paid" ? "Paid" : "50% Deposit"}
                           </span>
                         </td>
                         <td className="text-black text-sm">{order.created_at}</td>
@@ -1735,9 +1783,48 @@ const AdminDashboard = () => {
                   <button className="btn-secondary" onClick={() => setSelectedReviewIds(new Set())}>Clear</button>
                 </div>
                 <div className="bulk-actions">
-                  <button className="btn-primary" onClick={() => setReviews(reviews.map(r => selectedReviewIds.has(r.id) ? { ...r, approved: true } : r))}>Approve</button>
-                  <button className="btn-secondary" onClick={() => setReviews(reviews.map(r => selectedReviewIds.has(r.id) ? { ...r, approved: false } : r))}>Unapprove</button>
-                  <button className="btn-danger" onClick={() => setReviews(reviews.filter(r => !selectedReviewIds.has(r.id)))}>Delete</button>
+                  <button className="btn-primary" onClick={() => {
+                    Array.from(selectedReviewIds).forEach(id => {
+                      fetch('https://crtvshotss.atwebpages.com/reviews_update.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ id, is_approved: true })
+                      }).then(res => res.json()).then(json => {
+                        if (json.success) {
+                          setReviews(reviews.map(r => r.id === id ? { ...r, approved: true } : r));
+                        }
+                      });
+                    });
+                  }}>Approve</button>
+                  <button className="btn-secondary" onClick={() => {
+                    Array.from(selectedReviewIds).forEach(id => {
+                      fetch('https://crtvshotss.atwebpages.com/reviews_update.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ id, is_approved: false })
+                      }).then(res => res.json()).then(json => {
+                        if (json.success) {
+                          setReviews(reviews.map(r => r.id === id ? { ...r, approved: false } : r));
+                        }
+                      });
+                    });
+                  }}>Unapprove</button>
+                  <button className="btn-danger" onClick={() => {
+                    Array.from(selectedReviewIds).forEach(id => {
+                      fetch('https://crtvshotss.atwebpages.com/reviews_delete.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ id })
+                      }).then(res => res.json()).then(json => {
+                        if (json.success) {
+                          setReviews(reviews.filter(r => r.id !== id));
+                        }
+                      });
+                    });
+                  }}>Delete</button>
                 </div>
               </div>
 
@@ -1800,8 +1887,30 @@ const AdminDashboard = () => {
                         <td className="text-black">{r.approved ? "Yes" : "No"}</td>
                         <td>
                           <div className="table-actions">
-                            <button className="btn-secondary" onClick={() => setReviews(reviews.map(x => x.id === r.id ? { ...x, approved: !x.approved } : x))}>Toggle Approve</button>
-                            <button className="btn-danger" onClick={() => setReviews(reviews.filter(x => x.id !== r.id))}>Delete</button>
+                            <button className="btn-secondary" onClick={() => {
+                              fetch('https://crtvshotss.atwebpages.com/reviews_update.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify({ id: r.id, is_approved: !r.approved })
+                              }).then(res => res.json()).then(json => {
+                                if (json.success) {
+                                  setReviews(reviews.map(x => x.id === r.id ? { ...x, approved: !x.approved } : x));
+                                }
+                              });
+                            }}>Toggle Approve</button>
+                            <button className="btn-danger" onClick={() => {
+                              fetch('https://crtvshotss.atwebpages.com/reviews_delete.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify({ id: r.id })
+                              }).then(res => res.json()).then(json => {
+                                if (json.success) {
+                                  setReviews(reviews.filter(x => x.id !== r.id));
+                                }
+                              });
+                            }}>Delete</button>
                           </div>
                         </td>
                       </tr>

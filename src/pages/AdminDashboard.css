@@ -1,3 +1,8 @@
+/* Yellow badge for 50% deposit */
+.badge-yellow {
+  background: #fef9c3;
+  color: #b45309;
+}
 .admin-dashboard {
   display: flex;
   min-height: 100vh;

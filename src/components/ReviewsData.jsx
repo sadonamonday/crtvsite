@@ -1,5 +1,6 @@
 // src/components/ReviewsData.jsx
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -8,6 +9,7 @@ import 'swiper/css/pagination';
 const API_BASE = 'https://crtvshotss.atwebpages.com';
 
 export default function Reviews() {
+    const navigate = useNavigate();
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -118,7 +120,7 @@ export default function Reviews() {
                 <div className="mb-12">
                     {!showForm ? (
                         <button
-                            onClick={() => setShowForm(true)}
+                            onClick={() => navigate('/reviews')}
                             className="px-6 py-2 bg-white text-black font-semibold rounded-lg hover:bg-gray-200 transition"
                         >
                             Write a Review
