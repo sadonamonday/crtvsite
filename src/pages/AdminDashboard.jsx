@@ -330,6 +330,206 @@ const TimeSlotManager = ({ date, timeSlots, onAddSlot, onRemoveSlot }) => {
   );
 };
 
+// Bookings Calendar Component
+const BookingsCalendar = ({ orders, onDateSelect, selectedDate }) => {
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  });
+
+  const daysInMonth = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth() + 1,
+    0
+  ).getDate();
+
+  const firstDayOfMonth = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth(),
+    1
+  ).getDay();
+
+  const monthName = currentMonth.toLocaleString('default', { month: 'long' });
+  const year = currentMonth.getFullYear();
+
+  const nextMonth = () => {
+    setCurrentMonth(prevMonth => {
+      const next = new Date(prevMonth);
+      next.setMonth(next.getMonth() + 1);
+      return next;
+    });
+  };
+
+  const prevMonth = () => {
+    setCurrentMonth(prevMonth => {
+      const prev = new Date(prevMonth);
+      prev.setMonth(prev.getMonth() - 1);
+      return prev;
+    });
+  };
+
+  // Count bookings per date
+  const bookingsByDate = {};
+  orders.forEach(order => {
+    if (order.created_at) {
+      const dateStr = order.created_at.split(' ')[0]; // Get YYYY-MM-DD part
+      bookingsByDate[dateStr] = (bookingsByDate[dateStr] || 0) + 1;
+    }
+  });
+
+  // Find max bookings for color scaling
+  const maxBookings = Math.max(...Object.values(bookingsByDate), 1);
+
+  const getDateColor = (dateString) => {
+    const count = bookingsByDate[dateString] || 0;
+    if (count === 0) return 'hover:bg-gray-100 text-black border border-gray-300';
+    
+    // Calculate opacity based on booking count (0.3 to 1.0)
+    const opacity = 0.3 + (count / maxBookings) * 0.7;
+    const isSelected = dateString === selectedDate;
+    
+    if (isSelected) {
+      return `bg-blue-700 text-white font-bold`;
+    }
+    
+    // Use inline style for dynamic opacity
+    return `text-white font-semibold`;
+  };
+
+  const getBackgroundStyle = (dateString) => {
+    const count = bookingsByDate[dateString] || 0;
+    if (count === 0 || dateString === selectedDate) return {};
+    
+    const opacity = 0.3 + (count / maxBookings) * 0.7;
+    return {
+      backgroundColor: `rgba(37, 99, 235, ${opacity})` // blue-600 with variable opacity
+    };
+  };
+
+  return (
+    <div className="w-full max-w-md mx-auto">
+      <div className="flex items-center justify-between mb-4">
+        <button
+          type="button"
+          onClick={prevMonth}
+          className="p-2 rounded transition-colors hover:bg-gray-200 text-black"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <h3 className="text-lg font-semibold text-black">
+          {monthName} {year}
+        </h3>
+        <button
+          type="button"
+          onClick={nextMonth}
+          className="p-2 hover:bg-gray-200 rounded text-black"
+        >
+          <ChevronRight size={20} />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day} className="text-center text-sm text-black py-1 font-medium">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: firstDayOfMonth }).map((_, index) => (
+          <div key={`empty-${index}`} className="p-2" />
+        ))}
+
+        {Array.from({ length: daysInMonth }).map((_, index) => {
+          const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index + 1);
+          const dateString = formatDateString(date);
+          const bookingCount = bookingsByDate[dateString] || 0;
+
+          return (
+            <button
+              key={index}
+              type="button"
+              onClick={() => onDateSelect(dateString)}
+              className={`p-2 rounded text-sm transition ${getDateColor(dateString)}`}
+              style={getBackgroundStyle(dateString)}
+              title={bookingCount > 0 ? `${bookingCount} booking${bookingCount > 1 ? 's' : ''}` : 'No bookings'}
+            >
+              <span>{index + 1}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 text-sm text-gray-600">
+        <p className="font-semibold mb-2">Legend:</p>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 border border-gray-300 rounded"></div>
+            <span>No bookings</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-blue-300 rounded"></div>
+            <span>Few bookings</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-blue-600 rounded"></div>
+            <span>Many bookings</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Bookings Date Details Component
+const BookingsDateDetails = ({ date, orders }) => {
+  const dateOrders = orders.filter(o => {
+    if (!o.created_at) return false;
+    const orderDate = o.created_at.split(' ')[0];
+    return orderDate === date;
+  });
+
+  if (dateOrders.length === 0) {
+    return (
+      <div className="mt-4 p-4 bg-white border border-gray-300 rounded-lg">
+        <h4 className="font-semibold text-black mb-3">Bookings for {date}</h4>
+        <p className="text-gray-500 text-sm">No bookings on this date</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 p-4 bg-white border border-blue-300 rounded-lg">
+      <h4 className="font-semibold text-black mb-3">
+        Bookings for {date} ({dateOrders.length})
+      </h4>
+      <div className="space-y-2 max-h-96 overflow-y-auto">
+        {dateOrders.map((order, idx) => (
+          <div key={idx} className="p-3 bg-blue-50 border border-blue-200 rounded">
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <p className="font-semibold text-black">{order.customer_name}</p>
+                <p className="text-sm text-gray-700">{order.service}</p>
+                <p className="text-sm text-gray-600">{order.customer_email}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-black">R{parseFloat(order.amount).toFixed(2)}</p>
+                <span className={`inline-block px-2 py-1 rounded text-xs ${
+                  order.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {order.status === 'paid' ? 'Paid' : '50% Deposit'}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("bookings");
@@ -489,6 +689,7 @@ const AdminDashboard = () => {
   const [availabilitySaving, setAvailabilitySaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [draftTimeSlotsByDate, setDraftTimeSlotsByDate] = useState({}); // { [date]: string[] }
+  const [selectedBookingDate, setSelectedBookingDate] = useState("");
   
   // Pagination and sorting state
   const [ordersPage, setOrdersPage] = useState(1);
@@ -1494,6 +1695,23 @@ const AdminDashboard = () => {
                 <div className="stat-card">
                   <div className="stat-value">{orders.filter(o => o.status === "pending").length}</div>
                   <div className="stat-label">Pending</div>
+                </div>
+              </div>
+
+              <div className="availability-content" style={{ marginBottom: '2rem' }}>
+                <div className="calendar-section">
+                  <h3 className="section-title" style={{ marginBottom: '1rem' }}>Bookings Calendar</h3>
+                  <BookingsCalendar
+                    orders={orders}
+                    onDateSelect={setSelectedBookingDate}
+                    selectedDate={selectedBookingDate}
+                  />
+                  {selectedBookingDate && (
+                    <BookingsDateDetails
+                      date={selectedBookingDate}
+                      orders={orders}
+                    />
+                  )}
                 </div>
               </div>
 
