@@ -136,7 +136,8 @@ const services = [
       "Commercial usage rights",
       "Quick digital delivery"
     ],
-    image: "/Images/services/services/commercialphoto.jpg"
+    image: "/Images/services/services/commercialphoto.jpg",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/commercialphoto.jpg"
     
   },
   {
@@ -154,7 +155,8 @@ const services = [
       "Fast editing turnaround",
       "Digital delivery within 48 hours"
     ],
-    image: "/Images/services/services/fashion show.webp"
+    image: "/Images/services/services/fashion show.webp",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/fashionshow.webp"
   },
   {
     id: "personal-single-photo",
@@ -171,7 +173,8 @@ const services = [
       "Online gallery",
       "Print release"
     ],
-    image: "/Images/services/services/personalphoto.jpg"
+    image: "/Images/services/services/personalphoto.jpg",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/personalphoto.jpg"
   },
   {
     id: "personal-family-photo",
@@ -188,7 +191,8 @@ const services = [
       "Online gallery",
       "Print release"
     ],
-    image: "/Images/services/services/familyphoto.webp"
+    image: "/Images/services/services/familyphoto.webp",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/familyphoto.webp"
   },
 
   // Videography Services
@@ -208,7 +212,8 @@ const services = [
       "Full ceremony recording",
       "Digital delivery"
     ],
-    image: "/Images/services/services/matricdancevideo.jpeg"
+    image: "/Images/services/services/matricdancevideo.jpeg",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/matricdancevideo.jpeg" 
   },
   {
     id: "wedding-video",
@@ -226,7 +231,8 @@ const services = [
       "Drone footage (if applicable)",
       "Digital delivery"
     ],
-    image: "/Images/services/services/weddingvideo.jpg"
+    image: "/Images/services/services/weddingvideo.jpg",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/weddingvideo.jpg"
   },
   {
     id: "corporate-video",
@@ -243,7 +249,8 @@ const services = [
       "Full presentations recording",
       "Branded graphics and titles"
     ],
-    image: "/Images/services/services/corporatevideo.webp"
+    image: "/Images/services/services/corporatevideo.webp",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/corporatevideo.webp"
   },
   {
     id: "birthday-video",
@@ -260,7 +267,8 @@ const services = [
       "Fun editing with music",
       "Digital delivery"
     ],
-    image: "/Images/services/services/birthdaypartyvideo.webp"
+    image: "/Images/services/services/birthdaypartyvideo.webp",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/birthdaypartyvideo.webp"
   },
   {
     id: "commercial-video",
@@ -278,7 +286,8 @@ const services = [
       "Motion graphics (basic)",
       "Commercial usage rights"
     ],
-    image: "/Images/services/services/commercialvideo.jpg"
+    image: "/Images/services/services/commercialvideo.jpg",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/commercialvideo.jpg"
   },
   {
     id: "fashion-video",
@@ -295,7 +304,8 @@ const services = [
       "Slow motion sequences",
       "Music synchronization"
     ],
-    image: "/Images/services/services/fashionshowvideo.jpg"
+    image: "/Images/services/services/fashionshowvideo.jpg",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/fashionshowvideo.jpg"
   },
   {
     id: "music-video",
@@ -313,7 +323,8 @@ const services = [
       "Full music video recording with additional clips",
       "Digital delivery"
     ],
-    image: "/Images/services/services/musicvideophoto.jpg"
+    image: "/Images/services/services/musicvideophoto.jpg",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/musicvideophoto.jpg"
   },
   {
     id: "reel-video",
@@ -330,7 +341,8 @@ const services = [
       "3-5 minute highlight film",
       "Digital delivery"
     ],
-    image:"/Images/services/services/highlightreel.webp"
+    image:"/Images/services/services/highlightreel.webp",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/highlightreel.webp"
   },
   {
     id: "music-video-editing",
@@ -346,7 +358,8 @@ const services = [
       "Dance floor energy",
       "Digital delivery"
     ],
-    image: "/Images/services/services/musicvideoediting.jpg"
+    image: "/Images/services/services/musicvideoediting.jpg",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/musicvideoediting.jpg"
   },
   {
   id: "color-grading",
@@ -364,7 +377,8 @@ const services = [
     "Final export in your preferred format",
     "Unlimited revisions until perfect"
   ],
-  image: "Images/services/services/colourgrading.jpg"
+  image: "Images/services/services/colourgrading.jpg",
+  image_url: "https://crtvshotss.atwebpages.com/uploads/services/colourgrading.jpg"
 },
 
   // Combo Services (Photography + Videography)
@@ -384,7 +398,8 @@ const services = [
       "Digital delivery of all files",
       "15% savings vs booking separately"
     ],
-    image: "/Images/services/services/matricdancecombo.jpg"
+    image: "/Images/services/services/matricdancecombo.jpg",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/matricdancecombo.jpg"
   },
   {
     id: "wedding-combo",
@@ -403,7 +418,8 @@ const services = [
       "USB delivery in presentation box",
       "20% savings vs separate booking"
     ],
-    image: "/Images/services/services/weddingcombo.webp"
+    image: "/Images/services/services/weddingcombo.webp",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/weddingcombo.webp"
   },
   {
     id: "corporate-combo",
@@ -421,7 +437,8 @@ const services = [
       "Commercial usage rights",
       "Quick turnaround delivery"
     ],
-    image: "/Images/services/services/corporatecombo.jpg"
+    image: "/Images/services/services/corporatecombo.jpg",
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/corporatecombo.jpg"
   },
   {
   id: "music-video-combo",
@@ -444,7 +461,8 @@ const services = [
     "All raw footage and photos delivered",
     "3 revision rounds for perfect results"
   ],
-  image: "Images/services/services/musicvideocombo.jpg"
+  image: "Images/services/services/musicvideocombo.jpg",
+  image_url: "https://crtvshotss.atwebpages.com/uploads/services/musicvideocombo.jpg"
 }
 ];
 
@@ -753,11 +771,8 @@ export default function BookingPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
-  // Services fetched from backend (initialized with static fallback)
-  const [servicesList, setServicesList] = useState([]);
-  const [servicesLoading, setServicesLoading] = useState(true);
-  const [servicesError, setServicesError] = useState("");
-  // Services fetched from backend (initialized with static fallback)
+  
+  // Fixed: Single declaration of services state
   const [servicesList, setServicesList] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(true);
   const [servicesError, setServicesError] = useState("");
@@ -774,7 +789,9 @@ export default function BookingPage() {
         
         console.log("Fetching services from API...");
         const res = await fetch("https://crtvshotss.atwebpages.com/services_list.php", {
-          signal: controller.signal
+          signal: controller.signal,
+          mode: 'cors',
+          credentials: 'omit'
         });
         
         if (!res.ok) {
@@ -874,7 +891,7 @@ export default function BookingPage() {
       } catch (err) {
         console.error("Error loading services:", err);
         if (isMounted) {
-          setServicesError(err.message);
+          setServicesError(`Failed to fetch: ${err.message}. Using fallback data.`);
           // Fallback to static services
           setServicesList(services);
         }
@@ -895,9 +912,6 @@ export default function BookingPage() {
 
   // Fixed: Filter services based on active category
   const filteredServices = useMemo(() => {
-    if (activeCategory === "all") return servicesList;
-    return servicesList.filter(service => service.category === activeCategory);
-  }, [activeCategory, servicesList]);
     if (activeCategory === "all") return servicesList;
     return servicesList.filter(service => service.category === activeCategory);
   }, [activeCategory, servicesList]);
@@ -933,7 +947,6 @@ export default function BookingPage() {
 
   const getServiceDisplayName = () => {
     if (service === "other") return customService.title || "Custom Service";
-    return selectedService?.name || service || "—";
     return selectedService?.name || service || "—";
   };
 
@@ -1069,197 +1082,109 @@ export default function BookingPage() {
     setCurrentStep((p) => Math.max(p - 1, 1));
   };
 
-    const handlePay = async () => {
-        if (!validateStep(5)) {
-            alert("Please select a payment option");
-            return;
-        }
+  const handlePay = async () => {
+    if (!validateStep(5)) {
+      alert("Please select a payment option");
+      return;
+    }
 
-        setIsProcessing(true);
+    setIsProcessing(true);
 
-        const { start: time_start, end: time_end } = parseTimeRange(time);
-        const displayName = getServiceDisplayName();
+    const { start: time_start, end: time_end } = parseTimeRange(time);
+    const displayName = getServiceDisplayName();
 
-        const bookingData = {
-            service: service, // backend expects 'service'
-            item_name: displayName,
-            item_description: `${displayName} - ${date}${time ? ` ${time}` : ""}`,
-            date: date,
-            time_start: time_start || undefined,
-            time_end: time_end || undefined,
-            customer_name: details.name,
-            customer_email: details.email,
-            customer_phone: details.phone || "",
-            customer_address: details.address || "",
-            notes: details.notes || "",
-            // omit amount/currency/payment fields; backend computes pricing
-        };
-
-        try {
-            const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(bookingData),
-            });
-
-            let data;
-            try { data = await res.json(); } catch { data = { success: res.ok, message: res.statusText }; }
-
-            if (data.success) {
-                alert("✅ Booking saved successfully!");
-                console.log("Booking saved:", data);
-                setIsProcessing(false);
-                // If backend returns a payfast_url in future, redirect:
-                // if (data.payfast_url) window.location.href = data.payfast_url;
-                resetToServiceSelection();
-            } else {
-                alert("❌ Failed to save booking: " + (data.message || "Unknown error"));
-                setIsProcessing(false);
-            }
-        } catch (err) {
-            alert("Network error: " + err.message);
-            setIsProcessing(false);
-        }
+    const bookingData = {
+      service: service, // backend expects 'service'
+      item_name: displayName,
+      item_description: `${displayName} - ${date}${time ? ` ${time}` : ""}`,
+      date: date,
+      time_start: time_start || undefined,
+      time_end: time_end || undefined,
+      customer_name: details.name,
+      customer_email: details.email,
+      customer_phone: details.phone || "",
+      customer_address: details.address || "",
+      notes: details.notes || "",
+      // omit amount/currency/payment fields; backend computes pricing
     };
 
-    const handlePay = async () => {
-        if (!validateStep(5)) {
-            alert("Please select a payment option");
-            return;
-        }
+    try {
+      const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingData),
+      });
 
-        setIsProcessing(true);
+      let data;
+      try { 
+        data = await res.json(); 
+      } catch { 
+        data = { success: res.ok, message: res.statusText }; 
+      }
 
-        const { start: time_start, end: time_end } = parseTimeRange(time);
-        const displayName = getServiceDisplayName();
+      if (data.success) {
+        alert("✅ Booking saved successfully!");
+        console.log("Booking saved:", data);
+        setIsProcessing(false);
+        // If backend returns a payfast_url in future, redirect:
+        // if (data.payfast_url) window.location.href = data.payfast_url;
+        resetToServiceSelection();
+      } else {
+        alert("❌ Failed to save booking: " + (data.message || "Unknown error"));
+        setIsProcessing(false);
+      }
+    } catch (err) {
+      alert("Network error: " + err.message);
+      setIsProcessing(false);
+    }
+  };
 
-        const bookingData = {
-            service: service, // backend expects 'service'
-            item_name: displayName,
-            item_description: `${displayName} - ${date}${time ? ` ${time}` : ""}`,
-            date: date,
-            time_start: time_start || undefined,
-            time_end: time_end || undefined,
-            customer_name: details.name,
-            customer_email: details.email,
-            customer_phone: details.phone || "",
-            customer_address: details.address || "",
-            notes: details.notes || "",
-            // omit amount/currency/payment fields; backend computes pricing
-        };
+  const handleConfirmCustom = async () => {
+    setIsProcessing(true);
 
-        try {
-            const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(bookingData),
-            });
+    const { start: time_start, end: time_end } = parseTimeRange(time);
 
-            let data;
-            try { data = await res.json(); } catch { data = { success: res.ok, message: res.statusText }; }
-
-            if (data.success) {
-                alert("✅ Booking saved successfully!");
-                console.log("Booking saved:", data);
-                setIsProcessing(false);
-                // If backend returns a payfast_url in future, redirect:
-                // if (data.payfast_url) window.location.href = data.payfast_url;
-                resetToServiceSelection();
-            } else {
-                alert("❌ Failed to save booking: " + (data.message || "Unknown error"));
-                setIsProcessing(false);
-            }
-        } catch (err) {
-            alert("Network error: " + err.message);
-            setIsProcessing(false);
-        }
+    const bookingData = {
+      service: 0,  // backend expects a numeric service_id
+      item_name: customService.title || "Custom Service",
+      item_description: customService.description || "",
+      date: date,
+      time: `${time_start}-${time_end}`, // backend requires this exact field
+      customer_name: details.name,
+      customer_email: details.email,
+      customer_phone: details.phone || "",
+      customer_address: details.address || "",
+      notes: details.notes || "",
     };
 
+    try {
+      const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingData),
+      });
 
-    const handleConfirmCustom = async () => {
-        setIsProcessing(true);
+      let data;
+      try { 
+        data = await res.json(); 
+      } catch { 
+        data = { success: res.ok, message: res.statusText }; 
+      }
 
-        const { start: time_start, end: time_end } = parseTimeRange(time);
-
-        const bookingData = {
-    service: 0,  // backend expects a numeric service_id
-    item_name: customService.title || "Custom Service",
-    item_description: customService.description || "",
-    date: date,
-    time: `${time_start}-${time_end}`, // backend requires this exact field
-    customer_name: details.name,
-    customer_email: details.email,
-    customer_phone: details.phone || "",
-    customer_address: details.address || "",
-    notes: details.notes || "",
-};
-
-        try {
-            const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(bookingData),
-            });
-
-            let data;
-            try { data = await res.json(); } catch { data = { success: res.ok, message: res.statusText }; }
-
-            if (data.success) {
-                alert("✅ Custom booking saved successfully!");
-                console.log("Custom booking saved:", data);
-                setIsProcessing(false);
-                resetToServiceSelection();
-            } else {
-                alert("❌ Failed to save booking: " + (data.message || "Unknown error"));
-                setIsProcessing(false);
-            }
-        } catch (err) {
-            alert("Network error: " + err.message);
-            setIsProcessing(false);
-        }
-    };
-    const handleConfirmCustom = async () => {
-        setIsProcessing(true);
-
-        const { start: time_start, end: time_end } = parseTimeRange(time);
-
-        const bookingData = {
-    service: 0,  // backend expects a numeric service_id
-    item_name: customService.title || "Custom Service",
-    item_description: customService.description || "",
-    date: date,
-    time: `${time_start}-${time_end}`, // backend requires this exact field
-    customer_name: details.name,
-    customer_email: details.email,
-    customer_phone: details.phone || "",
-    customer_address: details.address || "",
-    notes: details.notes || "",
-};
-
-        try {
-            const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(bookingData),
-            });
-
-            let data;
-            try { data = await res.json(); } catch { data = { success: res.ok, message: res.statusText }; }
-
-            if (data.success) {
-                alert("✅ Custom booking saved successfully!");
-                console.log("Custom booking saved:", data);
-                setIsProcessing(false);
-                resetToServiceSelection();
-            } else {
-                alert("❌ Failed to save booking: " + (data.message || "Unknown error"));
-                setIsProcessing(false);
-            }
-        } catch (err) {
-            alert("Network error: " + err.message);
-            setIsProcessing(false);
-        }
-    };
+      if (data.success) {
+        alert("✅ Custom booking saved successfully!");
+        console.log("Custom booking saved:", data);
+        setIsProcessing(false);
+        resetToServiceSelection();
+      } else {
+        alert("❌ Failed to save booking: " + (data.message || "Unknown error"));
+        setIsProcessing(false);
+      }
+    } catch (err) {
+      alert("Network error: " + err.message);
+      setIsProcessing(false);
+    }
+  };
 
   const CustomServiceModal = ({ open, onClose, initial, onSave }) => {
     const [form, setForm] = useState(initial || { title: "", description: "", budget: "" });
@@ -1405,15 +1330,12 @@ export default function BookingPage() {
         <div className="space-y-2">
           <label className="block font-medium text-gray-800">Preferred Service Type</label>
           <select
-          <select
             className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-800"
             onChange={(e) => {
               if (e.target.value) {
                 // If user selects a specific service type, switch to that category
                 setService(e.target.value);
                 setActiveCategory(
-                  e.target.value === "photography" ? "photography" :
-                  e.target.value === "videography" ? "videography" :
                   e.target.value === "photography" ? "photography" :
                   e.target.value === "videography" ? "videography" :
                   e.target.value === "combo" ? "combo" : "custom"
@@ -1635,7 +1557,6 @@ export default function BookingPage() {
     </div>
   );
 
-  // Fix: Update the step 1 rendering logic
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -1679,9 +1600,7 @@ export default function BookingPage() {
                 
                 {/* Show calculated price for hourly services */}
                 {isHourlyService && time && (
-                {isHourlyService && time && (
                   <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-green-800 mb-2">Hourly booking</h4>
                     <h4 className="font-semibold text-green-800 mb-2">Hourly booking</h4>
                     <div className="text-sm text-green-700">
                       <div className="flex justify-between">
@@ -1693,8 +1612,6 @@ export default function BookingPage() {
                           })()}
                         </span>
                       </div>
-                      <div className="mt-2 text-green-800">
-                        Pricing is calculated by the backend at checkout.
                       <div className="mt-2 text-green-800">
                         Pricing is calculated by the backend at checkout.
                       </div>
@@ -1782,11 +1699,6 @@ export default function BookingPage() {
                         <div className="text-sm mt-1 text-gray-700">
                           <span className="font-medium">Duration:</span>
                           {` ${calculateHoursBetweenTimes(time.split('-')[0], time.split('-')[1]).toFixed(1)} hours`}
-                      {getServiceDisplayName()}
-                      {isHourlyService && time && (
-                        <div className="text-sm mt-1 text-gray-700">
-                          <span className="font-medium">Duration:</span>
-                          {` ${calculateHoursBetweenTimes(time.split('-')[0], time.split('-')[1]).toFixed(1)} hours`}
                         </div>
                       )}
                     </div>
@@ -1861,7 +1773,6 @@ export default function BookingPage() {
                   </span>
                 </div>
                 {service !== "other" && isHourlyService && time && (
-                {service !== "other" && isHourlyService && time && (
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Duration:</span>
                     <span>
@@ -1869,8 +1780,6 @@ export default function BookingPage() {
                     </span>
                   </div>
                 )}
-                {/* Amount is calculated by the backend; no client-side total here */}
-                {/* Amount is calculated by the backend; no client-side total here */}
                 {service === "other" && customService.budget && (
                   <div className="flex justify-between text-lg font-semibold mt-4 pt-4 border-t border-gray-300">
                     <span>Estimated Budget:</span>
@@ -1895,7 +1804,6 @@ export default function BookingPage() {
                   >
                     <h4 className="text-lg font-semibold mb-2 text-gray-800">Pay Full Amount</h4>
                     <div className="text-2xl font-bold text-green-600 mb-2">Calculated at checkout</div>
-                    <div className="text-2xl font-bold text-green-600 mb-2">Calculated at checkout</div>
                     <p className="text-gray-600 text-sm">Secure your booking with full payment</p>
                   </button>
 
@@ -1906,7 +1814,6 @@ export default function BookingPage() {
                   >
                     <h4 className="text-lg font-semibold mb-2 text-gray-800">Pay 50% Deposit</h4>
                     <div className="text-2xl font-bold text-green-600 mb-2">Calculated at checkout</div>
-                    <div className="text-2xl font-bold text-green-600 mb-2">Calculated at checkout</div>
                     <p className="text-gray-600 text-sm">Pay half now, balance due before service</p>
                   </button>
                 </div>
@@ -1915,7 +1822,6 @@ export default function BookingPage() {
                   <h4 className="font-semibold mb-2 text-gray-800">Payment Information</h4>
                   <p className="text-gray-600 text-sm">
                     {paymentOption === "deposit"
-                      ? "A 50% deposit is required to secure your booking. The remaining balance will be due before the service date."
                       ? "A 50% deposit is required to secure your booking. The remaining balance will be due before the service date."
                       : "Full payment secures your booking and ensures availability for your selected date and time."}
                    </p>
@@ -2015,7 +1921,6 @@ export default function BookingPage() {
                     disabled={!paymentOption || isProcessing}
                   >
                     {isProcessing ? "Processing..." : "Pay Now"}
-                    {isProcessing ? "Processing..." : "Pay Now"}
                   </button>
                 </div>
               )
@@ -2114,4 +2019,4 @@ export default function BookingPage() {
       `}</style>
     </div>
   );
-};
+}
