@@ -55,11 +55,11 @@ const Verify2FA = () => {
         localStorage.setItem('user', JSON.stringify(userData));
         sessionStorage.removeItem('user_email'); // Clean up
         
-        console.log("Navigating to:", data.is_admin === 1 ? "/admin-dashboard" : "/");
+        console.log("Navigating to:", data.is_admin === 1 ? "/admin" : "/");
         
         // Check if user is admin
         if (data.is_admin === 1) {
-          navigate("/admin-dashboard");
+          navigate("/admin");
         } else {
           navigate("/");
         }
