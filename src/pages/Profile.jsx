@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 // If you already have a global config/env, prefer using that.
-const API_BASE = 'https://crtvshotss.atwebpages.com/api';
+const API_BASE = 'https://crtvshotss.atwebpages.com/';
 
 const TABS = {
     OVERVIEW: 'overview',
@@ -81,11 +81,11 @@ const Profile = () => {
     }, [email, navigate]);
 
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-900">
+        <div className="min-h-screen bg-gray-50 text-gray-900 mt-35">
             <header className="bg-white border-b">
                 <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
                     <Link to="/" className="text-xl font-semibold">
-                        CRTVisuals
+
                     </Link>
                     <nav className="flex gap-2">
                         <TabButton label="Overview" active={activeTab === TABS.OVERVIEW} onClick={() => setActiveTab(TABS.OVERVIEW)} />
@@ -222,7 +222,7 @@ function OrdersTab() {
         return params.toString();
     }, [page, pageSize, status, q]);
 
-    const { data, error, loading } = useFetchJson(`${API_BASE}/orders_list.php?${query}`, [query]);
+    const { data, error, loading } = useFetchJson(`${API_BASE}/order_list.php?${query}`, [query]);
 
     const total = data?.total || 0;
     const orders = data?.orders || [];
