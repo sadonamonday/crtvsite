@@ -14,6 +14,7 @@ import Checkout from "./pages/Checkout.jsx";
 import Login from "./pages/Login";
 import Verify2FA from "./pages/Verify2fa.jsx";
 import AdminDashboard from './pages/AdminDashboard.jsx';
+import Signup from "./pages/Signup.jsx";
 
 function AppContent() {
   const location = useLocation();
@@ -37,6 +38,8 @@ function AppContent() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/login" element={<Login />} />
           <Route path="/Verify2FA" element={<Verify2FA />} />
+          <Route path="/signup" element={<Signup />} />
+
         </Routes>
       </main>
     </div>

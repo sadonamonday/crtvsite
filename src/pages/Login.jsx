@@ -141,12 +141,12 @@ const Login = () => {
           <div className="mt-6 text-center text-sm">
             <p>
               Don't have an account?{" "}
-              <a
-                href="https://crtvshotss.atwebpages.com/signup.php"
-                className="text-blue-600 hover:underline font-medium"
-              >
-                Sign up
-              </a>
+              <Link
+      to="/signup"
+      className="text-blue-600 hover:underline font-medium"
+    >
+      Sign up
+    </Link>
             </p>
             <p className="mt-2">
               <a
