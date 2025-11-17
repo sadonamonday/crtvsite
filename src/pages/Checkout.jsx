@@ -110,6 +110,7 @@ const Checkout = () => {
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col">
       <Header />
+      <div className="h-24"></div>
       <div className="flex-grow pt-5 px-6 text-gray-900 max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-6 text-center">Checkout</h1>
 
