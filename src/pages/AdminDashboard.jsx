@@ -967,7 +967,13 @@ const AdminDashboard = () => {
         });
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
-          setUsers(json.data);
+          // Ensure is_admin is properly converted to number
+          const mappedUsers = json.data.map(u => ({
+            ...u,
+            is_admin: parseInt(u.is_admin) || 0,
+            email_verified: parseInt(u.email_verified) || 0
+          }));
+          setUsers(mappedUsers);
           setSelectedUserIds(new Set());
         } else {
           setServicesMessage("Failed to load users");
@@ -1009,8 +1015,10 @@ const AdminDashboard = () => {
             user: r.name || r.user || r.email || '',
             name: r.name || r.user || r.email || '',
             email: r.email || '',
+            quote: r.quote || r.comment || '',
             comment: r.quote || r.comment || '',
             rating: r.rating || 0,
+            is_approved: r.is_approved ? 1 : 0,
             approved: r.is_approved ? true : false,
             service_id: r.service_id || 0,
             service_name: serviceMap[r.service_id] || (r.service_name || '—'),
@@ -2076,9 +2084,76 @@ const AdminDashboard = () => {
                   <button className="btn-secondary" onClick={() => setSelectedUserIds(new Set())}>Clear</button>
                 </div>
                 <div className="bulk-actions">
-                  <button className="btn-primary" disabled>Make Admin</button>
-                  <button className="btn-secondary" disabled>Make Customer</button>
-                  <button className="btn-danger" disabled>Delete</button>
+                  <button 
+                    className="btn-primary" 
+                    disabled={selectedUserIds.size === 0}
+                    onClick={async () => {
+                      try {
+                        await Promise.all(Array.from(selectedUserIds).map(user_id => 
+                          fetch('https://crtvshotss.atwebpages.com/users_update_admin.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ user_id, is_admin: true })
+                          }).then(res => res.json())
+                        ));
+                        setUsers(users.map(u => selectedUserIds.has(u.user_id) ? { ...u, is_admin: 1 } : u));
+                        setSelectedUserIds(new Set());
+                      } catch (err) {
+                        console.error('Error making admin:', err);
+                        alert('Failed to update users');
+                      }
+                    }}
+                  >
+                    Make Admin
+                  </button>
+                  <button 
+                    className="btn-secondary" 
+                    disabled={selectedUserIds.size === 0}
+                    onClick={async () => {
+                      try {
+                        await Promise.all(Array.from(selectedUserIds).map(user_id => 
+                          fetch('https://crtvshotss.atwebpages.com/users_update_admin.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ user_id, is_admin: false })
+                          }).then(res => res.json())
+                        ));
+                        setUsers(users.map(u => selectedUserIds.has(u.user_id) ? { ...u, is_admin: 0 } : u));
+                        setSelectedUserIds(new Set());
+                      } catch (err) {
+                        console.error('Error removing admin:', err);
+                        alert('Failed to update users');
+                      }
+                    }}
+                  >
+                    Make Customer
+                  </button>
+                  <button 
+                    className="btn-danger" 
+                    disabled={selectedUserIds.size === 0}
+                    onClick={async () => {
+                      if (!confirm(`Delete ${selectedUserIds.size} user(s)?`)) return;
+                      try {
+                        await Promise.all(Array.from(selectedUserIds).map(user_id => 
+                          fetch('https://crtvshotss.atwebpages.com/users_delete.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ user_id })
+                          }).then(res => res.json())
+                        ));
+                        setUsers(users.filter(u => !selectedUserIds.has(u.user_id)));
+                        setSelectedUserIds(new Set());
+                      } catch (err) {
+                        console.error('Error deleting users:', err);
+                        alert('Failed to delete users');
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
 
@@ -2126,6 +2201,14 @@ const AdminDashboard = () => {
                         Verified
                       </SortableHeader>
                       <SortableHeader
+                        field="is_admin"
+                        currentSortField={usersSortField}
+                        currentSortDirection={usersSortDirection}
+                        onSort={handleUsersSort}
+                      >
+                        Admin
+                      </SortableHeader>
+                      <SortableHeader
                         field="created_at"
                         currentSortField={usersSortField}
                         currentSortDirection={usersSortDirection}
@@ -2133,16 +2216,17 @@ const AdminDashboard = () => {
                       >
                         Joined
                       </SortableHeader>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {servicesLoading ? (
                       <tr>
-                        <td colSpan="9" className="text-black text-center">Loading users...</td>
+                        <td colSpan="11" className="text-black text-center">Loading users...</td>
                       </tr>
                     ) : sortedUsers.length === 0 ? (
                       <tr>
-                        <td colSpan="9" className="text-black text-center">No users found.</td>
+                        <td colSpan="11" className="text-black text-center">No users found.</td>
                       </tr>
                     ) : (
                       paginatedUsers.map(u => (
@@ -2159,11 +2243,66 @@ const AdminDashboard = () => {
                           <td className="text-black text-ellipsis" style={{ maxWidth: '200px' }} title={u.user_email}>{u.user_email}</td>
                           <td className="text-black">{u.user_contact || '-'}</td>
                           <td>
-                            <span className={`badge ${u.email_verified ? "badge-confirmed" : "badge-pending"}`}>
-                              {u.email_verified ? "Yes" : "No"}
+                            <span className={`badge ${u.email_verified == 1 || u.email_verified === 1 || u.email_verified === '1' ? "badge-confirmed" : "badge-pending"}`}>
+                              {u.email_verified == 1 || u.email_verified === 1 || u.email_verified === '1' ? "Yes" : "No"}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`badge ${u.is_admin == 1 || u.is_admin === 1 || u.is_admin === '1' ? "badge-confirmed" : "badge-pending"}`}>
+                              {u.is_admin == 1 || u.is_admin === 1 || u.is_admin === '1' ? "Yes" : "No"}
                             </span>
                           </td>
                           <td className="text-black text-sm">{u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'}</td>
+                          <td>
+                            <div className="table-actions">
+                              <button 
+                                className="btn-secondary" 
+                                onClick={async () => {
+                                  try {
+                                    const res = await fetch('https://crtvshotss.atwebpages.com/users_update_admin.php', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      credentials: 'include',
+                                      body: JSON.stringify({ user_id: u.user_id, is_admin: !u.is_admin })
+                                    });
+                                    const json = await res.json();
+                                    if (json.success) {
+                                      const currentIsAdmin = u.is_admin == 1 || u.is_admin === 1 || u.is_admin === '1';
+                                      setUsers(users.map(x => x.user_id === u.user_id ? { ...x, is_admin: currentIsAdmin ? 0 : 1 } : x));
+                                    }
+                                  } catch (err) {
+                                    console.error('Error updating admin status:', err);
+                                    alert('Failed to update user');
+                                  }
+                                }}
+                              >
+                                {(u.is_admin == 1 || u.is_admin === 1 || u.is_admin === '1') ? 'Remove Admin' : 'Make Admin'}
+                              </button>
+                              <button 
+                                className="btn-danger" 
+                                onClick={async () => {
+                                  if (!confirm(`Delete user ${u.user_firstname} ${u.user_surname}?`)) return;
+                                  try {
+                                    const res = await fetch('https://crtvshotss.atwebpages.com/users_delete.php', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      credentials: 'include',
+                                      body: JSON.stringify({ user_id: u.user_id })
+                                    });
+                                    const json = await res.json();
+                                    if (json.success) {
+                                      setUsers(users.filter(x => x.user_id !== u.user_id));
+                                    }
+                                  } catch (err) {
+                                    console.error('Error deleting user:', err);
+                                    alert('Failed to delete user');
+                                  }
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -2190,47 +2329,57 @@ const AdminDashboard = () => {
                   <button className="btn-secondary" onClick={() => setSelectedReviewIds(new Set())}>Clear</button>
                 </div>
                 <div className="bulk-actions">
-                  <button className="btn-primary" onClick={() => {
-                    Array.from(selectedReviewIds).forEach(id => {
-                      fetch('https://crtvshotss.atwebpages.com/reviews_update.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
-                        body: JSON.stringify({ id, is_approved: true })
-                      }).then(res => res.json()).then(json => {
-                        if (json.success) {
-                          setReviews(reviews.map(r => r.id === id ? { ...r, approved: true } : r));
-                        }
-                      });
-                    });
+                  <button className="btn-primary" onClick={async () => {
+                    try {
+                      await Promise.all(Array.from(selectedReviewIds).map(id => 
+                        fetch('https://crtvshotss.atwebpages.com/reviews_update.php', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          credentials: 'include',
+                          body: JSON.stringify({ id, is_approved: true })
+                        }).then(res => res.json())
+                      ));
+                      setReviews(reviews.map(r => selectedReviewIds.has(r.id) ? { ...r, is_approved: 1 } : r));
+                      setSelectedReviewIds(new Set());
+                    } catch (err) {
+                      console.error('Error approving reviews:', err);
+                      alert('Failed to approve reviews');
+                    }
                   }}>Approve</button>
-                  <button className="btn-secondary" onClick={() => {
-                    Array.from(selectedReviewIds).forEach(id => {
-                      fetch('https://crtvshotss.atwebpages.com/reviews_update.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
-                        body: JSON.stringify({ id, is_approved: false })
-                      }).then(res => res.json()).then(json => {
-                        if (json.success) {
-                          setReviews(reviews.map(r => r.id === id ? { ...r, approved: false } : r));
-                        }
-                      });
-                    });
+                  <button className="btn-secondary" onClick={async () => {
+                    try {
+                      await Promise.all(Array.from(selectedReviewIds).map(id => 
+                        fetch('https://crtvshotss.atwebpages.com/reviews_update.php', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          credentials: 'include',
+                          body: JSON.stringify({ id, is_approved: false })
+                        }).then(res => res.json())
+                      ));
+                      setReviews(reviews.map(r => selectedReviewIds.has(r.id) ? { ...r, is_approved: 0 } : r));
+                      setSelectedReviewIds(new Set());
+                    } catch (err) {
+                      console.error('Error unapproving reviews:', err);
+                      alert('Failed to unapprove reviews');
+                    }
                   }}>Unapprove</button>
-                  <button className="btn-danger" onClick={() => {
-                    Array.from(selectedReviewIds).forEach(id => {
-                      fetch('https://crtvshotss.atwebpages.com/reviews_delete.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
-                        body: JSON.stringify({ id })
-                      }).then(res => res.json()).then(json => {
-                        if (json.success) {
-                          setReviews(reviews.filter(r => r.id !== id));
-                        }
-                      });
-                    });
+                  <button className="btn-danger" onClick={async () => {
+                    if (!confirm(`Delete ${selectedReviewIds.size} review(s)?`)) return;
+                    try {
+                      await Promise.all(Array.from(selectedReviewIds).map(id => 
+                        fetch('https://crtvshotss.atwebpages.com/reviews_delete.php', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          credentials: 'include',
+                          body: JSON.stringify({ id })
+                        }).then(res => res.json())
+                      ));
+                      setReviews(reviews.filter(r => !selectedReviewIds.has(r.id)));
+                      setSelectedReviewIds(new Set());
+                    } catch (err) {
+                      console.error('Error deleting reviews:', err);
+                      alert('Failed to delete reviews');
+                    }
                   }}>Delete</button>
                 </div>
               </div>
@@ -2252,12 +2401,12 @@ const AdminDashboard = () => {
                         ID
                       </SortableHeader>
                       <SortableHeader
-                        field="user"
+                        field="name"
                         currentSortField={reviewsSortField}
                         currentSortDirection={reviewsSortDirection}
                         onSort={handleReviewsSort}
                       >
-                        User
+                        Name
                       </SortableHeader>
                       <SortableHeader
                         field="rating"
@@ -2267,9 +2416,9 @@ const AdminDashboard = () => {
                       >
                         Rating
                       </SortableHeader>
-                      <th>Comment</th>
+                      <th>Quote</th>
                       <SortableHeader
-                        field="approved"
+                        field="is_approved"
                         currentSortField={reviewsSortField}
                         currentSortDirection={reviewsSortDirection}
                         onSort={handleReviewsSort}
@@ -2288,42 +2437,46 @@ const AdminDashboard = () => {
                           setSelectedReviewIds(next);
                         }} /></td>
                         <td className="text-black">{r.id}</td>
-                        <td className="text-black">{r.user}</td>
+                        <td className="text-black">{r.name}</td>
                         <td className="text-black">{r.rating}</td>
-                        <td className="text-black">{r.comment}</td>
-                        <td className="text-black">{r.approved ? "Yes" : "No"}</td>
+                        <td className="text-black">{r.quote}</td>
+                        <td className="text-black">{r.is_approved ? "Yes" : "No"}</td>
                         <td>
                           <div className="table-actions">
-                            <button className="btn-secondary" onClick={() => {
-                              fetch('https://crtvshotss.atwebpages.com/admin/reviews_update.php', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                credentials: 'include',
-                                body: JSON.stringify({ id: r.id, is_approved: !r.approved })
-                              }).then(res => res.json()).then(json => {
+                            <button className="btn-secondary" onClick={async () => {
+                              try {
+                                const res = await fetch('https://crtvshotss.atwebpages.com/reviews_update.php', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  credentials: 'include',
+                                  body: JSON.stringify({ id: r.id, is_approved: !r.is_approved })
+                                });
+                                const json = await res.json();
                                 if (json.success) {
-                                  setReviews(reviews.map(x => x.id === r.id ? { ...x, approved: !x.approved } : x));
+                                  setReviews(reviews.map(x => x.id === r.id ? { ...x, is_approved: x.is_approved ? 0 : 1 } : x));
                                 }
-                              }).catch(err => {
+                              } catch (err) {
                                 console.error('Error toggling approval:', err);
                                 alert('Failed to update review');
-                              });
-                            }}>Toggle Approve</button>
-                            <button className="btn-danger" onClick={() => {
+                              }
+                            }}>{r.is_approved ? 'Unapprove' : 'Approve'}</button>
+                            <button className="btn-danger" onClick={async () => {
                               if (!confirm('Are you sure you want to delete this review?')) return;
-                              fetch('https://crtvshotss.atwebpages.com/admin/reviews_delete.php', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                credentials: 'include',
-                                body: JSON.stringify({ id: r.id })
-                              }).then(res => res.json()).then(json => {
+                              try {
+                                const res = await fetch('https://crtvshotss.atwebpages.com/reviews_delete.php', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  credentials: 'include',
+                                  body: JSON.stringify({ id: r.id })
+                                });
+                                const json = await res.json();
                                 if (json.success) {
                                   setReviews(reviews.filter(x => x.id !== r.id));
                                 }
-                              }).catch(err => {
+                              } catch (err) {
                                 console.error('Error deleting review:', err);
                                 alert('Failed to delete review');
-                              });
+                              }
                             }}>Delete</button>
                           </div>
                         </td>
