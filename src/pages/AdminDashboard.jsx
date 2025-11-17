@@ -825,14 +825,58 @@ const AdminDashboard = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log("Checking admin authentication...");
+        
+        // Check localStorage first (primary source of truth for cross-domain auth)
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            console.log("Found user in localStorage:", userData);
+            
+            if (userData.is_admin === 1) {
+              console.log("User is admin (from localStorage), granting access");
+              setIsAuthenticated(true);
+              setIsLoading(false);
+              return;
+            } else {
+              console.log("User is not admin (from localStorage), redirecting to home");
+              navigate("/");
+              setIsLoading(false);
+              return;
+            }
+          } catch (parseError) {
+            console.error("Error parsing user data from localStorage:", parseError);
+            localStorage.removeItem('user');
+          }
+        }
+        
+        // Fallback: Check server session (for direct server access or same-domain)
+        console.log("No localStorage, checking server session...");
         const res = await fetch("https://crtvshotss.atwebpages.com/sessions/check_admin_simple.php", {
           credentials: "include"
         });
-        const data = await res.json();
+        
+        const text = await res.text();
+        console.log("Admin check raw response:", text);
+        
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (parseError) {
+          console.error("Failed to parse admin check response:", text.substring(0, 200));
+          navigate("/login");
+          setIsLoading(false);
+          return;
+        }
+        
+        console.log("Admin check data:", data);
         
         if (data.success && data.is_admin) {
+          console.log("User is admin (from server), granting access");
           setIsAuthenticated(true);
         } else {
+          console.log("Not admin or not authenticated, redirecting to login");
           navigate("/login");
         }
       } catch (error) {
