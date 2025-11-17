@@ -1195,23 +1195,81 @@ const AdminDashboard = () => {
 
   // Inline forms for CRUD sections
   const OrderForm = ({ onCreate }) => {
+    const [customerName, setCustomerName] = useState("");
     const [email, setEmail] = useState("");
-    const [total, setTotal] = useState("");
+    const [phone, setPhone] = useState("");
+    const [service, setService] = useState("");
+    const [amount, setAmount] = useState("");
     const [status, setStatus] = useState("pending");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    const handleCreate = async () => {
+      if (!customerName || !email || !phone || !service || !amount) {
+        alert("All fields are required");
+        return;
+      }
+      
+      try {
+        setIsSubmitting(true);
+        const res = await fetch('https://crtvshotss.atwebpages.com/bookings_create.php', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customer_name: customerName,
+            customer_email: email,
+            customer_phone: phone,
+            service,
+            amount: parseFloat(amount),
+            status
+          })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          onCreate({
+            id: data.booking_id,
+            order_id: data.order_id || 'ORD-' + Date.now(),
+            customer_name: customerName,
+            customer_email: email,
+            customer_phone: phone,
+            service,
+            amount,
+            status,
+            created_at: new Date().toISOString().split('T')[0]
+          });
+          // Reset form
+          setCustomerName("");
+          setEmail("");
+          setPhone("");
+          setService("");
+          setAmount("");
+          setStatus("pending");
+        } else {
+          alert('Failed to create booking: ' + (data.message || 'Unknown error'));
+        }
+      } catch (e) {
+        alert('Error creating booking: ' + e.message);
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+    
     return (
-      <div className="entity-form-grid">
-        <input className="settings-input" placeholder="User Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input className="settings-input" placeholder="Total (R)" type="number" value={total} onChange={(e) => setTotal(Number(e.target.value))} />
+      <div className="entity-form-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        <input className="settings-input" placeholder="Customer Name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+        <input className="settings-input" placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input className="settings-input" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <input className="settings-input" placeholder="Service" value={service} onChange={(e) => setService(e.target.value)} />
+        <input className="settings-input" placeholder="Amount (R)" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
         <select className="settings-input" value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="pending">pending</option>
-          <option value="paid">paid</option>
-          <option value="refunded">refunded</option>
+          <option value="pending">Pending</option>
+          <option value="paid">Paid</option>
+          <option value="refunded">Refunded</option>
         </select>
-        <button className="btn-primary" onClick={() => {
-          if (!email || !total) return;
-          onCreate({ user: email, total: Number(total), status, createdAt: new Date().toISOString().slice(0,10) });
-          setEmail(""); setTotal(""); setStatus("pending");
-        }}>Create</button>
+        <button className="btn-primary" onClick={handleCreate} disabled={isSubmitting}>
+          {isSubmitting ? 'Creating...' : 'Create Booking'}
+        </button>
       </div>
     );
   };
@@ -1295,7 +1353,7 @@ const AdminDashboard = () => {
         onLoading(true);
         onMessage("");
         const endpoint = service ? "services_update.php" : "services_create.php";
-        const res = await fetch(`https://crtvshotss.atwebpages.com/admin/${endpoint}`, {
+        const res = await fetch(`https://crtvshotss.atwebpages.com/${endpoint}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include", // Send PHP session cookie for authentication
@@ -1436,7 +1494,7 @@ const AdminDashboard = () => {
     try {
       setServicesLoading(true);
       setServicesMessage("");
-      const res = await fetch("https://crtvshotss.atwebpages.com/admin/services_delete.php", {
+      const res = await fetch("https://crtvshotss.atwebpages.com/services_delete.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // Send PHP session cookie for authentication
@@ -1835,20 +1893,70 @@ const AdminDashboard = () => {
                   <button className="btn-secondary" onClick={() => setSelectedOrderIds(new Set())}>Clear</button>
                 </div>
                 <div className="bulk-actions">
-                  <button className="btn-primary" onClick={() => {
-                    const updated = orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "paid" } : o);
-                    setOrders(updated);
-                    setSelectedOrderIds(new Set());
+                  <button className="btn-primary" onClick={async () => {
+                    if (selectedOrderIds.size === 0) {
+                      alert('Please select orders to mark as paid');
+                      return;
+                    }
+                    try {
+                      const promises = Array.from(selectedOrderIds).map(id => 
+                        fetch('https://crtvshotss.atwebpages.com/bookings_update.php', {
+                          method: 'POST',
+                          credentials: 'include',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ id, status: 'paid' })
+                        })
+                      );
+                      await Promise.all(promises);
+                      const updated = orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "paid" } : o);
+                      setOrders(updated);
+                      setSelectedOrderIds(new Set());
+                    } catch (e) {
+                      alert('Error updating bookings: ' + e.message);
+                    }
                   }}>Mark Paid</button>
-                  <button className="btn-secondary" onClick={() => {
-                    const updated = orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "refunded" } : o);
-                    setOrders(updated);
-                    setSelectedOrderIds(new Set());
+                  <button className="btn-secondary" onClick={async () => {
+                    if (selectedOrderIds.size === 0) {
+                      alert('Please select orders to mark as refunded');
+                      return;
+                    }
+                    try {
+                      const promises = Array.from(selectedOrderIds).map(id => 
+                        fetch('https://crtvshotss.atwebpages.com/bookings_update.php', {
+                          method: 'POST',
+                          credentials: 'include',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ id, status: 'refunded' })
+                        })
+                      );
+                      await Promise.all(promises);
+                      const updated = orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "refunded" } : o);
+                      setOrders(updated);
+                      setSelectedOrderIds(new Set());
+                    } catch (e) {
+                      alert('Error updating bookings: ' + e.message);
+                    }
                   }}>Mark Refunded</button>
-                  <button className="btn-danger" onClick={() => {
-                    if (confirm(`Delete ${selectedOrderIds.size} order(s)?`)) {
+                  <button className="btn-danger" onClick={async () => {
+                    if (selectedOrderIds.size === 0) {
+                      alert('Please select orders to delete');
+                      return;
+                    }
+                    if (!confirm(`Delete ${selectedOrderIds.size} order(s)?`)) return;
+                    try {
+                      const promises = Array.from(selectedOrderIds).map(id => 
+                        fetch('https://crtvshotss.atwebpages.com/bookings_delete.php', {
+                          method: 'POST',
+                          credentials: 'include',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ id })
+                        })
+                      );
+                      await Promise.all(promises);
                       setOrders(orders.filter(o => !selectedOrderIds.has(o.id)));
                       setSelectedOrderIds(new Set());
+                    } catch (e) {
+                      alert('Error deleting bookings: ' + e.message);
                     }
                   }}>Delete</button>
                 </div>
@@ -1949,7 +2057,7 @@ const AdminDashboard = () => {
 
               <div className="entity-form">
                 <h3 className="section-title">Create Order</h3>
-                <OrderForm onCreate={(newOrder) => setOrders([{ ...newOrder, id: Date.now() }, ...orders])} />
+                <OrderForm onCreate={(newOrder) => setOrders([newOrder, ...orders])} />
               </div>
             </div>
           )}
