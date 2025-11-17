@@ -30,6 +30,8 @@ const Login = () => {
       console.log("Login Response:", data);
 
       if (data.success) {
+
+
         sessionStorage.setItem("user_email", email);
         navigate("/Verify2FA");
       } else if (data.email_verified === false) {

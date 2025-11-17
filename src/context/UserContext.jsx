@@ -3,35 +3,42 @@ import React, { createContext, useState, useEffect } from "react";
 export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-  // Fetch logged-in user from backend
-  useEffect(() => {
+    // Fetch user on page load
     const fetchUser = async () => {
-      try {
-        const res = await fetch(
-          "https://crtvshotss.atwebpages.com/users/get_user.php",
-          {
-            method: "GET",
-            credentials: "include", // send PHP session cookie
-          }
-        );
-        const data = await res.json();
-        if (!data.error) {
-          setUser(data);
+        try {
+            const res = await fetch(
+                "https://crtvshotss.atwebpages.com/users/get_user.php",
+                {
+                    method: "GET",
+                    credentials: "include",
+                }
+            );
+
+            const data = await res.json();
+
+            if (!data.error && data.id) {
+                setUser(data); // must contain user info
+            } else {
+                setUser(null);
+            }
+        } catch (err) {
+            console.error("Error fetching user:", err);
+            setUser(null);
         }
-      } catch (err) {
-        console.error("Error fetching user:", err);
-        setUser(null);
-      }
+
+        setLoading(false);
     };
 
-    fetchUser();
-  }, []);
+    useEffect(() => {
+        fetchUser();
+    }, []);
 
-  return (
-    <UserContext.Provider value={{ user, setUser }}>
-      {children}
-    </UserContext.Provider>
-  );
+    return (
+        <UserContext.Provider value={{ user, setUser, fetchUser, loading }}>
+            {children}
+        </UserContext.Provider>
+    );
 };
