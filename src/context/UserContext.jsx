@@ -1,36 +1,17 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState } from "react";
 
 export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Fetch logged-in user from backend
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch(
-          "http://crtvshotss.atwebpages.com/users/get_user.php",
-          {
-            method: "GET",
-            credentials: "include", // send PHP session cookie
-          }
-        );
-        const data = await res.json();
-        if (!data.error) {
-          setUser(data);
-        }
-      } catch (err) {
-        console.error("Error fetching user:", err);
-        setUser(null);
-      }
-    };
-
-    fetchUser();
-  }, []);
+  // No automatic user fetch neede admin auth is handled by backend
+  // Each admin API call checks $_SESSION['is_admin'] on the server
 
   return (
-    <UserContext.Provider value={{ user, setUser }}>
+    <UserContext.Provider value={{ user, setUser, loading, error }}>
       {children}
     </UserContext.Provider>
   );

@@ -14,14 +14,17 @@ import Checkout from "./pages/Checkout.jsx";
 import Login from "./pages/Login";
 import Verify2FA from "./pages/Verify2fa.jsx";
 import AdminDashboard from './pages/AdminDashboard.jsx';
+import Signup from "./pages/Signup.jsx";
+import Profile from "./pages/Profile.jsx";
 
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
-  
+  const hideHeader = isAdminRoute || location.pathname === '/login' || location.pathname === '/Verify2FA';
+
   return (
     <div className="relative min-h-screen">
-      {!isAdminRoute && <Header />}
+      {!hideHeader && <Header />}
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -36,6 +39,9 @@ function AppContent() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/login" element={<Login />} />
           <Route path="/Verify2FA" element={<Verify2FA />} />
+          <Route path="/signup" element={<Signup />} />
+            <Route path="/profile" element={<Profile />} />
+
         </Routes>
       </main>
     </div>

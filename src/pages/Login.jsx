@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import { Link, useNavigate } from "react-router-dom";
+import logo from "/Logo.png";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -19,7 +18,7 @@ const Login = () => {
 
     try {
       const res = await fetch(
-        "https://crtvshotss.atwebpages.com/login.php",
+        "https://crtvshotss.atwebpages.com/sessions/login_simple.php",
         {
           method: "POST",
           body: formData,
@@ -27,10 +26,24 @@ const Login = () => {
         }
       );
 
-      const data = await res.json();
+      // Check if response is JSON
+      const text = await res.text();
+      console.log("Server response:", text);
+      
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        console.error("Failed to parse JSON. Server returned:", text.substring(0, 500));
+        setError("Server error: The login endpoint is not responding correctly. Please make sure the session files are uploaded to the server.");
+        return;
+      }
+
       console.log("Login Response:", data);
 
       if (data.success) {
+
+
         sessionStorage.setItem("user_email", email);
         navigate("/Verify2FA");
       } else if (data.email_verified === false) {
@@ -40,7 +53,7 @@ const Login = () => {
       }
     } catch (err) {
       console.error("Fetch error:", err);
-      setError("Server error, please try again later.");
+      setError("Network error. Please check your connection and try again.");
     }
   };
 
@@ -64,10 +77,16 @@ const Login = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900">
-      {/* Header */}
-      <Header />
-      <div className="h-34"></div>
+    <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900 relative">
+      <div className="absolute top-6 left-6">
+        <Link to="/" aria-label="Back to home">
+          <img
+            src={logo}
+            alt="CRTVisuals logo"
+            className="w-24 h-auto object-contain"
+          />
+        </Link>
+      </div>
       {/* Main Login Form */}
       <main className="flex-grow flex flex-col justify-center items-center px-4">
         <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8">
@@ -124,12 +143,12 @@ const Login = () => {
           <div className="mt-6 text-center text-sm">
             <p>
               Don't have an account?{" "}
-              <a
-                href="https://crtvshotss.atwebpages.com/signup.php"
-                className="text-blue-600 hover:underline font-medium"
-              >
-                Sign up
-              </a>
+              <Link
+      to="/signup"
+      className="text-blue-600 hover:underline font-medium"
+    >
+      Sign up
+    </Link>
             </p>
             <p className="mt-2">
               <a
@@ -143,8 +162,6 @@ const Login = () => {
         </div>
       </main>
 
-      {/* Footer */}
-      <Footer />
     </div>
   );
 };
