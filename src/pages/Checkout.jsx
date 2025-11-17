@@ -1,60 +1,55 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { UserContext } from "../context/UserContext.jsx";
 
 const Checkout = () => {
   const { cartItems, total, clearCart } = useCart();
+  const { user } = useContext(UserContext); // Logged-in user
   const navigate = useNavigate();
-  const [user, setUser] = useState({ name: "", email: "", address: "" });
+  const [shippingInfo, setShippingInfo] = useState({
+    name: "",
+    email: "",
+    address: "",
+  });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const shippingRate = 110;
 
+  // Initialize form with user info if available
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch(
-          "http://localhost/crtvsite/backend/users/get_user.php",
-          { credentials: "include" }
-        );
-        const data = await res.json();
-        if (!data.error && data.user_email) {
-          setUser({
-            name: `${data.user_firstname} ${data.user_surname}`,
-            email: data.user_email,
-            address: data.user_address || "",
-          });
-        } else {
-          const savedGuest = JSON.parse(localStorage.getItem("guestInfo"));
-          if (savedGuest) setUser(savedGuest);
-        }
-      } catch {
-        const savedGuest = JSON.parse(localStorage.getItem("guestInfo"));
-        if (savedGuest) setUser(savedGuest);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("guestInfo", JSON.stringify(user));
+    if (user) {
+      setShippingInfo({
+        name: user.firstname || "",
+        email: user.email || "",
+        address: user.address || "",
+      });
+    }
+    setLoading(false);
   }, [user]);
 
   const handlePlaceOrder = async () => {
-    if (!user.name || !user.email || !user.address) {
-      alert("Please enter your name, email, and shipping address.");
+    // ✅ Require login
+    if (!user) {
+      alert("You must be logged in to place an order.");
+      navigate("/login");
+      return;
+    }
+
+    const { name, email, address } = shippingInfo;
+
+    if (!name || !email || !address) {
+      alert("Please fill in your name, email, and shipping address.");
       return;
     }
 
     const finalTotal = total + shippingRate;
     const orderData = {
-      user_name: user.name,
-      user_email: user.email,
-      user_address: user.address,
+      name,   // Must match database column
+      email,  // Must match database column
+      address,// Must match database column
       items: cartItems.map((item) => ({
         id: item.id,
         title: item.title,
@@ -69,7 +64,7 @@ const Checkout = () => {
     try {
       setSubmitting(true);
       const response = await fetch(
-      "https://crtvshotss.atwebpages.com/orders/place_order.php",
+        "https://crtvshotss.atwebpages.com/orders/place_order.php",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -89,7 +84,6 @@ const Checkout = () => {
       if (data.success) {
         alert("Order placed successfully!");
         clearCart();
-        localStorage.removeItem("guestInfo");
         navigate("/");
       } else {
         alert("Error placing order: " + (data.message || "Unknown error"));
@@ -110,6 +104,7 @@ const Checkout = () => {
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col">
       <Header />
+      <div className="h-24"></div>
       <div className="flex-grow pt-5 px-6 text-gray-900 max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-6 text-center">Checkout</h1>
 
@@ -148,33 +143,50 @@ const Checkout = () => {
             <div className="mb-6 bg-white p-4 rounded shadow">
               <h2 className="text-xl font-semibold mb-3">Shipping Information</h2>
               <div className="space-y-3">
+                {/* Name */}
                 <div>
-                  <label className="block text-sm text-gray-700 mb-1">Full Name</label>
+                  <label className="block text-sm text-gray-700 mb-1">
+                    Full Name
+                  </label>
                   <input
                     type="text"
-                    value={user.name}
-                    onChange={(e) => setUser({ ...user, name: e.target.value })}
+                    value={shippingInfo.name}
+                    onChange={(e) =>
+                      setShippingInfo({ ...shippingInfo, name: e.target.value })
+                    }
                     className="w-full px-3 py-2 rounded bg-gray-50 text-gray-900 outline-none focus:ring-2 focus:ring-yellow-400"
                     placeholder="Enter your full name"
                     required
                   />
                 </div>
+
+                {/* Email */}
                 <div>
-                  <label className="block text-sm text-gray-700 mb-1">Email Address</label>
+                  <label className="block text-sm text-gray-700 mb-1">
+                    Email Address
+                  </label>
                   <input
                     type="email"
-                    value={user.email}
-                    onChange={(e) => setUser({ ...user, email: e.target.value })}
+                    value={shippingInfo.email}
+                    onChange={(e) =>
+                      setShippingInfo({ ...shippingInfo, email: e.target.value })
+                    }
                     className="w-full px-3 py-2 rounded bg-gray-50 text-gray-900 outline-none focus:ring-2 focus:ring-yellow-400"
                     placeholder="Enter your email"
                     required
                   />
                 </div>
+
+                {/* Shipping Address */}
                 <div>
-                  <label className="block text-sm text-gray-700 mb-1">Shipping Address</label>
+                  <label className="block text-sm text-gray-700 mb-1">
+                    Shipping Address
+                  </label>
                   <textarea
-                    value={user.address}
-                    onChange={(e) => setUser({ ...user, address: e.target.value })}
+                    value={shippingInfo.address}
+                    onChange={(e) =>
+                      setShippingInfo({ ...shippingInfo, address: e.target.value })
+                    }
                     className="w-full px-3 py-2 rounded bg-gray-50 text-gray-900 outline-none focus:ring-2 focus:ring-yellow-400"
                     placeholder="Enter your shipping address"
                     rows="3"
@@ -193,7 +205,6 @@ const Checkout = () => {
             {/* Place Order Button */}
             <button
               onClick={handlePlaceOrder}
-              disabled={submitting}
               className={`${
                 submitting ? "bg-green-400" : "bg-green-700 hover:bg-green-800"
               } text-black font-semibold px-6 py-3 rounded w-full transition`}
