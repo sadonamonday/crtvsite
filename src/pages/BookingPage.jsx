@@ -63,8 +63,7 @@ const services = [
       "100+ professionally edited digital photos",
       "Online gallery for sharing"
     ],
-    image: "/Images/services/services/matric-dance.jpg",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/matric-dance.jpg" 
+    image: "/Images/services/services/matric-dance.jpg"
   },
   {
     id: "wedding-photo",
@@ -82,8 +81,7 @@ const services = [
       "300+ edited digital photos",
       "Online gallery and USB delivery"
     ],
-    image: "/Images/services/services/pexels-edwardeyer-1247756.jpg",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/pexels-edwardeyer-1247756.jpg"
+    image: "/Images/services/services/pexels-edwardeyer-1247756.jpg"
   },
   {
     id: "corporate-photo",
@@ -100,8 +98,7 @@ const services = [
       "Quick turnaround delivery",
       "Digital files with commercial rights"
     ],
-    image: "/Images/services/services/pexels-rdne-7648474.jpg",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/pexels-rdne-7648474.jpg"
+    image: "/Images/services/services/pexels-rdne-7648474.jpg"
   },
   {
     id: "birthday-photo",
@@ -118,8 +115,7 @@ const services = [
       "60+ edited digital photos",
       "Online gallery"
     ],
-    image: "/Images/services/services/birthdayparty.jpg",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/birthdayparty.jpg"
+    image: "/Images/services/services/birthdayparty.jpg"
   },
   {
     id: "commercial-photo",
@@ -136,9 +132,7 @@ const services = [
       "Commercial usage rights",
       "Quick digital delivery"
     ],
-    image: "/Images/services/services/commercialphoto.jpg",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/commercialphoto.jpg"
-    
+    image: "/Images/services/services/commercialphoto.jpg"
   },
   {
     id: "fashion-photo",
@@ -155,8 +149,7 @@ const services = [
       "Fast editing turnaround",
       "Digital delivery within 48 hours"
     ],
-    image: "/Images/services/services/fashion show.webp",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/fashionshow.webp"
+    image: "/Images/services/services/fashion show.webp"
   },
   {
     id: "personal-single-photo",
@@ -173,8 +166,7 @@ const services = [
       "Online gallery",
       "Print release"
     ],
-    image: "/Images/services/services/personalphoto.jpg",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/personalphoto.jpg"
+    image: "/Images/services/services/personalphoto.jpg"
   },
   {
     id: "personal-family-photo",
@@ -191,8 +183,7 @@ const services = [
       "Online gallery",
       "Print release"
     ],
-    image: "/Images/services/services/familyphoto.webp",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/familyphoto.webp"
+    image: "/Images/services/services/familyphoto.webp"
   },
 
   // Videography Services
@@ -212,8 +203,7 @@ const services = [
       "Full ceremony recording",
       "Digital delivery"
     ],
-    image: "/Images/services/services/matricdancevideo.jpeg",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/matricdancevideo.jpeg" 
+    image: "/Images/services/services/matricdancevideo.jpeg"
   },
   {
     id: "wedding-video",
@@ -231,8 +221,7 @@ const services = [
       "Drone footage (if applicable)",
       "Digital delivery"
     ],
-    image: "/Images/services/services/weddingvideo.jpg",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/weddingvideo.jpg"
+    image: "/Images/services/services/weddingvideo.jpg"
   },
   {
     id: "corporate-video",
@@ -249,8 +238,7 @@ const services = [
       "Full presentations recording",
       "Branded graphics and titles"
     ],
-    image: "/Images/services/services/corporatevideo.webp",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/corporatevideo.webp"
+    image: "/Images/services/services/corporatevideo.webp"
   },
   {
     id: "birthday-video",
@@ -267,8 +255,7 @@ const services = [
       "Fun editing with music",
       "Digital delivery"
     ],
-    image: "/Images/services/services/birthdaypartyvideo.webp",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/birthdaypartyvideo.webp"
+    image: "/Images/services/services/birthdaypartyvideo.webp"
   },
   {
     id: "commercial-video",
@@ -286,8 +273,7 @@ const services = [
       "Motion graphics (basic)",
       "Commercial usage rights"
     ],
-    image: "/Images/services/services/commercialvideo.jpg",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/commercialvideo.jpg"
+    image: "/Images/services/services/commercialvideo.jpg"
   },
   {
     id: "fashion-video",
@@ -304,8 +290,7 @@ const services = [
       "Slow motion sequences",
       "Music synchronization"
     ],
-    image: "/Images/services/services/fashionshowvideo.jpg",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/fashionshowvideo.jpg"
+    image: "/Images/services/services/fashionshowvideo.jpg"
   },
   {
     id: "music-video",
@@ -323,8 +308,7 @@ const services = [
       "Full music video recording with additional clips",
       "Digital delivery"
     ],
-    image: "/Images/services/services/musicvideophoto.jpg",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/musicvideophoto.jpg"
+    image: "/Images/services/services/musicvideophoto.jpg"
   },
   {
     id: "reel-video",
@@ -341,8 +325,7 @@ const services = [
       "3-5 minute highlight film",
       "Digital delivery"
     ],
-    image: "/Images/services/services/highlightreel.webp",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/highlightreel.webp"
+    image: "/Images/services/services/highlightreel.webp"
   },
   {
     id: "music-video-editing",
@@ -358,8 +341,7 @@ const services = [
       "Dance floor energy",
       "Digital delivery"
     ],
-    image: "/Images/services/services/musicvideoediting.jpg",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/musicvideoediting.jpg"
+    image: "/Images/services/services/musicvideoediting.jpg"
   },
   {
   id: "color-grading",
@@ -377,8 +359,7 @@ const services = [
     "Final export in your preferred format",
     "Unlimited revisions until perfect"
   ],
-  image: "Images/services/services/colourgrading.jpg",
-  image_url: "https://crtvshotss.atwebpages.com/uploads/services/colourgrading.jpg"
+  image: "Images/services/services/colourgrading.jpg"
 },
 
   // Combo Services (Photography + Videography)
@@ -398,8 +379,7 @@ const services = [
       "Digital delivery of all files",
       "15% savings vs booking separately"
     ],
-    image: "/Images/services/services/matricdancecombo.jpg",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/matricdancecombo.jpg"
+    image: "/Images/services/services/matricdancecombo.jpg"
   },
   {
     id: "wedding-combo",
@@ -418,8 +398,7 @@ const services = [
       "USB delivery in presentation box",
       "20% savings vs separate booking"
     ],
-    image: "/Images/services/services/weddingcombo.webp",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/weddingcombo.webp"
+    image: "/Images/services/services/weddingcombo.webp"
   },
   {
     id: "corporate-combo",
@@ -437,8 +416,7 @@ const services = [
       "Commercial usage rights",
       "Quick turnaround delivery"
     ],
-    image: "/Images/services/services/corporatecombo.jpg",
-    image_url: "https://crtvshotss.atwebpages.com/uploads/services/corporatecombo.jpg"
+    image: "/Images/services/services/corporatecombo.jpg"
   },
   {
   id: "music-video-combo",
@@ -461,17 +439,49 @@ const services = [
     "All raw footage and photos delivered",
     "3 revision rounds for perfect results"
   ],
-  image: "Images/services/services/musicvideocombo.jpg",
-  image_url: "https://crtvshotss.atwebpages.com/uploads/services/musicvideocombo.jpg"
+  image: "Images/services/services/musicvideocombo.jpg"
 }
 ];
 
-const Calendar = ({ selectedDate, onSelectDate }) => {
+const Calendar = ({ selectedDate, onSelectDate, onTimeSlotsChange, refreshTrigger }) => {
   const [currentMonth, setCurrentMonth] = useState(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
+    // Start at November 2025 since that's where available dates are
+    const startMonth = new Date(2025, 10, 1); // November 2025 (month is 0-indexed)
+    startMonth.setHours(0, 0, 0, 0);
+    return startMonth;
   });
+  const [availableDates, setAvailableDates] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch available dates from database
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch availability data (should already have booked slots removed by backend)
+        const availRes = await fetch("https://crtvshotss.atwebpages.com/save_availability.php?action=list", {
+          credentials: "include"
+        });
+        
+        const availData = await availRes.json();
+        
+        if (Array.isArray(availData)) {
+          // Only show dates that have available time slots
+          const datesWithSlots = availData.filter(dateSlot => 
+            dateSlot.timeSlots && dateSlot.timeSlots.length > 0
+          );
+          setAvailableDates(datesWithSlots);
+        }
+      } catch (e) {
+        console.error("Failed to load availability:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchAvailability();
+  }, [refreshTrigger]);
   
   const daysInMonth = new Date(
     currentMonth.getFullYear(),
@@ -518,13 +528,29 @@ const Calendar = ({ selectedDate, onSelectDate }) => {
     return date < today;
   };
 
+  // Check if a date is available in the database (same logic as AdminDashboard)
+  const isDateAvailable = (dateString) => {
+    return availableDates.some(d => d.date === dateString);
+  };
+
   const handleDateClick = (date) => {
-    // Don't allow selection of past dates
-    if (isPastDate(date)) {
+    const formattedDate = formatDateString(date);
+    
+    // Don't allow selection of past dates or unavailable dates
+    if (isPastDate(date) || !isDateAvailable(formattedDate)) {
       return;
     }
-    const formattedDate = formatDateString(date);
+    
+    // Find the time slots for this date
+    const dateData = availableDates.find(d => d.date === formattedDate);
+    const timeSlots = dateData?.timeSlots || [];
+    
     onSelectDate(formattedDate);
+    
+    // Pass available time slots to parent component
+    if (onTimeSlotsChange) {
+      onTimeSlotsChange(timeSlots);
+    }
   };
 
   return (
@@ -557,37 +583,54 @@ const Calendar = ({ selectedDate, onSelectDate }) => {
          ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
-        {Array.from({ length: firstDayOfMonth }).map((_, index) => (
-          <div key={`empty-${index}`} className="p-2" />
-        ))}
-        
-        {Array.from({ length: daysInMonth }).map((_, index) => {
-          const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index + 1);
-          const dateString = formatDateString(date);
-          const isSelected = selectedDate === dateString;
-          const isPast = isPastDate(date);
+      <div className="grid grid-cols-7 gap-1 min-h-[200px]">
+        {loading ? (
+          <div className="col-span-7 text-center py-8 text-gray-500">
+            Loading available dates...
+          </div>
+        ) : (
+          <>
+            {Array.from({ length: firstDayOfMonth }).map((_, index) => (
+              <div key={`empty-${index}`} className="p-2" />
+            ))}
+            
+            {Array.from({ length: daysInMonth }).map((_, index) => {
+              const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index + 1);
+              const dateString = formatDateString(date);
+              const isSelected = selectedDate === dateString;
+              const isPast = isPastDate(date);
+              const isAvailable = isDateAvailable(dateString);
+              const isDisabled = isPast || !isAvailable;
 
-          return (
-             <button
-               key={index}
-               type="button"
-               onClick={() => handleDateClick(date)}
-               disabled={isPast}
-               className={`p-2 rounded text-sm transition
-                ${isSelected ? 'bg-green-600 text-white' : 
-                  isPast ? 'text-gray-400 cursor-not-allowed' : 
-                  'hover:bg-gray-200 text-gray-800'}
-                ${!isPast && 'hover:bg-gray-200'}
-              `}
-             >
-               <span className={isPast ? 'line-through opacity-50' : ''}>
-                 {index + 1}
-               </span>
-             </button>
-           );
-         })}
+              return (
+                 <button
+                   key={index}
+                   type="button"
+                   onClick={() => handleDateClick(date)}
+                   disabled={isDisabled}
+                   className={`p-2 rounded text-sm transition
+                    ${isSelected ? 'bg-green-600 text-white' : 
+                      isAvailable && !isPast ? 'bg-red-600 text-white hover:bg-red-700' :
+                      isDisabled ? 'text-gray-400 cursor-not-allowed bg-gray-100' : 
+                      'hover:bg-gray-200 text-gray-800'}
+                  `}
+                   title={!isAvailable && !isPast ? 'Not available' : isAvailable ? 'Available for booking' : ''}
+                 >
+                   <span className={isDisabled ? 'line-through opacity-50' : ''}>
+                     {index + 1}
+                   </span>
+                 </button>
+               );
+             })}
+          </>
+        )}
        </div>
+       
+       {!loading && availableDates.length === 0 && (
+         <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-center text-sm text-yellow-800">
+           No available dates yet. Please check back later or contact us directly.
+         </div>
+       )}
      </div>
    );
  };
@@ -606,8 +649,8 @@ const calculateHoursBetweenTimes = (startTime, endTime) => {
   return diffMinutes / 60; // Convert to hours
 };
 
-const TimeDropdownSelector = ({ selectedTime, onTimeSelect }) => {
-  const timeOptions = generateTimeOptions();
+const TimeDropdownSelector = ({ selectedTime, onTimeSelect, availableSlots = [] }) => {
+  const allTimeOptions = generateTimeOptions();
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
@@ -627,6 +670,61 @@ const TimeDropdownSelector = ({ selectedTime, onTimeSelect }) => {
     }
   }, [startTime, endTime, onTimeSelect]);
 
+  // Get available start times from available slots
+  const getAvailableStartTimes = () => {
+    if (availableSlots.length === 0) {
+      return allTimeOptions; // No restrictions if no slots specified
+    }
+    
+    const validStartTimes = new Set();
+    availableSlots.forEach(slot => {
+      const [start, end] = slot.split('-');
+      if (start) {
+        // Add the start time and all times between start and end as potential start times
+        const startIdx = allTimeOptions.indexOf(start);
+        const endIdx = allTimeOptions.indexOf(end);
+        if (startIdx !== -1 && endIdx !== -1) {
+          for (let i = startIdx; i < endIdx; i++) {
+            validStartTimes.add(allTimeOptions[i]);
+          }
+        }
+      }
+    });
+    
+    return allTimeOptions.filter(time => validStartTimes.has(time));
+  };
+
+  // Get available end times based on selected start time and available slots
+  const getAvailableEndTimes = () => {
+    if (!startTime) return [];
+    
+    if (availableSlots.length === 0) {
+      return allTimeOptions.filter(time => time > startTime); // No restrictions if no slots specified
+    }
+    
+    const validEndTimes = new Set();
+    availableSlots.forEach(slot => {
+      const [slotStart, slotEnd] = slot.split('-');
+      const slotStartIdx = allTimeOptions.indexOf(slotStart);
+      const slotEndIdx = allTimeOptions.indexOf(slotEnd);
+      const startTimeIdx = allTimeOptions.indexOf(startTime);
+      
+      // If the selected start time falls within this slot's range
+      if (startTimeIdx >= slotStartIdx && startTimeIdx < slotEndIdx) {
+        // Add all times from start time to slot end as valid end times
+        for (let i = startTimeIdx + 1; i <= slotEndIdx; i++) {
+          if (i < allTimeOptions.length) {
+            validEndTimes.add(allTimeOptions[i]);
+          }
+        }
+      }
+    });
+    
+    return allTimeOptions.filter(time => validEndTimes.has(time));
+  };
+
+  const timeOptions = getAvailableStartTimes();
+
   const handleStartTimeChange = (e) => {
     const newStartTime = e.target.value;
     setStartTime(newStartTime);
@@ -641,8 +739,7 @@ const TimeDropdownSelector = ({ selectedTime, onTimeSelect }) => {
   };
 
   const getEndTimeOptions = () => {
-    if (!startTime) return timeOptions;
-    return timeOptions.filter(time => time > startTime);
+    return getAvailableEndTimes();
   };
 
   const getDuration = () => {
@@ -771,13 +868,25 @@ export default function BookingPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
-  
-  // Fixed: Single declaration of services state
+  const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
+  const [calendarRefreshTrigger, setCalendarRefreshTrigger] = useState(0);
+  // Services fetched from backend (initialized with static fallback)
   const [servicesList, setServicesList] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(true);
   const [servicesError, setServicesError] = useState("");
 
-  // Fixed: Fetch services from backend once on mount
+  // Add this useEffect to automatically set service when custom form is completed
+  useEffect(() => {
+    if (activeCategory === "custom" && 
+        customService.title.trim() && 
+        customService.description.trim() && 
+        service !== "") {
+      setService("");
+    }
+  }, [customService, activeCategory, service]);
+
+
+  // Fetch services from backend once on mount
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
@@ -786,119 +895,80 @@ export default function BookingPage() {
       try {
         setServicesLoading(true);
         setServicesError("");
-        
-        console.log("Fetching services from API...");
-        const res = await fetch("https://crtvshotss.atwebpages.com/services_list.php", {
-          signal: controller.signal,
-          mode: 'cors',
-          credentials: 'omit'
-        });
-        
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        
+        const res = await fetch("https://crtvshotss.atwebpages.com/services_list.php");
+const json = await res.json();
+
+// Validate structure
+if (!json.success || !Array.isArray(json.data)) {
+  throw new Error("Invalid services response");
+}
+
+// Use json.data as the array of services
+const services = json.data;
+
+// Continue processing images
+const normalizedServices = services.map((service) => {
+  let image = service.image || "";
+
+  if (image && !/^https?:\/\//i.test(image)) {
+    image = `https://crtvshotss.atwebpages.com/${image.replace(/^\/+/, "")}`;
+  }
+
+  return { ...service, image };
+});
+
+setServicesList(normalizedServices);
+        if (!res.ok) throw new Error(`Failed to fetch services: ${res.status}`);
         const data = await res.json();
-        console.log("API Response:", data);
-        
-        // Handle different possible response structures
-        let servicesArray = [];
-        
-        if (Array.isArray(data)) {
-          servicesArray = data;
-        } else if (data && Array.isArray(data.data)) {
-          servicesArray = data.data;
-        } else if (data && data.success && Array.isArray(data.data)) {
-          servicesArray = data.data;
-        } else {
-          console.warn("Unexpected API response structure, using fallback services");
-          servicesArray = services; // Use static fallback
-        }
-        
-        if (servicesArray.length === 0) {
-          console.warn("No services found in API response, using fallback");
-          servicesArray = services; // Use static fallback
-        }
+        if (!Array.isArray(data)) throw new Error("Invalid services payload");
 
-        // Normalize service data with better error handling
-        const normalizedServices = servicesArray.map((item, idx) => {
-          try {
-            const rawIncludes = item.includes || item.included || item.features || "";
-            const includesArr = Array.isArray(rawIncludes)
-              ? rawIncludes
-              : String(rawIncludes)
-                  .split(/[,\n|]/)
-                  .map((s) => s.trim())
-                  .filter(Boolean);
+        // Normalize incoming items to expected shape
+        const normalized = data.map((item, idx) => {
+          const rawIncludes = item.includes || item.included || item.features || "";
+          const includesArr = Array.isArray(rawIncludes)
+            ? rawIncludes
+            : String(rawIncludes)
+                .split(/[,\n]/)
+                .map((s) => s.trim())
+                .filter(Boolean);
 
-            const category = (item.category || item.type || "photography").toString().toLowerCase();
-            const mapCategory =
-              category.includes("photo")
-                ? "photography"
-                : category.includes("video")
-                ? "videography"
-                : category.includes("combo")
-                ? "combo"
-                : category || "photography";
+          const category = (item.category || item.type || "").toString().toLowerCase();
+          const mapCategory =
+            category.includes("photo")
+              ? "photography"
+              : category.includes("video")
+              ? "videography"
+              : category.includes("combo")
+              ? "combo"
+              : category || "photography";
 
-            const priceNumber = Number(item.price || item.amount || 0);
-            const priceText = item.priceText || item.price_label || 
-                            (priceNumber ? `R${priceNumber}` : String(item.price || "").trim() || "Contact for price");
+          const priceNumber = Number(item.price || item.amount || 0);
+          const priceText = item.priceText || item.price_label || (priceNumber ? `R${priceNumber}` : String(item.price || "").trim() || "");
 
-            // Better image URL handling
-            let image = item.image || item.image_url || item.thumbnail || "";
-            if (image) {
-              if (!/^https?:\/\//i.test(image)) {
-                image = `https://crtvshotss.atwebpages.com/${image.replace(/^\/+/, "")}`;
-              }
-            } else {
-              // Use fallback image from static data if available
-              const staticService = services.find(s => s.id === (item.id || item.name));
-              image = staticService?.image || "/Images/services/services/default.jpg";
-            }
-
-            return {
-              id: item.id || item.slug || `svc-${idx}-${Date.now()}`,
-              name: item.name || item.title || "Unnamed Service",
-              category: mapCategory,
-              price: priceText,
-              price_type: (item.price_type || "").toString().toLowerCase(),
-              description: item.description || item.desc || "Professional service delivery",
-              includes: includesArr.length ? includesArr : ["Professional service", "Quality deliverables"],
-              image: image,
-              image_url: image // Keep both for compatibility
-            };
-          } catch (error) {
-            console.error("Error normalizing service:", item, error);
-            // Return a minimal valid service object
-            return {
-              id: `error-${idx}`,
-              name: "Service",
-              category: "photography",
-              price: "Contact for price",
-              description: "Professional service",
-              includes: ["Professional service"],
-              image: "/Images/services/services/default.jpg"
-            };
+          // Image URL normalization
+          let image = item.image || item.image_url || item.thumbnail || "";
+          if (image && !/^https?:\/\//i.test(image)) {
+            image = `https://crtvshotss.atwebpages.com/${image.replace(/^\/+/, "")}`;
           }
+
+          return {
+            id: item.id || item.slug || item.code || `svc-${idx}`,
+            name: item.name || item.title || "Service",
+            category: mapCategory,
+            price: priceText || "",
+            price_type: (item.price_type || item.type || "").toString().toLowerCase(),
+            description: item.description || item.desc || "",
+            includes: includesArr.length ? includesArr : ["Professional service", "Edited deliverables"],
+            image: image || "/Images/services/services/default.jpg",
+          };
         });
 
-        console.log("Normalized services:", normalizedServices);
-        
-        if (isMounted) {
-          setServicesList(normalizedServices);
-        }
+        if (isMounted) setServicesList(normalized);
       } catch (err) {
-        console.error("Error loading services:", err);
-        if (isMounted) {
-          setServicesError(`Failed to fetch: ${err.message}. Using fallback data.`);
-          // Fallback to static services
-          setServicesList(services);
-        }
+        console.error(err);
+        if (isMounted) setServicesError(err.message || "Failed to load services");
       } finally {
-        if (isMounted) {
-          setServicesLoading(false);
-        }
+        if (isMounted) setServicesLoading(false);
       }
     }
 
@@ -910,21 +980,11 @@ export default function BookingPage() {
     };
   }, []);
 
-  // Fixed: Filter services based on active category
+  // Filter services based on active category
   const filteredServices = useMemo(() => {
     if (activeCategory === "all") return servicesList;
     return servicesList.filter(service => service.category === activeCategory);
   }, [activeCategory, servicesList]);
-
-  // Add this useEffect to automatically set service when custom form is completed
-  useEffect(() => {
-    if (activeCategory === "custom" && 
-        customService.title.trim() && 
-        customService.description.trim() && 
-        service !== "") {
-      setService("");
-    }
-  }, [customService, activeCategory, service]);
 
   // Helpers derived from selected service
   const findService = (id) => servicesList.find((s) => String(s.id) === String(id));
@@ -943,6 +1003,50 @@ export default function BookingPage() {
     if (!txt) return 0;
     const m = txt.replace(/[, ]/g, "").match(/(\d+)/);
     return m ? parseInt(m[1], 10) : 0;
+  };
+
+  // Function to update availability by removing booked time slot
+  const updateAvailabilityAfterBooking = async (bookedDate, bookedTimeSlot) => {
+    try {
+      const payload = {
+        action: "remove_time_slot",
+        date: bookedDate,
+        time_slot: bookedTimeSlot
+      };
+      
+      console.log("Updating availability with payload:", payload);
+      
+      const response = await fetch("https://crtvshotss.atwebpages.com/save_availability.php", {
+        method: "POST",
+        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      const text = await response.text();
+      console.log("Raw response:", text);
+      
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (e) {
+        console.error("Failed to parse response:", text);
+        return;
+      }
+      
+      if (result.success) {
+        console.log("Availability updated successfully");
+        // Trigger calendar refresh
+        setCalendarRefreshTrigger(prev => prev + 1);
+      } else {
+        console.error("Failed to update availability:", result.message || result);
+      }
+    } catch (error) {
+      console.error("Error updating availability:", error);
+    }
   };
 
   const getServiceDisplayName = () => {
@@ -1080,7 +1184,7 @@ export default function BookingPage() {
 
   const prevStep = () => {
     setCurrentStep((p) => Math.max(p - 1, 1));
-   };
+  };
 
     const handlePay = async () => {
       if (!validateStep(5)) {
@@ -1106,17 +1210,19 @@ export default function BookingPage() {
         service: service,
         item_name: displayName,
         item_description: `${displayName} - ${date}${time ? ` ${time}` : ""}`,
-        date: date,
-        time_start: time_start || undefined,
-        time_end: time_end || undefined,
-        customer_name: details.name,
-        customer_email: details.email,
+        date: date || "",
+        time_start: time_start || "",
+        time_end: time_end || "",
+        customer_name: details.name || "",
+        customer_email: details.email || "",
         customer_phone: details.phone || "",
         customer_address: details.address || "",
         notes: details.notes || "",
-        payment_option: paymentOption, // 'full' | 'deposit'
+        payment_option: paymentOption || "", // 'full' | 'deposit'
         amount: basePrice,             // backend applies 50% when deposit
       };
+
+      console.log("Sending booking data:", bookingData);
 
       try {
         const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
@@ -1138,6 +1244,11 @@ export default function BookingPage() {
         }
 
         if (data && data.success && data.payfast) {
+          // Update availability to remove booked time slot
+          if (date && time) {
+            await updateAvailabilityAfterBooking(date, time);
+          }
+          
           // Redirect to PayFast
           const payfastUrl = "https://sandbox.payfast.co.za/eng/process";
           const form = document.createElement('form');
@@ -1164,6 +1275,7 @@ export default function BookingPage() {
       }
     };
 
+
     const handleConfirmCustom = async () => {
       setIsProcessing(true);
 
@@ -1182,17 +1294,19 @@ export default function BookingPage() {
         service: 'other',
         item_name: title,
         item_description: desc,
-        date: date,
-        time_start: time_start || undefined,
-        time_end: time_end || undefined,
-        customer_name: details.name,
-        customer_email: details.email,
+        date: date || "",
+        time_start: time_start || "",
+        time_end: time_end || "",
+        customer_name: details.name || "",
+        customer_email: details.email || "",
         customer_phone: details.phone || "",
         customer_address: details.address || "",
         notes: details.notes || "",
         payment_option: 'full',
         amount: budget,
       };
+
+      console.log("Sending custom booking data:", bookingData);
 
       try {
         const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
@@ -1204,9 +1318,7 @@ export default function BookingPage() {
 
         const text = await res.text();
         let data;
-        try { 
-          data = JSON.parse(text); 
-        } catch (e) {
+        try { data = JSON.parse(text); } catch (e) {
           console.error("Invalid JSON from server:", text);
           alert("Server returned an invalid response. Please try again.");
           setIsProcessing(false);
@@ -1214,6 +1326,11 @@ export default function BookingPage() {
         }
 
         if (data && data.success && data.payfast) {
+          // Update availability to remove booked time slot
+          if (date && time) {
+            await updateAvailabilityAfterBooking(date, time);
+          }
+          
           const payfastUrl = "https://sandbox.payfast.co.za/eng/process";
           const form = document.createElement('form');
           form.method = 'POST';
@@ -1461,21 +1578,6 @@ export default function BookingPage() {
 
   const renderServiceGrid = () => (
     <div className="space-y-6">
-      {/* Debug info - remove in production */}
-      {servicesError && (
-        <div className="bg-yellow-100 border border-yellow-400 rounded p-4">
-          <p className="text-yellow-800">Services loading issue: {servicesError}. Using fallback data.</p>
-        </div>
-      )}
-
-      {/* Loading state */}
-      {servicesLoading && (
-        <div className="text-center py-8">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-          <p className="mt-2 text-gray-600">Loading services...</p>
-        </div>
-      )}
-
       {/* Category Tabs - Gallery Style */}
       <div className="filter-tabs-container">
         <div className="filter-tabs">
@@ -1503,10 +1605,6 @@ export default function BookingPage() {
         <p className="description-text">
           {serviceCategories.find(cat => cat.id === activeCategory)?.description}
         </p>
-        {/* Show counts for debugging */}
-        <p className="text-sm opacity-75 mt-1">
-          Showing {filteredServices.length} service{filteredServices.length !== 1 ? 's' : ''}
-        </p>
       </div>
 
       {/* Custom Request Form */}
@@ -1514,102 +1612,87 @@ export default function BookingPage() {
         renderCustomRequestForm()
       ) : (
         /* Services Grid */
-        <div>
-          {/* No services message */}
-          {!servicesLoading && filteredServices.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-gray-500 text-lg mb-2">No services found</div>
-              <p className="text-gray-400">
-                {servicesList.length === 0 
-                  ? "Unable to load services. Please check your connection." 
-                  : `No services found in the ${activeCategory} category.`}
-              </p>
-            </div>
-          )}
-
-          {/* Services Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredServices.map((s) => {
-              const isExpanded = expandedService === s.id;
-              return (
-                <div
-                  key={s.id}
-                  className={`flex flex-col border rounded-lg overflow-hidden transition-all duration-200 ${
-                    isExpanded ? "border-green-500 shadow-lg" : "border-gray-300 hover:shadow-md"
-                  }`}
-                >
-                  {/* Service Image with better fallback */}
-                  <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 relative overflow-hidden">
-                    <img 
-                      src={s.image} 
-                      alt={s.name}
-                      className="w-full h-full object-cover"
-                      onError={handleImageError}
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                    <div className="absolute bottom-4 left-4 right-4 text-white">
-                      <h3 className="font-bold text-lg">{s.name}</h3>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="font-semibold text-green-300">{s.price}</span>
-                        <span className="text-sm bg-black/50 px-2 py-1 rounded">Flexible Duration</span>
-                      </div>
-                    </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredServices.map((s) => {
+            const isExpanded = expandedService === s.id;
+            return (
+              <div
+                key={s.id}
+                className={`flex flex-col border rounded-lg overflow-hidden transition-all duration-200 ${
+                  isExpanded ? "border-green-500 shadow-lg" : "border-gray-300 hover:shadow-md"
+                }`}
+              >
+                {/* Service Image */}
+                <div className="h-48 bg-gray-200 relative overflow-hidden">
+                   <img 
+                     src={s.image} 
+                     alt={s.name}
+                     className="w-full h-full object-cover"
+                     onError={handleImageError}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                  <div className="absolute bottom-4 left-4 right-4 text-white">
+                    <h3 className="font-bold text-lg">{s.name}</h3>
+                    <div className="flex justify-between items-center mt-2">
+                     <span className="font-semibold text-green-300">{s.price}</span>
+                     <span className="text-sm bg-black/50 px-2 py-1 rounded">Flexible Duration</span>
+                   </div>
+                 </div>
                   </div>
 
-                  {/* Service Content */}
-                  <div className="p-4 flex-1 flex flex-col bg-white">
-                    <p className="text-gray-600 text-sm mb-4 flex-1">{s.description}</p>
-                    
-                    <div className="space-y-3">
-                      <button
-                        type="button"
-                        onClick={() => handleServiceClick(s.id)}
-                        className="w-full text-left flex items-center justify-between text-green-600 hover:text-green-700 font-medium"
-                      >
-                        <span>View Details</span>
-                        <ChevronRight 
-                          size={16} 
-                          className={`transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-                        />
-                      </button>
+                {/* Service Content */}
+                <div className="p-4 flex-1 flex flex-col bg-white">
+                  <p className="text-gray-600 text-sm mb-4 flex-1">{s.description}</p>
+                  
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => handleServiceClick(s.id)}
+                      className="w-full text-left flex items-center justify-between text-green-600 hover:text-green-700 font-medium"
+                    >
+                      <span>View Details</span>
+                      <ChevronRight 
+                        size={16} 
+                        className={`transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                      />
+                    </button>
 
-                      {isExpanded && (
-                        <div className="space-y-4 pt-4 border-t border-gray-200">
-                          {/* What's Included */}
-                          <div>
-                            <h4 className="font-semibold text-sm mb-2 text-gray-800">What's Included:</h4>
-                            <ul className="text-sm text-gray-600 space-y-1">
-                              {s.includes.map((item, index) => (
-                                <li key={index} className="flex items-start">
-                                  <CheckCircle size={16} className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                                  {item}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-
-                          {/* Select Button - Now separate from View Details */}
-                          <button
-                            type="button"
-                            onClick={() => handleSelectService(s.id)}
-                            className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded font-medium transition"
-                          >
-                            Select & Continue
-                          </button>
+                    {isExpanded && (
+                      <div className="space-y-4 pt-4 border-t border-gray-200">
+                        {/* What's Included */}
+                        <div>
+                          <h4 className="font-semibold text-sm mb-2 text-gray-800">What's Included:</h4>
+                          <ul className="text-sm text-gray-600 space-y-1">
+                            {s.includes.map((item, index) => (
+                              <li key={index} className="flex items-start">
+                                <CheckCircle size={16} className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
                         </div>
-                      )}
-                    </div>
+
+                        {/* Select Button - Now separate from View Details */}
+                        <button
+                          type="button"
+                          onClick={() => handleSelectService(s.id)}
+                          className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded font-medium transition"
+                        >
+                          Select & Continue
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
   );
 
+  // Fix: Update the step 1 rendering logic
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -1638,15 +1721,31 @@ export default function BookingPage() {
                 <Calendar
                   selectedDate={date}
                   onSelectDate={setDate}
+                  onTimeSlotsChange={setAvailableTimeSlots}
+                  refreshTrigger={calendarRefreshTrigger}
                 />
               </div>
 
               <div>
                 <label className="block mb-4 font-medium text-gray-800">Select Time</label>
-                <TimeDropdownSelector 
-                  selectedTime={time} 
-                  onTimeSelect={setTime} 
-                />
+                {date ? (
+                  <>
+                    <TimeDropdownSelector 
+                      selectedTime={time} 
+                      onTimeSelect={setTime}
+                      availableSlots={availableTimeSlots}
+                    />
+                    {availableTimeSlots.length > 0 && (
+                      <p className="mt-2 text-sm text-gray-600">
+                        Available time slots for this date: {availableTimeSlots.join(', ')}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm text-gray-500">
+                    Please select a date first to see available time slots
+                  </p>
+                )}
                 <p className="mt-2 text-sm text-gray-600">
                   Available hours: 8:00 AM - 8:00 PM, in 30-minute intervals
                 </p>
@@ -1833,6 +1932,7 @@ export default function BookingPage() {
                     </span>
                   </div>
                 )}
+                {/* Amount is calculated by the backend; no client-side total here */}
                 {service === "other" && customService.budget && (
                   <div className="flex justify-between text-lg font-semibold mt-4 pt-4 border-t border-gray-300">
                     <span>Estimated Budget:</span>
@@ -1893,7 +1993,7 @@ export default function BookingPage() {
     <div className="bg-white flex flex-col min-h-screen">
       <Header />
 
-      <main className="flex-grow pt-30 md:pt-32 pb-12">
+      <main className="flex-grow pt-30t md:pt-32 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Updated Title with Underline like Gallery */}
           <div className="page-header">
