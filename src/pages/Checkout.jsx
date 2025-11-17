@@ -26,21 +26,18 @@ const Checkout = () => {
         email: user.email || "",
         address: user.address || "",
       });
-    } else {
-      const savedGuest = JSON.parse(localStorage.getItem("guestInfo"));
-      if (savedGuest) setShippingInfo(savedGuest);
     }
     setLoading(false);
   }, [user]);
 
-  // Save guest info in localStorage
-  useEffect(() => {
-    if (!user) {
-      localStorage.setItem("guestInfo", JSON.stringify(shippingInfo));
-    }
-  }, [shippingInfo, user]);
-
   const handlePlaceOrder = async () => {
+    // ✅ Require login
+    if (!user) {
+      alert("You must be logged in to place an order.");
+      navigate("/login");
+      return;
+    }
+
     const { name, email, address } = shippingInfo;
 
     if (!name || !email || !address) {
@@ -50,9 +47,9 @@ const Checkout = () => {
 
     const finalTotal = total + shippingRate;
     const orderData = {
-      user_name: name,
-      user_email: email,
-      user_address: address,
+      name,   // Must match database column
+      email,  // Must match database column
+      address,// Must match database column
       items: cartItems.map((item) => ({
         id: item.id,
         title: item.title,
@@ -87,7 +84,6 @@ const Checkout = () => {
       if (data.success) {
         alert("Order placed successfully!");
         clearCart();
-        localStorage.removeItem("guestInfo");
         navigate("/");
       } else {
         alert("Error placing order: " + (data.message || "Unknown error"));
@@ -121,7 +117,10 @@ const Checkout = () => {
               <h2 className="text-xl font-semibold mb-2">Order Details</h2>
               <ul className="space-y-2">
                 {cartItems.map((item) => (
-                  <li key={item.id} className="flex justify-between bg-gray-100 p-3 rounded">
+                  <li
+                    key={item.id}
+                    className="flex justify-between bg-gray-100 p-3 rounded"
+                  >
                     <span>
                       {item.title} × {item.quantity}
                     </span>
@@ -146,7 +145,9 @@ const Checkout = () => {
               <div className="space-y-3">
                 {/* Name */}
                 <div>
-                  <label className="block text-sm text-gray-700 mb-1">Full Name</label>
+                  <label className="block text-sm text-gray-700 mb-1">
+                    Full Name
+                  </label>
                   <input
                     type="text"
                     value={shippingInfo.name}
@@ -161,7 +162,9 @@ const Checkout = () => {
 
                 {/* Email */}
                 <div>
-                  <label className="block text-sm text-gray-700 mb-1">Email Address</label>
+                  <label className="block text-sm text-gray-700 mb-1">
+                    Email Address
+                  </label>
                   <input
                     type="email"
                     value={shippingInfo.email}
@@ -176,7 +179,9 @@ const Checkout = () => {
 
                 {/* Shipping Address */}
                 <div>
-                  <label className="block text-sm text-gray-700 mb-1">Shipping Address</label>
+                  <label className="block text-sm text-gray-700 mb-1">
+                    Shipping Address
+                  </label>
                   <textarea
                     value={shippingInfo.address}
                     onChange={(e) =>
