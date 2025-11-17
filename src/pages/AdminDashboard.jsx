@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Calendar, CalendarDays, Settings, LogOut, Home, ChevronsUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import "./AdminDashboard.css";
@@ -533,6 +533,8 @@ const BookingsDateDetails = ({ date, orders }) => {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("bookings");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   // Sample orders data for Orders page (bookings tab)
   const [sampleOrders] = useState([
     { 
@@ -803,6 +805,46 @@ const AdminDashboard = () => {
   const currentDateSaved = availableDates.find(d => d.date === selectedDate);
   const currentDateSlots = currentDateSaved ? (currentDateSaved.timeSlots || []) : (draftTimeSlotsByDate[selectedDate] || []);
 
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      await fetch("https://crtvshotss.atwebpages.com/sessions/logout_simple.php", {
+        method: "POST",
+        credentials: "include"
+      });
+      localStorage.removeItem('user');
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      localStorage.removeItem('user');
+      navigate("/login");
+    }
+  };
+
+  // Check admin authentication on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("https://crtvshotss.atwebpages.com/sessions/check_admin_simple.php", {
+          credentials: "include"
+        });
+        const data = await res.json();
+        
+        if (data.success && data.is_admin) {
+          setIsAuthenticated(true);
+        } else {
+          navigate("/login");
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        navigate("/login");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
 
   React.useEffect(() => {
     if (activeTab !== "availability") return;
@@ -1371,6 +1413,31 @@ const AdminDashboard = () => {
     }
   };
 
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="admin-dashboard" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="spinner" style={{ 
+            border: '4px solid #f3f3f3', 
+            borderTop: '4px solid #3498db', 
+            borderRadius: '50%', 
+            width: '40px', 
+            height: '40px', 
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 20px'
+          }}></div>
+          <p>Verifying admin access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, component will redirect to login via useEffect
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="admin-dashboard">
       {/* Sidebar */}
@@ -1449,7 +1516,7 @@ const AdminDashboard = () => {
             <Home size={20} />
             <span>Back to Site</span>
           </button>
-          <button className="nav-item logout-btn">
+          <button className="nav-item logout-btn" onClick={handleLogout}>
             <LogOut size={20} />
             <span>Logout</span>
           </button>
@@ -2076,7 +2143,7 @@ const AdminDashboard = () => {
                         <td>
                           <div className="table-actions">
                             <button className="btn-secondary" onClick={() => {
-                              fetch('https://crtvshotss.atwebpages.com/reviews_update.php', {
+                              fetch('https://crtvshotss.atwebpages.com/admin/reviews_update.php', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 credentials: 'include',
@@ -2085,10 +2152,14 @@ const AdminDashboard = () => {
                                 if (json.success) {
                                   setReviews(reviews.map(x => x.id === r.id ? { ...x, approved: !x.approved } : x));
                                 }
+                              }).catch(err => {
+                                console.error('Error toggling approval:', err);
+                                alert('Failed to update review');
                               });
                             }}>Toggle Approve</button>
                             <button className="btn-danger" onClick={() => {
-                              fetch('https://crtvshotss.atwebpages.com/reviews_delete.php', {
+                              if (!confirm('Are you sure you want to delete this review?')) return;
+                              fetch('https://crtvshotss.atwebpages.com/admin/reviews_delete.php', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 credentials: 'include',
@@ -2097,6 +2168,9 @@ const AdminDashboard = () => {
                                 if (json.success) {
                                   setReviews(reviews.filter(x => x.id !== r.id));
                                 }
+                              }).catch(err => {
+                                console.error('Error deleting review:', err);
+                                alert('Failed to delete review');
                               });
                             }}>Delete</button>
                           </div>

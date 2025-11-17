@@ -20,6 +20,7 @@ export default function ReviewsPage() {
   
   // Form state
   const [showForm, setShowForm] = useState(false);
+  const [formServiceId, setFormServiceId] = useState('');
   const [name, setName] = useState('');
   const [quote, setQuote] = useState('');
   const [rating, setRating] = useState(5);
@@ -29,8 +30,18 @@ export default function ReviewsPage() {
 
   // Check authentication on mount
   useEffect(() => {
-    const userEmail = sessionStorage.getItem('user_email');
-    setIsAuthenticated(!!userEmail);
+    const storedUser = localStorage.getItem('user');
+    setIsAuthenticated(!!storedUser);
+    
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        setName(userData.firstname || ''); // Pre-fill name if logged in
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+    
     fetchServices();
   }, []);
 
@@ -131,8 +142,8 @@ export default function ReviewsPage() {
     setSubmitSuccess('');
 
     // Check authentication
-    const userEmail = sessionStorage.getItem('user_email');
-    if (!userEmail) {
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) {
       navigate('/login');
       return;
     }
@@ -147,7 +158,7 @@ export default function ReviewsPage() {
       return;
     }
 
-    if (!selectedServiceId) {
+    if (!formServiceId || formServiceId === '') {
       setSubmitError('Please select a service');
       return;
     }
@@ -158,7 +169,7 @@ export default function ReviewsPage() {
         name: name.trim(),
         quote: quote.trim(),
         rating: Number(rating),
-        service_id: selectedServiceId
+        service_id: formServiceId
       };
 
       const res = await fetch(`${API_BASE}/reviews_create.php`, {
@@ -171,6 +182,7 @@ export default function ReviewsPage() {
 
       if (data.success) {
         setSubmitSuccess('✓ Review submitted! It will appear after approval.');
+        setFormServiceId('');
         setName('');
         setQuote('');
         setRating(5);
@@ -420,9 +432,13 @@ export default function ReviewsPage() {
                   <div>
                     <label className="block text-sm font-semibold text-gray-300 mb-3">Select Service *</label>
                     <select
-                      value={selectedServiceId || ''}
-                      onChange={(e) => setSelectedServiceId(Number(e.target.value))}
-                      className="w-full bg-black border-2 border-gray-700 rounded-lg px-4 py-3 text-white focus:border-green-400 focus:outline-none transition-colors"
+                      value={formServiceId || ''}
+                      onChange={(e) => {
+                        const newValue = e.target.value || null;
+                        console.log('Setting formServiceId to:', newValue);
+                        setFormServiceId(newValue);
+                      }}
+                      className="w-full bg-black border-2 border-gray-700 rounded-lg px-4 py-3 text-white focus:border-green-400 focus:outline-none transition-colors appearance-none cursor-pointer"
                       disabled={submitting}
                     >
                       <option value="">Choose a service...</option>
@@ -509,6 +525,7 @@ export default function ReviewsPage() {
                         setShowForm(false);
                         setSubmitError('');
                         setSubmitSuccess('');
+                        setFormServiceId('');
                         setName('');
                         setQuote('');
                         setRating(5);

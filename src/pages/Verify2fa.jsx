@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { UserContext } from "../context/UserContext";
 
 const Verify2FA = () => {
   const [code, setCode] = useState("");
@@ -8,6 +9,7 @@ const Verify2FA = () => {
   const [email, setEmail] = useState("");
   const [resending, setResending] = useState(false);
   const navigate = useNavigate();
+  const { setUser } = useContext(UserContext);
 
   // Fetch stored email from sessionStorage
   useEffect(() => {
@@ -27,7 +29,7 @@ const Verify2FA = () => {
 
     try {
       const res = await fetch(
-        "https://crtvshotss.atwebpages.com/verify_2fa.php",
+        "https://crtvshotss.atwebpages.com/sessions/verify_2fa_simple.php",
         {
           method: "POST",
           body: formData,
@@ -36,9 +38,31 @@ const Verify2FA = () => {
       );
 
       const data = await res.json();
+      console.log("2FA verification response:", data);
 
       if (data.success) {
-        navigate("/"); // ✅ Redirect to homepage on success
+        console.log("2FA successful! User is_admin:", data.is_admin);
+        
+        // Save user data to context and localStorage
+        const userData = {
+          id: data.user.id,
+          email: data.user.email,
+          firstname: data.user.firstname,
+          is_admin: data.is_admin
+        };
+        
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        sessionStorage.removeItem('user_email'); // Clean up
+        
+        console.log("Navigating to:", data.is_admin === 1 ? "/admin-dashboard" : "/");
+        
+        // Check if user is admin
+        if (data.is_admin === 1) {
+          navigate("/admin-dashboard");
+        } else {
+          navigate("/");
+        }
       } else {
         setError(data.message || "Invalid code. Please try again.");
       }
@@ -64,7 +88,7 @@ const Verify2FA = () => {
       formData.append("user_email", email);
 
       const res = await fetch(
-        "https://crtvshotss.atwebpages.com/resend_2fa.php",
+        "https://crtvshotss.atwebpages.com/sessions/resend_2fa_simple.php",
         {
           method: "POST",
           body: formData,

@@ -7,7 +7,7 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // No automatic user fetch needed - admin auth is handled by backend
+  // No automatic user fetch neede admin auth is handled by backend
   // Each admin API call checks $_SESSION['is_admin'] on the server
 
   return (
