@@ -108,14 +108,11 @@ const MerchPage = () => {
 
                     {/* ✅ Add to Cart button */}
                     <button
-  onClick={() => {
-    addToCart(p);
-    alert(`${p.title} added to cart!`);
-  }}
-  className="flex-1 bg-[#06d6a0] hover:bg-[#05b88c] text-black p-2 rounded font-semibold transition"
->
-  Add to Cart
-</button>
+                      onClick={() => addToCart(p)}
+                      className="flex-1 bg-[#06d6a0] hover:bg-[#05b88c] text-black p-2 rounded font-semibold transition"
+                    >
+                      Add to Cart
+                    </button>
                   </div>
                 </div>
               </div>

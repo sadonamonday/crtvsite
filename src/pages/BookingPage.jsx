@@ -1022,100 +1022,159 @@ setFilteredServices(normalizedServices);
   };
 
     const handlePay = async () => {
-        if (!validateStep(5)) {
-            alert("Please select a payment option");
-            return;
-        }
+      if (!validateStep(5)) {
+        alert("Please select a payment option");
+        return;
+      }
 
-        setIsProcessing(true);
+      setIsProcessing(true);
 
-        const { start: time_start, end: time_end } = parseTimeRange(time);
-        const displayName = getServiceDisplayName();
+      const { start: time_start, end: time_end } = parseTimeRange(time);
+      const displayName = getServiceDisplayName();
 
-        const bookingData = {
-            service: service, // backend expects 'service'
-            item_name: displayName,
-            item_description: `${displayName} - ${date}${time ? ` ${time}` : ""}`,
-            date: date,
-            time_start: time_start || undefined,
-            time_end: time_end || undefined,
-            customer_name: details.name,
-            customer_email: details.email,
-            customer_phone: details.phone || "",
-            customer_address: details.address || "",
-            notes: details.notes || "",
-            // omit amount/currency/payment fields; backend computes pricing
-        };
+      // Calculate base price from selected service (full amount)
+      const priceLabel = (selectedService && selectedService.price) || "";
+      const basePrice = Number(String(priceLabel).replace(/[^0-9.,]/g, '').replace(/,/g, '')) || 0;
+      if (!basePrice) {
+        alert("Could not determine service price. Please try again.");
+        setIsProcessing(false);
+        return;
+      }
 
+      const bookingData = {
+        service: service,
+        item_name: displayName,
+        item_description: `${displayName} - ${date}${time ? ` ${time}` : ""}`,
+        date: date,
+        time_start: time_start || undefined,
+        time_end: time_end || undefined,
+        customer_name: details.name,
+        customer_email: details.email,
+        customer_phone: details.phone || "",
+        customer_address: details.address || "",
+        notes: details.notes || "",
+        payment_option: paymentOption, // 'full' | 'deposit'
+        amount: basePrice,             // backend applies 50% when deposit
+      };
+
+      try {
+        const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bookingData),
+        });
+
+        const text = await res.text();
+        let data;
         try {
-            const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(bookingData),
-            });
-
-            let data;
-            try { data = await res.json(); } catch { data = { success: res.ok, message: res.statusText }; }
-
-            if (data.success) {
-                alert("✅ Booking saved successfully!");
-                console.log("Booking saved:", data);
-                setIsProcessing(false);
-                // If backend returns a payfast_url in future, redirect:
-                // if (data.payfast_url) window.location.href = data.payfast_url;
-                resetToServiceSelection();
-            } else {
-                alert("❌ Failed to save booking: " + (data.message || "Unknown error"));
-                setIsProcessing(false);
-            }
-        } catch (err) {
-            alert("Network error: " + err.message);
-            setIsProcessing(false);
+          data = JSON.parse(text);
+        } catch (e) {
+          console.error("Invalid JSON from server:", text);
+          alert("Server returned an invalid response. Please try again.");
+          setIsProcessing(false);
+          return;
         }
+
+        if (data && data.success && data.payfast) {
+          // Redirect to PayFast
+          const payfastUrl = "https://sandbox.payfast.co.za/eng/process";
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = payfastUrl;
+          Object.entries(data.payfast).forEach(([key, value]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+          });
+          document.body.appendChild(form);
+          form.submit();
+        } else {
+          console.error("Unexpected response:", data);
+          alert("Failed to start payment. Please try again.");
+          setIsProcessing(false);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Network error: " + err.message);
+        setIsProcessing(false);
+      }
     };
 
 
     const handleConfirmCustom = async () => {
-        setIsProcessing(true);
+      setIsProcessing(true);
 
-        const { start: time_start, end: time_end } = parseTimeRange(time);
+      const { start: time_start, end: time_end } = parseTimeRange(time);
+      const title = customService.title || "Custom Service";
+      const desc = customService.description || "";
+      const budget = Number(String(customService.budget || '').replace(/[^0-9.,]/g, '').replace(/,/g, '')) || 0;
 
-        const bookingData = {
-    service: 0,  // backend expects a numeric service_id
-    item_name: customService.title || "Custom Service",
-    item_description: customService.description || "",
-    date: date,
-    time: `${time_start}-${time_end}`, // backend requires this exact field
-    customer_name: details.name,
-    customer_email: details.email,
-    customer_phone: details.phone || "",
-    customer_address: details.address || "",
-    notes: details.notes || "",
-};
+      if (!budget) {
+        alert("Please enter a budget to proceed with payment or choose a predefined service.");
+        setIsProcessing(false);
+        return;
+      }
 
-        try {
-            const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(bookingData),
-            });
+      const bookingData = {
+        service: 'other',
+        item_name: title,
+        item_description: desc,
+        date: date,
+        time_start: time_start || undefined,
+        time_end: time_end || undefined,
+        customer_name: details.name,
+        customer_email: details.email,
+        customer_phone: details.phone || "",
+        customer_address: details.address || "",
+        notes: details.notes || "",
+        payment_option: 'full',
+        amount: budget,
+      };
 
-            let data;
-            try { data = await res.json(); } catch { data = { success: res.ok, message: res.statusText }; }
+      try {
+        const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bookingData),
+        });
 
-            if (data.success) {
-                alert("✅ Custom booking saved successfully!");
-                console.log("Custom booking saved:", data);
-                setIsProcessing(false);
-                resetToServiceSelection();
-            } else {
-                alert("❌ Failed to save booking: " + (data.message || "Unknown error"));
-                setIsProcessing(false);
-            }
-        } catch (err) {
-            alert("Network error: " + err.message);
-            setIsProcessing(false);
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); } catch (e) {
+          console.error("Invalid JSON from server:", text);
+          alert("Server returned an invalid response. Please try again.");
+          setIsProcessing(false);
+          return;
         }
+
+        if (data && data.success && data.payfast) {
+          const payfastUrl = "https://sandbox.payfast.co.za/eng/process";
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = payfastUrl;
+          Object.entries(data.payfast).forEach(([key, value]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+          });
+          document.body.appendChild(form);
+          form.submit();
+        } else {
+          console.error("Unexpected response:", data);
+          alert("Failed to start payment. Please try again.");
+          setIsProcessing(false);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Network error: " + err.message);
+        setIsProcessing(false);
+      }
     };
 
   const CustomServiceModal = ({ open, onClose, initial, onSave }) => {

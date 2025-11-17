@@ -5,6 +5,7 @@ import "./About.css";
 
 const About = () => {
   return (
+    <>
     <section className="about-container">
       {/* Hero Section */}
       <div className="about-hero">
@@ -170,13 +171,14 @@ const About = () => {
 <div className="cta-section">
   <h2>Ready to Create With Us?</h2>
   <p>
-    Let’s bring your vision to life — book a shoot or creative session today!
+    Let's bring your vision to life — book a shoot or creative session today!
   </p>
   <a href="/booking" className="cta-button">Book Now</a>
 </div>
-
-      <Footer />
     </section>
+    
+    <Footer />
+    </>
   );
 };
 

@@ -18,52 +18,58 @@ const Cart = () => {
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col">
       <Header />
-      <div className="h-24"></div>
 
-      <div className="flex-grow pt-24 px-6 text-gray-900">
-        <h1 className="text-3xl font-bold mb-6 text-center">Your Cart</h1>
+      <div className="flex-grow pt-32 pb-12 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full text-gray-900">
+        <h1 className="text-3xl font-bold mb-8 text-center">Your Cart</h1>
 
         {cartItems.length === 0 ? (
-          <div className="text-center mt-10">
-            <p className="text-gray-700 mb-4">Your cart is empty.</p>
+          <div className="text-center mt-20 mb-20">
+            <p className="text-gray-700 text-lg mb-6">Your cart is empty.</p>
             <button
-  onClick={() => navigate("/merch")}
-  className="bg-[#06d6a0] hover:bg-[#05b88c] text-black font-semibold px-6 py-2 rounded transition"
->
-  Go to Shop
-</button>
+              onClick={() => navigate("/merch")}
+              className="bg-[#06d6a0] hover:bg-[#05b88c] text-black font-semibold px-8 py-3 rounded transition"
+            >
+              Go to Shop
+            </button>
           </div>
         ) : (
           <>
-            <ul className="space-y-4">
+            <ul className="space-y-6 mb-8">
               {cartItems.map((item) => (
                 <li
                   key={item.id}
-                  className="bg-white rounded-lg p-4 flex justify-between items-center shadow-md"
+                  className="bg-white rounded-lg p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center shadow-md gap-6"
                 >
-                  <div>
-                    <p className="font-semibold">{item.title}</p>
-                    <p className="text-black-400">
-                      R{item.price} × {item.quantity} = R{item.price * item.quantity}
-                    </p>
+                  <div className="flex items-center gap-4 flex-grow">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-20 h-20 object-cover rounded-md flex-shrink-0"
+                    />
+                    <div>
+                      <p className="font-semibold text-lg mb-1">{item.title}</p>
+                      <p className="text-gray-600">
+                        R{item.price} × {item.quantity} = R{item.price * item.quantity}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <button
                       onClick={() => decreaseQuantity(item.id)}
-                      className="bg-gray-200 hover:bg-gray-300 text-gray-900 px-2 rounded"
+                      className="bg-gray-200 hover:bg-gray-300 text-gray-900 px-3 py-1 rounded font-semibold"
                     >
                       -
                     </button>
-                    <span>{item.quantity}</span>
+                    <span className="font-semibold min-w-[2rem] text-center">{item.quantity}</span>
                     <button
                       onClick={() => increaseQuantity(item.id)}
-                      className="bg-gray-200 hover:bg-gray-300 text-gray-900 px-2 rounded"
+                      className="bg-gray-200 hover:bg-gray-300 text-gray-900 px-3 py-1 rounded font-semibold"
                     >
                       +
                     </button>
                     <button
                       onClick={() => removeFromCart(item.id)}
-                      className="bg-red-400 hover:bg-red-500 text-black px-3 py-1 rounded"
+                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-semibold transition"
                     >
                       Remove
                     </button>
@@ -72,29 +78,31 @@ const Cart = () => {
               ))}
             </ul>
 
-            <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-              <button
-                onClick={clearCart}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold px-4 py-2 rounded"
-              >
-                Clear Cart
-              </button>
-              <div className="text-xl font-bold text-black-400">
-                Subtotal: R{total}
-              </div>
-              <div className="flex gap-2">
-             <button
-  onClick={() => navigate("/merch")}
-  className="bg-[#06d6a0] hover:bg-[#05b88c] text-black font-semibold px-6 py-2 rounded transition"
->
-  Continue to Shop
-</button>
-        <button
-  onClick={() => navigate("/checkout")}
-  className="bg-[#06d6a0] hover:bg-[#05b88c] text-black font-semibold px-6 py-2 rounded transition"
->
-  Checkout
-</button>
+            <div className="mt-8 bg-white rounded-lg p-6 shadow-md">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+                <button
+                  onClick={clearCart}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold px-6 py-3 rounded transition w-full sm:w-auto"
+                >
+                  Clear Cart
+                </button>
+                <div className="text-2xl font-bold text-gray-900">
+                  Subtotal: R{total}
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                  <button
+                    onClick={() => navigate("/merch")}
+                    className="bg-gray-700 hover:bg-gray-800 text-white font-semibold px-6 py-3 rounded transition"
+                  >
+                    Continue Shopping
+                  </button>
+                  <button
+                    onClick={() => navigate("/checkout")}
+                    className="bg-[#06d6a0] hover:bg-[#05b88c] text-black font-semibold px-8 py-3 rounded transition"
+                  >
+                    Checkout
+                  </button>
+                </div>
               </div>
             </div>
           </>
