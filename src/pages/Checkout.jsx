@@ -47,9 +47,9 @@ const Checkout = () => {
 
     const finalTotal = total + shippingRate;
     const orderData = {
-      name,   // Must match database column
-      email,  // Must match database column
-      address,// Must match database column
+      name,
+      email,
+      address,
       items: cartItems.map((item) => ({
         id: item.id,
         title: item.title,
@@ -64,9 +64,10 @@ const Checkout = () => {
     try {
       setSubmitting(true);
       const response = await fetch(
-        "https://crtvshotss.atwebpages.com/orders/place_order.php",
+        "https://crtvshotss.atwebpages.com/place_merch_order.php",
         {
           method: "POST",
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(orderData),
         }
@@ -78,17 +79,43 @@ const Checkout = () => {
         data = JSON.parse(text);
       } catch {
         alert("Server returned invalid response. Check console.");
+        setSubmitting(false);
         return;
       }
 
       if (data.success) {
-        alert("Order placed successfully!");
+        // Redirect to PayFast payment
+        const orderId = data.order_id;
+        const payfastUrl = "https://sandbox.payfast.co.za/eng/process";
+        
+        // Use PayFast test credentials for sandbox
+        const payfastData = data.payfast;
+
+
+        // Create and submit form
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = payfastUrl;
+
+        Object.keys(payfastData).forEach((key) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = payfastData[key];
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+        
+        // Clear cart after successful order placement
         clearCart();
-        navigate("/");
       } else {
         alert("Error placing order: " + (data.message || "Unknown error"));
+        setSubmitting(false);
       }
-    } finally {
+    } catch (error) {
+      alert("Failed to place order. Please try again.");
       setSubmitting(false);
     }
   };
@@ -104,45 +131,51 @@ const Checkout = () => {
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col">
       <Header />
-      <div className="h-24"></div>
-      <div className="flex-grow pt-5 px-6 text-gray-900 max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-center">Checkout</h1>
+      <div className="flex-grow pt-32 pb-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full text-gray-900">
+        <h1 className="text-3xl font-bold mb-8 text-center">Checkout</h1>
 
         {cartItems.length === 0 ? (
-          <p className="text-gray-700 text-center">Your cart is empty.</p>
+          <p className="text-gray-700 text-center text-lg mt-20 mb-20">Your cart is empty.</p>
         ) : (
           <>
             {/* Order Details */}
-            <div className="bg-white p-4 rounded mb-6 shadow">
-              <h2 className="text-xl font-semibold mb-2">Order Details</h2>
-              <ul className="space-y-2">
+            <div className="bg-white p-6 rounded-lg mb-6 shadow-md">
+              <h2 className="text-xl font-semibold mb-4">Order Details</h2>
+              <ul className="space-y-3">
                 {cartItems.map((item) => (
                   <li
                     key={item.id}
-                    className="flex justify-between bg-gray-100 p-3 rounded"
+                    className="flex justify-between items-center bg-gray-50 p-4 rounded gap-4"
                   >
-                    <span>
-                      {item.title} × {item.quantity}
-                    </span>
-                    <span>R{item.price * item.quantity}</span>
+                    <div className="flex items-center gap-3 flex-grow">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-16 h-16 object-cover rounded flex-shrink-0"
+                      />
+                      <span className="font-medium">
+                        {item.title} × {item.quantity}
+                      </span>
+                    </div>
+                    <span className="font-semibold">R{item.price * item.quantity}</span>
                   </li>
                 ))}
               </ul>
-              <div className="mt-3 text-right text-xl font-bold text-yellow-400">
+              <div className="mt-4 pt-4 border-t border-gray-200 text-right text-xl font-bold text-gray-900">
                 Subtotal: R{total}
               </div>
             </div>
 
             {/* Shipping */}
-            <div className="mb-6 flex justify-between items-center bg-gray-100 p-3 rounded">
-              <span>Shipping:</span>
-              <span>Flat Rate: R{shippingRate}</span>
+            <div className="mb-6 flex justify-between items-center bg-white p-5 rounded-lg shadow-md">
+              <span className="font-semibold text-lg">Shipping:</span>
+              <span className="font-semibold text-lg">Flat Rate: R{shippingRate}</span>
             </div>
 
             {/* Shipping Info */}
-            <div className="mb-6 bg-white p-4 rounded shadow">
-              <h2 className="text-xl font-semibold mb-3">Shipping Information</h2>
-              <div className="space-y-3">
+            <div className="mb-6 bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold mb-5">Shipping Information</h2>
+              <div className="space-y-4">
                 {/* Name */}
                 <div>
                   <label className="block text-sm text-gray-700 mb-1">
@@ -154,7 +187,7 @@ const Checkout = () => {
                     onChange={(e) =>
                       setShippingInfo({ ...shippingInfo, name: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded bg-gray-50 text-gray-900 outline-none focus:ring-2 focus:ring-yellow-400"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-[#06d6a0] focus:border-transparent"
                     placeholder="Enter your full name"
                     required
                   />
@@ -171,7 +204,7 @@ const Checkout = () => {
                     onChange={(e) =>
                       setShippingInfo({ ...shippingInfo, email: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded bg-gray-50 text-gray-900 outline-none focus:ring-2 focus:ring-yellow-400"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-[#06d6a0] focus:border-transparent"
                     placeholder="Enter your email"
                     required
                   />
@@ -187,9 +220,9 @@ const Checkout = () => {
                     onChange={(e) =>
                       setShippingInfo({ ...shippingInfo, address: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded bg-gray-50 text-gray-900 outline-none focus:ring-2 focus:ring-yellow-400"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 outline-none focus:ring-2 focus:ring-[#06d6a0] focus:border-transparent"
                     placeholder="Enter your shipping address"
-                    rows="3"
+                    rows="4"
                     required
                   />
                 </div>
@@ -197,17 +230,20 @@ const Checkout = () => {
             </div>
 
             {/* Total */}
-            <div className="mb-6 flex justify-between items-center text-xl font-bold text-yellow-400 bg-gray-100 p-3 rounded">
+            <div className="mb-6 flex justify-between items-center text-2xl font-bold text-gray-900 bg-gray-100 p-6 rounded-lg">
               <span>Total:</span>
-              <span>R{total + shippingRate}</span>
+              <span className="text-[#06d6a0]">R{total + shippingRate}</span>
             </div>
 
             {/* Place Order Button */}
             <button
               onClick={handlePlaceOrder}
+              disabled={submitting}
               className={`${
-                submitting ? "bg-green-400" : "bg-green-700 hover:bg-green-800"
-              } text-black font-semibold px-6 py-3 rounded w-full transition`}
+                submitting 
+                  ? "bg-gray-400 cursor-not-allowed" 
+                  : "bg-[#06d6a0] hover:bg-[#05b88c]"
+              } text-black font-bold text-lg px-8 py-4 rounded-lg w-full transition shadow-md`}
             >
               {submitting ? "Placing Order..." : "Place Order"}
             </button>

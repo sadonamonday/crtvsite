@@ -64,7 +64,7 @@ const services = [
       "Online gallery for sharing"
     ],
     image: "/Images/services/services/matric-dance.jpg",
-    image_url:"https://crtvshotss.atwebpages.com/uploads/services/matric-dance.jpg" 
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/matric-dance.jpg" 
   },
   {
     id: "wedding-photo",
@@ -83,7 +83,7 @@ const services = [
       "Online gallery and USB delivery"
     ],
     image: "/Images/services/services/pexels-edwardeyer-1247756.jpg",
-    image_url:"https://crtvshotss.atwebpages.com/uploads/services/pexels-edwardeyer-1247756.jpg"
+    image_url: "https://crtvshotss.atwebpages.com/uploads/services/pexels-edwardeyer-1247756.jpg"
   },
   {
     id: "corporate-photo",
@@ -341,7 +341,7 @@ const services = [
       "3-5 minute highlight film",
       "Digital delivery"
     ],
-    image:"/Images/services/services/highlightreel.webp",
+    image: "/Images/services/services/highlightreel.webp",
     image_url: "https://crtvshotss.atwebpages.com/uploads/services/highlightreel.webp"
   },
   {
@@ -1080,111 +1080,164 @@ export default function BookingPage() {
 
   const prevStep = () => {
     setCurrentStep((p) => Math.max(p - 1, 1));
-  };
+   };
 
-  const handlePay = async () => {
-    if (!validateStep(5)) {
-      alert("Please select a payment option");
-      return;
-    }
+    const handlePay = async () => {
+      if (!validateStep(5)) {
+        alert("Please select a payment option");
+        return;
+      }
 
-    setIsProcessing(true);
+      setIsProcessing(true);
 
-    const { start: time_start, end: time_end } = parseTimeRange(time);
-    const displayName = getServiceDisplayName();
+      const { start: time_start, end: time_end } = parseTimeRange(time);
+      const displayName = getServiceDisplayName();
 
-    const bookingData = {
-      service: service, // backend expects 'service'
-      item_name: displayName,
-      item_description: `${displayName} - ${date}${time ? ` ${time}` : ""}`,
-      date: date,
-      time_start: time_start || undefined,
-      time_end: time_end || undefined,
-      customer_name: details.name,
-      customer_email: details.email,
-      customer_phone: details.phone || "",
-      customer_address: details.address || "",
-      notes: details.notes || "",
-      // omit amount/currency/payment fields; backend computes pricing
+      // Calculate base price from selected service (full amount)
+      const priceLabel = (selectedService && selectedService.price) || "";
+      const basePrice = Number(String(priceLabel).replace(/[^0-9.,]/g, '').replace(/,/g, '')) || 0;
+      if (!basePrice) {
+        alert("Could not determine service price. Please try again.");
+        setIsProcessing(false);
+        return;
+      }
+
+      const bookingData = {
+        service: service,
+        item_name: displayName,
+        item_description: `${displayName} - ${date}${time ? ` ${time}` : ""}`,
+        date: date,
+        time_start: time_start || undefined,
+        time_end: time_end || undefined,
+        customer_name: details.name,
+        customer_email: details.email,
+        customer_phone: details.phone || "",
+        customer_address: details.address || "",
+        notes: details.notes || "",
+        payment_option: paymentOption, // 'full' | 'deposit'
+        amount: basePrice,             // backend applies 50% when deposit
+      };
+
+      try {
+        const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bookingData),
+        });
+
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.error("Invalid JSON from server:", text);
+          alert("Server returned an invalid response. Please try again.");
+          setIsProcessing(false);
+          return;
+        }
+
+        if (data && data.success && data.payfast) {
+          // Redirect to PayFast
+          const payfastUrl = "https://sandbox.payfast.co.za/eng/process";
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = payfastUrl;
+          Object.entries(data.payfast).forEach(([key, value]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+          });
+          document.body.appendChild(form);
+          form.submit();
+        } else {
+          console.error("Unexpected response:", data);
+          alert("Failed to start payment. Please try again.");
+          setIsProcessing(false);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Network error: " + err.message);
+        setIsProcessing(false);
+      }
     };
 
-    try {
-      const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bookingData),
-      });
+    const handleConfirmCustom = async () => {
+      setIsProcessing(true);
 
-      let data;
-      try { 
-        data = await res.json(); 
-      } catch { 
-        data = { success: res.ok, message: res.statusText }; 
+      const { start: time_start, end: time_end } = parseTimeRange(time);
+      const title = customService.title || "Custom Service";
+      const desc = customService.description || "";
+      const budget = Number(String(customService.budget || '').replace(/[^0-9.,]/g, '').replace(/,/g, '')) || 0;
+
+      if (!budget) {
+        alert("Please enter a budget to proceed with payment or choose a predefined service.");
+        setIsProcessing(false);
+        return;
       }
 
-      if (data.success) {
-        alert("✅ Booking saved successfully!");
-        console.log("Booking saved:", data);
-        setIsProcessing(false);
-        // If backend returns a payfast_url in future, redirect:
-        // if (data.payfast_url) window.location.href = data.payfast_url;
-        resetToServiceSelection();
-      } else {
-        alert("❌ Failed to save booking: " + (data.message || "Unknown error"));
+      const bookingData = {
+        service: 'other',
+        item_name: title,
+        item_description: desc,
+        date: date,
+        time_start: time_start || undefined,
+        time_end: time_end || undefined,
+        customer_name: details.name,
+        customer_email: details.email,
+        customer_phone: details.phone || "",
+        customer_address: details.address || "",
+        notes: details.notes || "",
+        payment_option: 'full',
+        amount: budget,
+      };
+
+      try {
+        const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bookingData),
+        });
+
+        const text = await res.text();
+        let data;
+        try { 
+          data = JSON.parse(text); 
+        } catch (e) {
+          console.error("Invalid JSON from server:", text);
+          alert("Server returned an invalid response. Please try again.");
+          setIsProcessing(false);
+          return;
+        }
+
+        if (data && data.success && data.payfast) {
+          const payfastUrl = "https://sandbox.payfast.co.za/eng/process";
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = payfastUrl;
+          Object.entries(data.payfast).forEach(([key, value]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+          });
+          document.body.appendChild(form);
+          form.submit();
+        } else {
+          console.error("Unexpected response:", data);
+          alert("Failed to start payment. Please try again.");
+          setIsProcessing(false);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Network error: " + err.message);
         setIsProcessing(false);
       }
-    } catch (err) {
-      alert("Network error: " + err.message);
-      setIsProcessing(false);
-    }
-  };
-
-  const handleConfirmCustom = async () => {
-    setIsProcessing(true);
-
-    const { start: time_start, end: time_end } = parseTimeRange(time);
-
-    const bookingData = {
-      service: 0,  // backend expects a numeric service_id
-      item_name: customService.title || "Custom Service",
-      item_description: customService.description || "",
-      date: date,
-      time: `${time_start}-${time_end}`, // backend requires this exact field
-      customer_name: details.name,
-      customer_email: details.email,
-      customer_phone: details.phone || "",
-      customer_address: details.address || "",
-      notes: details.notes || "",
     };
-
-    try {
-      const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bookingData),
-      });
-
-      let data;
-      try { 
-        data = await res.json(); 
-      } catch { 
-        data = { success: res.ok, message: res.statusText }; 
-      }
-
-      if (data.success) {
-        alert("✅ Custom booking saved successfully!");
-        console.log("Custom booking saved:", data);
-        setIsProcessing(false);
-        resetToServiceSelection();
-      } else {
-        alert("❌ Failed to save booking: " + (data.message || "Unknown error"));
-        setIsProcessing(false);
-      }
-    } catch (err) {
-      alert("Network error: " + err.message);
-      setIsProcessing(false);
-    }
-  };
 
   const CustomServiceModal = ({ open, onClose, initial, onSave }) => {
     const [form, setForm] = useState(initial || { title: "", description: "", budget: "" });
@@ -1840,7 +1893,7 @@ export default function BookingPage() {
     <div className="bg-white flex flex-col min-h-screen">
       <Header />
 
-      <main className="flex-grow pt-30t md:pt-32 pb-12">
+      <main className="flex-grow pt-30 md:pt-32 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Updated Title with Underline like Gallery */}
           <div className="page-header">
