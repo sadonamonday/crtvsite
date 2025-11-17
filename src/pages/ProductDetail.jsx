@@ -9,12 +9,17 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedSize, setSelectedSize] = useState("");
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
     if (product) {
-      addToCart(product);
-      alert(`${product.title} added to cart!`);
+      const productWithSize = {
+        ...product,
+        selectedSize: selectedSize || (product.sizes && product.sizes[0]) || "One Size"
+      };
+      addToCart(productWithSize);
+      alert(`${product.title} ${selectedSize ? `(Size: ${selectedSize})` : ''} added to cart!`);
     }
   };
 
@@ -29,7 +34,16 @@ const ProductDetail = () => {
           alert(data.error);
           navigate("/merch");
         } else {
-          setProduct(data);
+          // Ensure product has sizes array
+          const productWithSizes = {
+            ...data,
+            sizes: Array.isArray(data.sizes) && data.sizes.length > 0 
+              ? data.sizes 
+              : ["One Size"]
+          };
+          setProduct(productWithSizes);
+          // Set default selected size
+          setSelectedSize(productWithSizes.sizes[0]);
         }
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -67,19 +81,46 @@ const ProductDetail = () => {
         <div className="flex flex-col text-gray-900 w-full md:w-1/2">
           <h1 className="text-4xl font-bold mb-4">{product.title}</h1>
           <p className="text-2xl font-semibold mb-4">R{product.price}</p>
-          <p className="mb-6">{product.description || "No description available."}</p>
+          
+          {/* Size Selection */}
+          {product.sizes && product.sizes.length > 0 && (
+            <div className="mb-6">
+              <label className="block text-gray-700 text-lg font-medium mb-3">
+                Size: {selectedSize && <span className="text-[#06d6a0] font-semibold">{selectedSize}</span>}
+              </label>
+              <div className="flex flex-wrap gap-3">
+                {product.sizes.map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => setSelectedSize(size)}
+                    className={`px-4 py-2 text-base rounded border transition-all ${
+                      selectedSize === size
+                        ? "bg-[#06d6a0] text-black border-[#06d6a0] font-semibold transform scale-105"
+                        : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200 hover:border-gray-400"
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <p className="mb-6 text-gray-700 leading-relaxed">
+            {product.description || "No description available."}
+          </p>
 
           {/* Buttons */}
           <div className="flex gap-4">
-          <button
-  className="bg-[#06d6a0] hover:bg-[#05b88c] text-black p-3 rounded font-semibold transition"
-  onClick={handleAddToCart}
->
-  Add to Cart
-</button>
+            <button
+              className="bg-[#06d6a0] hover:bg-[#05b88c] text-black p-3 rounded font-semibold transition flex-1"
+              onClick={handleAddToCart}
+            >
+              Add to Cart {selectedSize && `- ${selectedSize}`}
+            </button>
 
             <button
-              className="bg-gray-200 text-gray-900 p-3 rounded hover:bg-gray-300 transition"
+              className="bg-gray-200 text-gray-900 p-3 rounded hover:bg-gray-300 transition flex-1"
               onClick={() => navigate("/merch")}
             >
               Back to Shop

@@ -110,7 +110,7 @@ const portfolioData = {
     { id: "service14", type: "image", src: "/Images/services/services/pexels-rdne-7648474.jpg", caption: "Corporate Event Photography", category: "services", aspect: "portrait", comingSoon: false },
     { id: "service15", type: "image", src: "/Images/services/services/Professional-matric-dance-photography-by-Loci-Photography.jpg", caption: "Matric Dance Photgraphy", category: "services", aspect: "portrait", comingSoon: false },
     { id: "service16", type: "image", src: "/Images/services/services/weddingvideo.jpg", caption: "Wedding Photography", category: "services", aspect: "portrait", comingSoon: false },
-    { id: "service17", type: "image", src: "/Images/services/services/matricdance.jpg", caption: "Matric Dance Photography", category: "services", aspect: "portrait", comingSoon: false },
+    { id: "service17", type: "image", src: "/Images/services/services/matricdancefarewell.jpg", caption: "Matric Dance Photography", category: "services", aspect: "portrait", comingSoon: false },
   ],
  videography: [
   { id: "music1", type: "video", youtubeId: "AtvnwGUUL-s", caption: "BROTHERKUPA - CUPS AND FEELS (DIR, CRTVSHOTS)", category: "music", thumbnail: "https://i.ytimg.com/vi/AtvnwGUUL-s/hqdefault.jpg", duration: "2:26", aspect: "wide", comingSoon: false },
@@ -378,7 +378,9 @@ const getCurrentContent = () => {
 
       {selectedVideo && <VideoModal video={selectedVideo} onClose={() => setSelectedVideo(null)} />}
     </div>
+
   );
+  
 };
 
 export default Gallery;
