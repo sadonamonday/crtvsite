@@ -758,18 +758,7 @@ export default function BookingPage() {
   const [servicesLoading, setServicesLoading] = useState(true);
   const [servicesError, setServicesError] = useState("");
 
-  // Add this useEffect to automatically set service when custom form is completed
-  useEffect(() => {
-    if (activeCategory === "custom" && 
-        customService.title.trim() && 
-        customService.description.trim() && 
-        service !== "") {
-      setService("");
-    }
-  }, [customService, activeCategory, service]);
-
-
-  // Fetch services from backend once on mount
+  // Fixed: Fetch services from backend once on mount
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
@@ -778,81 +767,117 @@ export default function BookingPage() {
       try {
         setServicesLoading(true);
         setServicesError("");
-        const res = await fetch("https://crtvshotss.atwebpages.com/services_list.php");
-const json = await res.json();
-
-// Validate structure
-if (!json.success || !Array.isArray(json.data)) {
-  throw new Error("Invalid services response");
-}
-
-// Use json.data as the array of services
-const services = json.data;
-
-// Continue processing images
-const normalizedServices = services.map((service) => {
-  let image = service.image || "";
-
-  if (image && !/^https?:\/\//i.test(image)) {
-    image = `https://crtvshotss.atwebpages.com/${image.replace(/^\/+/, "")}`;
-  }
-
-  return { ...service, image };
-});
-
-setServicesList(normalizedServices);
-setFilteredServices(normalizedServices);
-        if (!res.ok) throw new Error(`Failed to fetch services: ${res.status}`);
+        
+        console.log("Fetching services from API...");
+        const res = await fetch("https://crtvshotss.atwebpages.com/services_list.php", {
+          signal: controller.signal
+        });
+        
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
         const data = await res.json();
-        if (!Array.isArray(data)) throw new Error("Invalid services payload");
+        console.log("API Response:", data);
+        
+        // Handle different possible response structures
+        let servicesArray = [];
+        
+        if (Array.isArray(data)) {
+          servicesArray = data;
+        } else if (data && Array.isArray(data.data)) {
+          servicesArray = data.data;
+        } else if (data && data.success && Array.isArray(data.data)) {
+          servicesArray = data.data;
+        } else {
+          console.warn("Unexpected API response structure, using fallback services");
+          servicesArray = services; // Use static fallback
+        }
+        
+        if (servicesArray.length === 0) {
+          console.warn("No services found in API response, using fallback");
+          servicesArray = services; // Use static fallback
+        }
 
-        // Normalize incoming items to expected shape
-        const normalized = data.map((item, idx) => {
-          const rawIncludes = item.includes || item.included || item.features || "";
-          const includesArr = Array.isArray(rawIncludes)
-            ? rawIncludes
-            : String(rawIncludes)
-                .split(/[,\n]/)
-                .map((s) => s.trim())
-                .filter(Boolean);
+        // Normalize service data with better error handling
+        const normalizedServices = servicesArray.map((item, idx) => {
+          try {
+            const rawIncludes = item.includes || item.included || item.features || "";
+            const includesArr = Array.isArray(rawIncludes)
+              ? rawIncludes
+              : String(rawIncludes)
+                  .split(/[,\n|]/)
+                  .map((s) => s.trim())
+                  .filter(Boolean);
 
-          const category = (item.category || item.type || "").toString().toLowerCase();
-          const mapCategory =
-            category.includes("photo")
-              ? "photography"
-              : category.includes("video")
-              ? "videography"
-              : category.includes("combo")
-              ? "combo"
-              : category || "photography";
+            const category = (item.category || item.type || "photography").toString().toLowerCase();
+            const mapCategory =
+              category.includes("photo")
+                ? "photography"
+                : category.includes("video")
+                ? "videography"
+                : category.includes("combo")
+                ? "combo"
+                : category || "photography";
 
-          const priceNumber = Number(item.price || item.amount || 0);
-          const priceText = item.priceText || item.price_label || (priceNumber ? `R${priceNumber}` : String(item.price || "").trim() || "");
+            const priceNumber = Number(item.price || item.amount || 0);
+            const priceText = item.priceText || item.price_label || 
+                            (priceNumber ? `R${priceNumber}` : String(item.price || "").trim() || "Contact for price");
 
-          // Image URL normalization
-          let image = item.image || item.image_url || item.thumbnail || "";
-          if (image && !/^https?:\/\//i.test(image)) {
-            image = `https://crtvshotss.atwebpages.com/${image.replace(/^\/+/, "")}`;
+            // Better image URL handling
+            let image = item.image || item.image_url || item.thumbnail || "";
+            if (image) {
+              if (!/^https?:\/\//i.test(image)) {
+                image = `https://crtvshotss.atwebpages.com/${image.replace(/^\/+/, "")}`;
+              }
+            } else {
+              // Use fallback image from static data if available
+              const staticService = services.find(s => s.id === (item.id || item.name));
+              image = staticService?.image || "/Images/services/services/default.jpg";
+            }
+
+            return {
+              id: item.id || item.slug || `svc-${idx}-${Date.now()}`,
+              name: item.name || item.title || "Unnamed Service",
+              category: mapCategory,
+              price: priceText,
+              price_type: (item.price_type || "").toString().toLowerCase(),
+              description: item.description || item.desc || "Professional service delivery",
+              includes: includesArr.length ? includesArr : ["Professional service", "Quality deliverables"],
+              image: image,
+              image_url: image // Keep both for compatibility
+            };
+          } catch (error) {
+            console.error("Error normalizing service:", item, error);
+            // Return a minimal valid service object
+            return {
+              id: `error-${idx}`,
+              name: "Service",
+              category: "photography",
+              price: "Contact for price",
+              description: "Professional service",
+              includes: ["Professional service"],
+              image: "/Images/services/services/default.jpg"
+            };
           }
-
-          return {
-            id: item.id || item.slug || item.code || `svc-${idx}`,
-            name: item.name || item.title || "Service",
-            category: mapCategory,
-            price: priceText || "",
-            price_type: (item.price_type || item.type || "").toString().toLowerCase(),
-            description: item.description || item.desc || "",
-            includes: includesArr.length ? includesArr : ["Professional service", "Edited deliverables"],
-            image: image || "/Images/services/services/default.jpg",
-          };
         });
 
-        if (isMounted) setServicesList(normalized);
+        console.log("Normalized services:", normalizedServices);
+        
+        if (isMounted) {
+          setServicesList(normalizedServices);
+        }
       } catch (err) {
-        console.error(err);
-        if (isMounted) setServicesError(err.message || "Failed to load services");
+        console.error("Error loading services:", err);
+        if (isMounted) {
+          setServicesError(err.message);
+          // Fallback to static services
+          setServicesList(services);
+        }
       } finally {
-        if (isMounted) setServicesLoading(false);
+        if (isMounted) {
+          setServicesLoading(false);
+        }
       }
     }
 
@@ -864,11 +889,21 @@ setFilteredServices(normalizedServices);
     };
   }, []);
 
-  // Filter services based on active category
+  // Fixed: Filter services based on active category
   const filteredServices = useMemo(() => {
     if (activeCategory === "all") return servicesList;
     return servicesList.filter(service => service.category === activeCategory);
   }, [activeCategory, servicesList]);
+
+  // Add this useEffect to automatically set service when custom form is completed
+  useEffect(() => {
+    if (activeCategory === "custom" && 
+        customService.title.trim() && 
+        customService.description.trim() && 
+        service !== "") {
+      setService("");
+    }
+  }, [customService, activeCategory, service]);
 
   // Helpers derived from selected service
   const findService = (id) => servicesList.find((s) => String(s.id) === String(id));
@@ -1345,6 +1380,21 @@ setFilteredServices(normalizedServices);
 
   const renderServiceGrid = () => (
     <div className="space-y-6">
+      {/* Debug info - remove in production */}
+      {servicesError && (
+        <div className="bg-yellow-100 border border-yellow-400 rounded p-4">
+          <p className="text-yellow-800">Services loading issue: {servicesError}. Using fallback data.</p>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {servicesLoading && (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+          <p className="mt-2 text-gray-600">Loading services...</p>
+        </div>
+      )}
+
       {/* Category Tabs - Gallery Style */}
       <div className="filter-tabs-container">
         <div className="filter-tabs">
@@ -1372,6 +1422,10 @@ setFilteredServices(normalizedServices);
         <p className="description-text">
           {serviceCategories.find(cat => cat.id === activeCategory)?.description}
         </p>
+        {/* Show counts for debugging */}
+        <p className="text-sm opacity-75 mt-1">
+          Showing {filteredServices.length} service{filteredServices.length !== 1 ? 's' : ''}
+        </p>
       </div>
 
       {/* Custom Request Form */}
@@ -1379,81 +1433,97 @@ setFilteredServices(normalizedServices);
         renderCustomRequestForm()
       ) : (
         /* Services Grid */
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredServices.map((s) => {
-            const isExpanded = expandedService === s.id;
-            return (
-              <div
-                key={s.id}
-                className={`flex flex-col border rounded-lg overflow-hidden transition-all duration-200 ${
-                  isExpanded ? "border-green-500 shadow-lg" : "border-gray-300 hover:shadow-md"
-                }`}
-              >
-                {/* Service Image */}
-                <div className="h-48 bg-gray-200 relative overflow-hidden">
-                   <img 
-                     src={s.image} 
-                     alt={s.name}
-                     className="w-full h-full object-cover"
-                     onError={handleImageError}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                  <div className="absolute bottom-4 left-4 right-4 text-white">
-                    <h3 className="font-bold text-lg">{s.name}</h3>
-                    <div className="flex justify-between items-center mt-2">
-                     <span className="font-semibold text-green-300">{s.price}</span>
-                     <span className="text-sm bg-black/50 px-2 py-1 rounded">Flexible Duration</span>
-                   </div>
-                 </div>
+        <div>
+          {/* No services message */}
+          {!servicesLoading && filteredServices.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-gray-500 text-lg mb-2">No services found</div>
+              <p className="text-gray-400">
+                {servicesList.length === 0 
+                  ? "Unable to load services. Please check your connection." 
+                  : `No services found in the ${activeCategory} category.`}
+              </p>
+            </div>
+          )}
+
+          {/* Services Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredServices.map((s) => {
+              const isExpanded = expandedService === s.id;
+              return (
+                <div
+                  key={s.id}
+                  className={`flex flex-col border rounded-lg overflow-hidden transition-all duration-200 ${
+                    isExpanded ? "border-green-500 shadow-lg" : "border-gray-300 hover:shadow-md"
+                  }`}
+                >
+                  {/* Service Image with better fallback */}
+                  <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 relative overflow-hidden">
+                    <img 
+                      src={s.image} 
+                      alt={s.name}
+                      className="w-full h-full object-cover"
+                      onError={handleImageError}
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                    <div className="absolute bottom-4 left-4 right-4 text-white">
+                      <h3 className="font-bold text-lg">{s.name}</h3>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="font-semibold text-green-300">{s.price}</span>
+                        <span className="text-sm bg-black/50 px-2 py-1 rounded">Flexible Duration</span>
+                      </div>
+                    </div>
                   </div>
 
-                {/* Service Content */}
-                <div className="p-4 flex-1 flex flex-col bg-white">
-                  <p className="text-gray-600 text-sm mb-4 flex-1">{s.description}</p>
-                  
-                  <div className="space-y-3">
-                    <button
-                      type="button"
-                      onClick={() => handleServiceClick(s.id)}
-                      className="w-full text-left flex items-center justify-between text-green-600 hover:text-green-700 font-medium"
-                    >
-                      <span>View Details</span>
-                      <ChevronRight 
-                        size={16} 
-                        className={`transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-                      />
-                    </button>
+                  {/* Service Content */}
+                  <div className="p-4 flex-1 flex flex-col bg-white">
+                    <p className="text-gray-600 text-sm mb-4 flex-1">{s.description}</p>
+                    
+                    <div className="space-y-3">
+                      <button
+                        type="button"
+                        onClick={() => handleServiceClick(s.id)}
+                        className="w-full text-left flex items-center justify-between text-green-600 hover:text-green-700 font-medium"
+                      >
+                        <span>View Details</span>
+                        <ChevronRight 
+                          size={16} 
+                          className={`transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                        />
+                      </button>
 
-                    {isExpanded && (
-                      <div className="space-y-4 pt-4 border-t border-gray-200">
-                        {/* What's Included */}
-                        <div>
-                          <h4 className="font-semibold text-sm mb-2 text-gray-800">What's Included:</h4>
-                          <ul className="text-sm text-gray-600 space-y-1">
-                            {s.includes.map((item, index) => (
-                              <li key={index} className="flex items-start">
-                                <CheckCircle size={16} className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                                {item}
-                              </li>
-                            ))}
-                          </ul>
+                      {isExpanded && (
+                        <div className="space-y-4 pt-4 border-t border-gray-200">
+                          {/* What's Included */}
+                          <div>
+                            <h4 className="font-semibold text-sm mb-2 text-gray-800">What's Included:</h4>
+                            <ul className="text-sm text-gray-600 space-y-1">
+                              {s.includes.map((item, index) => (
+                                <li key={index} className="flex items-start">
+                                  <CheckCircle size={16} className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                  {item}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {/* Select Button - Now separate from View Details */}
+                          <button
+                            type="button"
+                            onClick={() => handleSelectService(s.id)}
+                            className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded font-medium transition"
+                          >
+                            Select & Continue
+                          </button>
                         </div>
-
-                        {/* Select Button - Now separate from View Details */}
-                        <button
-                          type="button"
-                          onClick={() => handleSelectService(s.id)}
-                          className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded font-medium transition"
-                        >
-                          Select & Continue
-                        </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
