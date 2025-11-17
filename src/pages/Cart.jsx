@@ -18,6 +18,7 @@ const Cart = () => {
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col">
       <Header />
+      <div className="h-24"></div>
 
       <div className="flex-grow pt-24 px-6 text-gray-900">
         <h1 className="text-3xl font-bold mb-6 text-center">Your Cart</h1>

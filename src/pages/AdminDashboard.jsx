@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Calendar, CalendarDays, Settings, LogOut, Home } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, CalendarDays, Settings, LogOut, Home, ChevronsUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import "./AdminDashboard.css";
 import AdminAddProduct from './AdminAddProduct';
 import { PlusCircle } from 'lucide-react';
@@ -56,6 +56,98 @@ const availableImages = [
   "matricdancecombo.jpg",
   "matricdancefarewell.jpg"
 ];
+
+// Pagination Component
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  if (totalPages <= 1) return null;
+  
+  const pages = [];
+  const maxVisible = 5;
+  let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+  let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+  
+  if (endPage - startPage < maxVisible - 1) {
+    startPage = Math.max(1, endPage - maxVisible + 1);
+  }
+  
+  for (let i = startPage; i <= endPage; i++) {
+    pages.push(i);
+  }
+  
+  return (
+    <div className="pagination">
+      <button
+        className="pagination-btn"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+      >
+        <ChevronLeft size={16} />
+        Previous
+      </button>
+      
+      <div className="pagination-pages">
+        {startPage > 1 && (
+          <>
+            <button className="pagination-btn" onClick={() => onPageChange(1)}>1</button>
+            {startPage > 2 && <span className="pagination-ellipsis">...</span>}
+          </>
+        )}
+        
+        {pages.map(page => (
+          <button
+            key={page}
+            className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+            onClick={() => onPageChange(page)}
+          >
+            {page}
+          </button>
+        ))}
+        
+        {endPage < totalPages && (
+          <>
+            {endPage < totalPages - 1 && <span className="pagination-ellipsis">...</span>}
+            <button className="pagination-btn" onClick={() => onPageChange(totalPages)}>{totalPages}</button>
+          </>
+        )}
+      </div>
+      
+      <button
+        className="pagination-btn"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+      >
+        Next
+        <ChevronRight size={16} />
+      </button>
+    </div>
+  );
+};
+
+// Sortable Table Header Component
+const SortableHeader = ({ field, currentSortField, currentSortDirection, onSort, children }) => {
+  const handleClick = () => {
+    if (currentSortField === field) {
+      onSort(field, currentSortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      onSort(field, 'asc');
+    }
+  };
+  
+  return (
+    <th className="sortable-header" onClick={handleClick}>
+      <div className="sortable-header-content">
+        <span>{children}</span>
+        <span className="sort-icon">
+          {currentSortField === field ? (
+            currentSortDirection === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />
+          ) : (
+            <ChevronsUpDown size={14} />
+          )}
+        </span>
+      </div>
+    </th>
+  );
+};
 
 // Calendar Component for setting availability
 const AvailabilityCalendar = ({ availableDates, draftDates, onDateSelect, onTimeSlotAdd, onTimeSlotRemove }) => {
@@ -238,22 +330,353 @@ const TimeSlotManager = ({ date, timeSlots, onAddSlot, onRemoveSlot }) => {
   );
 };
 
+// Bookings Calendar Component
+const BookingsCalendar = ({ orders, onDateSelect, selectedDate }) => {
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  });
+
+  const daysInMonth = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth() + 1,
+    0
+  ).getDate();
+
+  const firstDayOfMonth = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth(),
+    1
+  ).getDay();
+
+  const monthName = currentMonth.toLocaleString('default', { month: 'long' });
+  const year = currentMonth.getFullYear();
+
+  const nextMonth = () => {
+    setCurrentMonth(prevMonth => {
+      const next = new Date(prevMonth);
+      next.setMonth(next.getMonth() + 1);
+      return next;
+    });
+  };
+
+  const prevMonth = () => {
+    setCurrentMonth(prevMonth => {
+      const prev = new Date(prevMonth);
+      prev.setMonth(prev.getMonth() - 1);
+      return prev;
+    });
+  };
+
+  // Count bookings per date
+  const bookingsByDate = {};
+  orders.forEach(order => {
+    if (order.created_at) {
+      const dateStr = order.created_at.split(' ')[0]; // Get YYYY-MM-DD part
+      bookingsByDate[dateStr] = (bookingsByDate[dateStr] || 0) + 1;
+    }
+  });
+
+  // Find max bookings for color scaling
+  const maxBookings = Math.max(...Object.values(bookingsByDate), 1);
+
+  const getDateColor = (dateString) => {
+    const count = bookingsByDate[dateString] || 0;
+    if (count === 0) return 'hover:bg-gray-100 text-black border border-gray-300';
+    
+    // Calculate opacity based on booking count (0.3 to 1.0)
+    const opacity = 0.3 + (count / maxBookings) * 0.7;
+    const isSelected = dateString === selectedDate;
+    
+    if (isSelected) {
+      return `bg-blue-700 text-white font-bold`;
+    }
+    
+    // Use inline style for dynamic opacity
+    return `text-white font-semibold`;
+  };
+
+  const getBackgroundStyle = (dateString) => {
+    const count = bookingsByDate[dateString] || 0;
+    if (count === 0 || dateString === selectedDate) return {};
+    
+    const opacity = 0.3 + (count / maxBookings) * 0.7;
+    return {
+      backgroundColor: `rgba(37, 99, 235, ${opacity})` // blue-600 with variable opacity
+    };
+  };
+
+  return (
+    <div className="w-full max-w-md mx-auto">
+      <div className="flex items-center justify-between mb-4">
+        <button
+          type="button"
+          onClick={prevMonth}
+          className="p-2 rounded transition-colors hover:bg-gray-200 text-black"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <h3 className="text-lg font-semibold text-black">
+          {monthName} {year}
+        </h3>
+        <button
+          type="button"
+          onClick={nextMonth}
+          className="p-2 hover:bg-gray-200 rounded text-black"
+        >
+          <ChevronRight size={20} />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day} className="text-center text-sm text-black py-1 font-medium">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: firstDayOfMonth }).map((_, index) => (
+          <div key={`empty-${index}`} className="p-2" />
+        ))}
+
+        {Array.from({ length: daysInMonth }).map((_, index) => {
+          const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index + 1);
+          const dateString = formatDateString(date);
+          const bookingCount = bookingsByDate[dateString] || 0;
+
+          return (
+            <button
+              key={index}
+              type="button"
+              onClick={() => onDateSelect(dateString)}
+              className={`p-2 rounded text-sm transition ${getDateColor(dateString)}`}
+              style={getBackgroundStyle(dateString)}
+              title={bookingCount > 0 ? `${bookingCount} booking${bookingCount > 1 ? 's' : ''}` : 'No bookings'}
+            >
+              <span>{index + 1}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 text-sm text-gray-600">
+        <p className="font-semibold mb-2">Legend:</p>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 border border-gray-300 rounded"></div>
+            <span>No bookings</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-blue-300 rounded"></div>
+            <span>Few bookings</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-blue-600 rounded"></div>
+            <span>Many bookings</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Bookings Date Details Component
+const BookingsDateDetails = ({ date, orders }) => {
+  const dateOrders = orders.filter(o => {
+    if (!o.created_at) return false;
+    const orderDate = o.created_at.split(' ')[0];
+    return orderDate === date;
+  });
+
+  if (dateOrders.length === 0) {
+    return (
+      <div className="mt-4 p-4 bg-white border border-gray-300 rounded-lg">
+        <h4 className="font-semibold text-black mb-3">Bookings for {date}</h4>
+        <p className="text-gray-500 text-sm">No bookings on this date</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 p-4 bg-white border border-blue-300 rounded-lg">
+      <h4 className="font-semibold text-black mb-3">
+        Bookings for {date} ({dateOrders.length})
+      </h4>
+      <div className="space-y-2 max-h-96 overflow-y-auto">
+        {dateOrders.map((order, idx) => (
+          <div key={idx} className="p-3 bg-blue-50 border border-blue-200 rounded">
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <p className="font-semibold text-black">{order.customer_name}</p>
+                <p className="text-sm text-gray-700">{order.service}</p>
+                <p className="text-sm text-gray-600">{order.customer_email}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-black">R{parseFloat(order.amount).toFixed(2)}</p>
+                <span className={`inline-block px-2 py-1 rounded text-xs ${
+                  order.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {order.status === 'paid' ? 'Paid' : '50% Deposit'}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("bookings");
-  // Admin data stores (mock) for CRUD sections
-  const [orders, setOrders] = useState([
-    { id: 101, user: "john@example.com", total: 1500, status: "paid", createdAt: "2024-12-10" },
-    { id: 102, user: "jane@example.com", total: 2200, status: "pending", createdAt: "2024-12-12" }
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  // Sample orders data for Orders page (bookings tab)
+  const [sampleOrders] = useState([
+    { 
+      id: 101, 
+      order_id: "ORD-2024-001",
+      customer_name: "John Doe",
+      customer_email: "john@example.com",
+      customer_phone: "+27 82 123 4567",
+      service: "Matric Dance Photography",
+      amount: 1800,
+      status: "paid",
+      created_at: "2024-12-10"
+    },
+    { 
+      id: 102, 
+      order_id: "ORD-2024-002",
+      customer_name: "Jane Smith",
+      customer_email: "jane@example.com",
+      customer_phone: "+27 83 234 5678",
+      service: "Wedding Videography",
+      amount: 9500,
+      status: "pending",
+      created_at: "2024-12-12"
+    },
+    { 
+      id: 103, 
+      order_id: "ORD-2024-003",
+      customer_name: "Mike Johnson",
+      customer_email: "mike@example.com",
+      customer_phone: "+27 84 345 6789",
+      service: "Corporate Event Combo",
+      amount: 4400,
+      status: "paid",
+      created_at: "2024-12-08"
+    },
+    { 
+      id: 104, 
+      order_id: "ORD-2024-004",
+      customer_name: "Sarah Williams",
+      customer_email: "sarah@example.com",
+      customer_phone: "+27 85 456 7890",
+      service: "Birthday Party Photography",
+      amount: 1500,
+      status: "pending",
+      created_at: "2024-12-15"
+    },
+    { 
+      id: 105, 
+      order_id: "ORD-2024-005",
+      customer_name: "David Brown",
+      customer_email: "david@example.com",
+      customer_phone: "+27 86 567 8901",
+      service: "Complete Music Video Package",
+      amount: 12500,
+      status: "paid",
+      created_at: "2024-12-05"
+    },
+    { 
+      id: 106, 
+      order_id: "ORD-2024-006",
+      customer_name: "Emily Davis",
+      customer_email: "emily@example.com",
+      customer_phone: "+27 87 678 9012",
+      service: "Fashion Show Videography",
+      amount: 5000,
+      status: "pending",
+      created_at: "2024-12-18"
+    },
+    { 
+      id: 107, 
+      order_id: "ORD-2024-007",
+      customer_name: "Chris Wilson",
+      customer_email: "chris@example.com",
+      customer_phone: "+27 88 789 0123",
+      service: "Commercial Photography",
+      amount: 5000,
+      status: "paid",
+      created_at: "2024-12-03"
+    },
+    { 
+      id: 108, 
+      order_id: "ORD-2024-008",
+      customer_name: "Lisa Anderson",
+      customer_email: "lisa@example.com",
+      customer_phone: "+27 89 890 1234",
+      service: "Personal Photo Shoot - Family",
+      amount: 1800,
+      status: "paid",
+      created_at: "2024-12-11"
+    },
+    { 
+      id: 109, 
+      order_id: "ORD-2024-009",
+      customer_name: "Robert Taylor",
+      customer_email: "robert@example.com",
+      customer_phone: "+27 71 901 2345",
+      service: "Matric Dance Combo",
+      amount: 3500,
+      status: "pending",
+      created_at: "2024-12-20"
+    },
+    { 
+      id: 110, 
+      order_id: "ORD-2024-010",
+      customer_name: "Amanda Martinez",
+      customer_email: "amanda@example.com",
+      customer_phone: "+27 72 012 3456",
+      service: "Professional Color Grading",
+      amount: 3000,
+      status: "paid",
+      created_at: "2024-12-07"
+    },
+    { 
+      id: 111, 
+      order_id: "ORD-2024-011",
+      customer_name: "James Lee",
+      customer_email: "james@example.com",
+      customer_phone: "+27 73 123 4567",
+      service: "Music Video Reels(DJI Osmo)",
+      amount: 3500,
+      status: "pending",
+      created_at: "2024-12-19"
+    },
+    { 
+      id: 112, 
+      order_id: "ORD-2024-012",
+      customer_name: "Maria Garcia",
+      customer_email: "maria@example.com",
+      customer_phone: "+27 74 234 5678",
+      service: "Wedding Combo Package",
+      amount: 15000,
+      status: "paid",
+      created_at: "2024-12-01"
+    }
   ]);
+  // Orders from database (for orders tab)
+  const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([
     { id: 1, name: "John Doe", email: "john@example.com", role: "customer" },
     { id: 2, name: "Jane Smith", email: "jane@example.com", role: "customer" }
   ]);
-  const [reviews, setReviews] = useState([
-    { id: 1, user: "john@example.com", rating: 5, comment: "Amazing!", approved: true },
-    { id: 2, user: "mike@example.com", rating: 4, comment: "Great work", approved: false }
-  ]);
+  const [reviews, setReviews] = useState([]);
   // Services state
   const [services, setServices] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(false);
@@ -268,6 +691,23 @@ const AdminDashboard = () => {
   const [availabilitySaving, setAvailabilitySaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [draftTimeSlotsByDate, setDraftTimeSlotsByDate] = useState({}); // { [date]: string[] }
+  const [selectedBookingDate, setSelectedBookingDate] = useState("");
+  
+  // Pagination and sorting state
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [ordersSortField, setOrdersSortField] = useState(null);
+  const [ordersSortDirection, setOrdersSortDirection] = useState('asc');
+  const [servicesPage, setServicesPage] = useState(1);
+  const [servicesSortField, setServicesSortField] = useState(null);
+  const [servicesSortDirection, setServicesSortDirection] = useState('asc');
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersSortField, setUsersSortField] = useState(null);
+  const [usersSortDirection, setUsersSortDirection] = useState('asc');
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [reviewsSortField, setReviewsSortField] = useState(null);
+  const [reviewsSortDirection, setReviewsSortDirection] = useState('asc');
+  
+  const ITEMS_PER_PAGE = 10;
 
   // Mock bookings data
   const [bookings, setBookings] = useState([
@@ -365,6 +805,90 @@ const AdminDashboard = () => {
   const currentDateSaved = availableDates.find(d => d.date === selectedDate);
   const currentDateSlots = currentDateSaved ? (currentDateSaved.timeSlots || []) : (draftTimeSlotsByDate[selectedDate] || []);
 
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      await fetch("https://crtvshotss.atwebpages.com/sessions/logout_simple.php", {
+        method: "POST",
+        credentials: "include"
+      });
+      localStorage.removeItem('user');
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      localStorage.removeItem('user');
+      navigate("/login");
+    }
+  };
+
+  // Check admin authentication on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        console.log("Checking admin authentication...");
+        
+        // Check localStorage first (primary source of truth for cross-domain auth)
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            console.log("Found user in localStorage:", userData);
+            
+            if (userData.is_admin === 1) {
+              console.log("User is admin (from localStorage), granting access");
+              setIsAuthenticated(true);
+              setIsLoading(false);
+              return;
+            } else {
+              console.log("User is not admin (from localStorage), redirecting to home");
+              navigate("/");
+              setIsLoading(false);
+              return;
+            }
+          } catch (parseError) {
+            console.error("Error parsing user data from localStorage:", parseError);
+            localStorage.removeItem('user');
+          }
+        }
+        
+        // Fallback: Check server session (for direct server access or same-domain)
+        console.log("No localStorage, checking server session...");
+        const res = await fetch("https://crtvshotss.atwebpages.com/sessions/check_admin_simple.php", {
+          credentials: "include"
+        });
+        
+        const text = await res.text();
+        console.log("Admin check raw response:", text);
+        
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (parseError) {
+          console.error("Failed to parse admin check response:", text.substring(0, 200));
+          navigate("/login");
+          setIsLoading(false);
+          return;
+        }
+        
+        console.log("Admin check data:", data);
+        
+        if (data.success && data.is_admin) {
+          console.log("User is admin (from server), granting access");
+          setIsAuthenticated(true);
+        } else {
+          console.log("Not admin or not authenticated, redirecting to login");
+          navigate("/login");
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        navigate("/login");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
 
   React.useEffect(() => {
     if (activeTab !== "availability") return;
@@ -405,6 +929,207 @@ const AdminDashboard = () => {
       }
     })();
   }, [activeTab]);
+
+  // Load orders when orders tab is active (from database)
+  React.useEffect(() => {
+    if (activeTab !== "orders") return;
+    (async () => {
+      try {
+        setServicesLoading(true);
+        setServicesMessage("");
+        const res = await fetch("https://crtvshotss.atwebpages.com/orders_list.php", {
+          credentials: "include"
+        });
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setOrders(json.data);
+          setOrdersPage(1); // Reset to first page when data loads
+        } else {
+          setServicesMessage("Failed to load orders");
+        }
+      } catch (e) {
+        setServicesMessage("Error loading orders: " + e.message);
+      } finally {
+        setServicesLoading(false);
+      }
+    })();
+  }, [activeTab]);
+
+  // Load users when users tab is active (from database)
+  React.useEffect(() => {
+    if (activeTab !== "users") return;
+    (async () => {
+      try {
+        setServicesLoading(true);
+        setServicesMessage("");
+        const res = await fetch("https://crtvshotss.atwebpages.com/get_users.php", {
+          credentials: "include"
+        });
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setUsers(json.data);
+          setSelectedUserIds(new Set());
+        } else {
+          setServicesMessage("Failed to load users");
+        }
+      } catch (e) {
+        setServicesMessage("Error loading users: " + e.message);
+      } finally {
+        setServicesLoading(false);
+      }
+    })();
+  }, [activeTab]);
+
+  // Load reviews when reviews tab is active (admin view: all reviews)
+  React.useEffect(() => {
+    if (activeTab !== 'reviews') return;
+    (async () => {
+      try {
+        setServicesLoading(true);
+        setServicesMessage('');
+
+        // Fetch services (to map service_id -> name) and reviews in parallel
+        const [servicesRes, reviewsRes] = await Promise.all([
+          fetch('https://crtvshotss.atwebpages.com/services_list.php'),
+          fetch('https://crtvshotss.atwebpages.com/reviews_admin_list.php', { credentials: 'include' })
+        ]);
+
+        const servicesJson = await servicesRes.json().catch(() => ({}));
+        const reviewsJson = await reviewsRes.json();
+
+        const serviceMap = {};
+        if (servicesJson && servicesJson.success && Array.isArray(servicesJson.data)) {
+          servicesJson.data.forEach(s => { serviceMap[s.id] = s.name; });
+          setServices(servicesJson.data);
+        }
+
+        if (reviewsJson && reviewsJson.success && Array.isArray(reviewsJson.data)) {
+          const mapped = reviewsJson.data.map(r => ({
+            id: r.id,
+            user: r.name || r.user || r.email || '',
+            name: r.name || r.user || r.email || '',
+            email: r.email || '',
+            comment: r.quote || r.comment || '',
+            rating: r.rating || 0,
+            approved: r.is_approved ? true : false,
+            service_id: r.service_id || 0,
+            service_name: serviceMap[r.service_id] || (r.service_name || '—'),
+            created_at: r.created_at || ''
+          }));
+
+          setReviews(mapped);
+          setSelectedReviewIds(new Set());
+          setReviewsPage(1);
+        } else {
+          setServicesMessage('Failed to load reviews');
+        }
+      } catch (e) {
+        setServicesMessage('Error loading reviews: ' + e.message);
+      } finally {
+        setServicesLoading(false);
+      }
+    })();
+  }, [activeTab]);
+  
+  // Sorting function
+  const sortData = (data, sortField, sortDirection) => {
+    if (!sortField) return data;
+    
+    return [...data].sort((a, b) => {
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+      
+      // Handle nested properties
+      if (sortField === 'created_at' || sortField === 'date') {
+        aVal = new Date(aVal || 0);
+        bVal = new Date(bVal || 0);
+      } else if (sortField === 'amount' || sortField === 'price') {
+        aVal = parseFloat(aVal || 0);
+        bVal = parseFloat(bVal || 0);
+      } else if (typeof aVal === 'string') {
+        aVal = aVal.toLowerCase();
+        bVal = (bVal || '').toLowerCase();
+      }
+      
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+  
+  // Orders sorting and pagination - use sampleOrders for bookings tab, orders for orders tab
+  const currentOrdersData = activeTab === "bookings" ? sampleOrders : orders;
+  
+  const handleOrdersSort = (field, direction) => {
+    setOrdersSortField(field);
+    setOrdersSortDirection(direction);
+    setOrdersPage(1); // Reset to first page when sorting changes
+  };
+  
+  const sortedOrders = useMemo(() => {
+    return sortData(currentOrdersData, ordersSortField, ordersSortDirection);
+  }, [currentOrdersData, ordersSortField, ordersSortDirection]);
+  
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (ordersPage - 1) * ITEMS_PER_PAGE;
+    return sortedOrders.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [sortedOrders, ordersPage]);
+  
+  const totalOrdersPages = Math.ceil(sortedOrders.length / ITEMS_PER_PAGE);
+  
+  // Services sorting and pagination
+  const handleServicesSort = (field, direction) => {
+    setServicesSortField(field);
+    setServicesSortDirection(direction);
+    setServicesPage(1); // Reset to first page when sorting changes
+  };
+  
+  const sortedServices = useMemo(() => {
+    return sortData(services, servicesSortField, servicesSortDirection);
+  }, [services, servicesSortField, servicesSortDirection]);
+  
+  const paginatedServices = useMemo(() => {
+    const startIndex = (servicesPage - 1) * ITEMS_PER_PAGE;
+    return sortedServices.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [sortedServices, servicesPage]);
+  
+  const totalServicesPages = Math.ceil(sortedServices.length / ITEMS_PER_PAGE);
+  
+  // Users sorting and pagination
+  const handleUsersSort = (field, direction) => {
+    setUsersSortField(field);
+    setUsersSortDirection(direction);
+    setUsersPage(1);
+  };
+  
+  const sortedUsers = useMemo(() => {
+    return sortData(users, usersSortField, usersSortDirection);
+  }, [users, usersSortField, usersSortDirection]);
+  
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (usersPage - 1) * ITEMS_PER_PAGE;
+    return sortedUsers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [sortedUsers, usersPage]);
+  
+  const totalUsersPages = Math.ceil(sortedUsers.length / ITEMS_PER_PAGE);
+  
+  // Reviews sorting and pagination
+  const handleReviewsSort = (field, direction) => {
+    setReviewsSortField(field);
+    setReviewsSortDirection(direction);
+    setReviewsPage(1);
+  };
+  
+  const sortedReviews = useMemo(() => {
+    return sortData(reviews, reviewsSortField, reviewsSortDirection);
+  }, [reviews, reviewsSortField, reviewsSortDirection]);
+  
+  const paginatedReviews = useMemo(() => {
+    const startIndex = (reviewsPage - 1) * ITEMS_PER_PAGE;
+    return sortedReviews.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [sortedReviews, reviewsPage]);
+  
+  const totalReviewsPages = Math.ceil(sortedReviews.length / ITEMS_PER_PAGE);
 
   const handleSaveAvailability = async () => {
     try {
@@ -732,6 +1457,31 @@ const AdminDashboard = () => {
     }
   };
 
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="admin-dashboard" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="spinner" style={{ 
+            border: '4px solid #f3f3f3', 
+            borderTop: '4px solid #3498db', 
+            borderRadius: '50%', 
+            width: '40px', 
+            height: '40px', 
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 20px'
+          }}></div>
+          <p>Verifying admin access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, component will redirect to login via useEffect
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="admin-dashboard">
       {/* Sidebar */}
@@ -745,17 +1495,17 @@ const AdminDashboard = () => {
             onClick={() => setActiveTab("bookings")}
             className={`nav-item ${activeTab === "bookings" ? "active" : ""}`}
           >
+            <Calendar size={20} />
+            <span>Orders</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("orders")}
+            className={`nav-item ${activeTab === "orders" ? "active" : ""}`}
+          >
             <CalendarDays size={20} />
             <span>Bookings</span>
           </button>
-
-        <button
-          onClick={() => setActiveTab("orders")}
-          className={`nav-item ${activeTab === "orders" ? "active" : ""}`}
-        >
-          <Calendar size={20} />
-          <span>Orders</span>
-        </button>
 
          <button
           onClick={() => setActiveTab("services")}
@@ -799,15 +1549,6 @@ const AdminDashboard = () => {
           <span>Reviews</span>
         </button>
 
-        <button
-          onClick={() => setActiveTab("sales")}
-          className={`nav-item ${activeTab === "sales" ? "active" : ""}`}
-        >
-          <Settings size={20} />
-          <span>Sales</span>
-        </button>
-
-
  
         </nav>
 
@@ -819,7 +1560,7 @@ const AdminDashboard = () => {
             <Home size={20} />
             <span>Back to Site</span>
           </button>
-          <button className="nav-item logout-btn">
+          <button className="nav-item logout-btn" onClick={handleLogout}>
             <LogOut size={20} />
             <span>Logout</span>
           </button>
@@ -831,66 +1572,141 @@ const AdminDashboard = () => {
         <div className="admin-content">
           {activeTab === "bookings" && (
             <div className="bookings-view">
-              <h1 className="page-title">Bookings Management</h1>
-
+              <h1 className="page-title">Orders</h1>
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-value">{bookings.length}</div>
-                  <div className="stat-label">Total Bookings</div>
+                  <div className="stat-value">{sampleOrders.length}</div>
+                  <div className="stat-label">Total Orders</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-value">{bookings.filter(b => b.status === "confirmed").length}</div>
-                  <div className="stat-label">Confirmed</div>
+                  <div className="stat-value">{sampleOrders.filter(o => o.status === "paid").length}</div>
+                  <div className="stat-label">Paid</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-value">{bookings.filter(b => b.status === "pending").length}</div>
+                  <div className="stat-value">{sampleOrders.filter(o => o.status === "pending").length}</div>
                   <div className="stat-label">Pending</div>
                 </div>
               </div>
 
-              <div className="bookings-table-container">
-                <table className="bookings-table">
+              <div className="bulk-bar">
+                <div>
+                  <button className="btn-secondary" onClick={() => {
+                    const next = new Set(sortedOrders.map(o => o.id));
+                    setSelectedOrderIds(next);
+                  }}>Select All</button>
+                  <button className="btn-secondary" onClick={() => setSelectedOrderIds(new Set())}>Clear</button>
+                </div>
+                <div className="bulk-actions">
+                  <button className="btn-primary" onClick={() => {
+                    alert("Sample orders are read-only. Use the Orders tab for database orders.");
+                  }}>Mark Paid</button>
+                  <button className="btn-secondary" onClick={() => {
+                    alert("Sample orders are read-only. Use the Orders tab for database orders.");
+                  }}>Mark Refunded</button>
+                  <button className="btn-danger" onClick={() => {
+                    alert("Sample orders are read-only. Use the Orders tab for database orders.");
+                  }}>Delete</button>
+                </div>
+              </div>
+
+              <div className="bookings-table-container orders-table-container">
+                <table className="bookings-table orders-table">
                   <thead>
                     <tr>
-                      <th>Customer</th>
+                      <th>
+                        <input 
+                          type="checkbox" 
+                          checked={sortedOrders.length > 0 && sortedOrders.every(o => selectedOrderIds.has(o.id))}
+                          onChange={(e) => {
+                            if (e.target.checked) setSelectedOrderIds(new Set(sortedOrders.map(o => o.id)));
+                            else setSelectedOrderIds(new Set());
+                          }} 
+                        />
+                      </th>
+                      <SortableHeader
+                        field="order_id"
+                        currentSortField={ordersSortField}
+                        currentSortDirection={ordersSortDirection}
+                        onSort={handleOrdersSort}
+                      >
+                        Order ID
+                      </SortableHeader>
+                      <SortableHeader
+                        field="customer_name"
+                        currentSortField={ordersSortField}
+                        currentSortDirection={ordersSortDirection}
+                        onSort={handleOrdersSort}
+                      >
+                        Customer
+                      </SortableHeader>
+                      <th>Email</th>
+                      <th>Phone</th>
                       <th>Service</th>
-                      <th>Date</th>
-                      <th>Time</th>
-                      <th>Amount</th>
-                      <th>Payment</th>
-                      <th>Status</th>
+                      <SortableHeader
+                        field="amount"
+                        currentSortField={ordersSortField}
+                        currentSortDirection={ordersSortDirection}
+                        onSort={handleOrdersSort}
+                      >
+                        Amount
+                      </SortableHeader>
+                      <SortableHeader
+                        field="status"
+                        currentSortField={ordersSortField}
+                        currentSortDirection={ordersSortDirection}
+                        onSort={handleOrdersSort}
+                      >
+                        Payment
+                      </SortableHeader>
+                      <SortableHeader
+                        field="created_at"
+                        currentSortField={ordersSortField}
+                        currentSortDirection={ordersSortDirection}
+                        onSort={handleOrdersSort}
+                      >
+                        Date
+                      </SortableHeader>
                     </tr>
                   </thead>
                   <tbody>
-                    {bookings.map(booking => (
-                      <tr key={booking.id}>
-                        <td>
-                          <div>
-                            <div className="font-semibold text-black">{booking.customerName}</div>
-                            <div className="text-sm text-gray-600">{booking.customerEmail}</div>
-                          </div>
-                        </td>
-                        <td className="text-black">{booking.service}</td>
-                        <td className="text-black">{booking.date}</td>
-                        <td className="text-black">
-                          {formatTimeForDisplay(booking.time.split('-')[0])} - {formatTimeForDisplay(booking.time.split('-')[1])}
-                        </td>
-                        <td className="text-black font-semibold">R{booking.amount}</td>
-                        <td>
-                          <span className={`badge ${booking.paymentOption === "full" ? "badge-full" : "badge-deposit"}`}>
-                            {booking.paymentOption === "full" ? "Full" : "50% Deposit"}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`badge ${booking.status === "confirmed" ? "badge-confirmed" : "badge-pending"}`}>
-                            {booking.status}
-                          </span>
-                        </td>
+                    {paginatedOrders.length === 0 ? (
+                      <tr>
+                        <td colSpan="8" className="text-black text-center">No orders found.</td>
                       </tr>
-                    ))}
+                    ) : (
+                      paginatedOrders.map(order => (
+                        <tr key={order.id}>
+                          <td><input type="checkbox" checked={selectedOrderIds.has(order.id)} onChange={(e) => {
+                            const next = new Set(selectedOrderIds);
+                            if (e.target.checked) next.add(order.id); else next.delete(order.id);
+                            setSelectedOrderIds(next);
+                          }} /></td>
+                          <td className="text-black">{order.order_id}</td>
+                          <td className="text-black">{order.customer_name}</td>
+                          <td className="text-black text-ellipsis" style={{ maxWidth: '200px' }} title={order.customer_email}>{order.customer_email}</td>
+                          <td className="text-black">{order.customer_phone}</td>
+                          <td className="text-black text-ellipsis" style={{ maxWidth: '250px' }} title={order.service}>{order.service}</td>
+                          <td className="text-black font-semibold">R{parseFloat(order.amount).toFixed(2)}</td>
+                          <td>
+                            <span className={`badge ${order.status === "paid" ? "badge-confirmed" : "badge-yellow"}`}>
+                                {order.status === "paid" ? "Paid" : "50% Deposit"}
+                              </span>
+                          </td>
+                          <td className="text-black text-sm">{order.created_at}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
+
+              {sortedOrders.length > ITEMS_PER_PAGE && (
+                <Pagination
+                  currentPage={ordersPage}
+                  totalPages={totalOrdersPages}
+                  onPageChange={setOrdersPage}
+                />
+              )}
             </div>
           )}
 
@@ -977,7 +1793,7 @@ const AdminDashboard = () => {
 
           {activeTab === "orders" && (
             <div className="orders-view">
-              <h1 className="page-title">Orders</h1>
+              <h1 className="page-title">Bookings</h1>
               <div className="stats-grid">
                 <div className="stat-card">
                   <div className="stat-value">{orders.length}</div>
@@ -993,63 +1809,143 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
+              <div className="availability-content" style={{ marginBottom: '2rem' }}>
+                <div className="calendar-section">
+                  <h3 className="section-title" style={{ marginBottom: '1rem' }}>Bookings Calendar</h3>
+                  <BookingsCalendar
+                    orders={orders}
+                    onDateSelect={setSelectedBookingDate}
+                    selectedDate={selectedBookingDate}
+                  />
+                  {selectedBookingDate && (
+                    <BookingsDateDetails
+                      date={selectedBookingDate}
+                      orders={orders}
+                    />
+                  )}
+                </div>
+              </div>
+
               <div className="bulk-bar">
                 <div>
                   <button className="btn-secondary" onClick={() => {
-                    const next = new Set(orders.map(o => o.id));
+                    const next = new Set(sortedOrders.map(o => o.id));
                     setSelectedOrderIds(next);
                   }}>Select All</button>
                   <button className="btn-secondary" onClick={() => setSelectedOrderIds(new Set())}>Clear</button>
                 </div>
                 <div className="bulk-actions">
-                  <button className="btn-primary" onClick={() => setOrders(orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "paid" } : o))}>Mark Paid</button>
-                  <button className="btn-secondary" onClick={() => setOrders(orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "refunded" } : o))}>Mark Refunded</button>
-                  <button className="btn-danger" onClick={() => setOrders(orders.filter(o => !selectedOrderIds.has(o.id)))}>Delete</button>
+                  <button className="btn-primary" onClick={() => {
+                    const updated = orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "paid" } : o);
+                    setOrders(updated);
+                    setSelectedOrderIds(new Set());
+                  }}>Mark Paid</button>
+                  <button className="btn-secondary" onClick={() => {
+                    const updated = orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "refunded" } : o);
+                    setOrders(updated);
+                    setSelectedOrderIds(new Set());
+                  }}>Mark Refunded</button>
+                  <button className="btn-danger" onClick={() => {
+                    if (confirm(`Delete ${selectedOrderIds.size} order(s)?`)) {
+                      setOrders(orders.filter(o => !selectedOrderIds.has(o.id)));
+                      setSelectedOrderIds(new Set());
+                    }
+                  }}>Delete</button>
                 </div>
               </div>
 
-              <div className="bookings-table-container">
-                <table className="bookings-table">
+              <div className="bookings-table-container orders-table-container">
+                <table className="bookings-table orders-table">
                   <thead>
                     <tr>
-                      <th><input type="checkbox" onChange={(e) => {
-                        if (e.target.checked) setSelectedOrderIds(new Set(orders.map(o => o.id)));
-                        else setSelectedOrderIds(new Set());
-                      }} /></th>
-                      <th>ID</th>
-                      <th>User</th>
-                      <th>Total</th>
-                      <th>Status</th>
-                      <th>Date</th>
-                      <th>Actions</th>
+                      <th>
+                        <input 
+                          type="checkbox" 
+                          checked={sortedOrders.length > 0 && sortedOrders.every(o => selectedOrderIds.has(o.id))}
+                          onChange={(e) => {
+                            if (e.target.checked) setSelectedOrderIds(new Set(sortedOrders.map(o => o.id)));
+                            else setSelectedOrderIds(new Set());
+                          }} 
+                        />
+                      </th>
+                      <SortableHeader
+                        field="order_id"
+                        currentSortField={ordersSortField}
+                        currentSortDirection={ordersSortDirection}
+                        onSort={handleOrdersSort}
+                      >
+                        Order ID
+                      </SortableHeader>
+                      <SortableHeader
+                        field="customer_name"
+                        currentSortField={ordersSortField}
+                        currentSortDirection={ordersSortDirection}
+                        onSort={handleOrdersSort}
+                      >
+                        Customer
+                      </SortableHeader>
+                      <th>Email</th>
+                      <th>Phone</th>
+                      <th>Service</th>
+                      <SortableHeader
+                        field="amount"
+                        currentSortField={ordersSortField}
+                        currentSortDirection={ordersSortDirection}
+                        onSort={handleOrdersSort}
+                      >
+                        Amount
+                      </SortableHeader>
+                      <SortableHeader
+                        field="status"
+                        currentSortField={ordersSortField}
+                        currentSortDirection={ordersSortDirection}
+                        onSort={handleOrdersSort}
+                      >
+                        Payment
+                      </SortableHeader>
+                      <SortableHeader
+                        field="created_at"
+                        currentSortField={ordersSortField}
+                        currentSortDirection={ordersSortDirection}
+                        onSort={handleOrdersSort}
+                      >
+                        Date
+                      </SortableHeader>
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.map(order => (
+                    {paginatedOrders.map(order => (
                       <tr key={order.id}>
                         <td><input type="checkbox" checked={selectedOrderIds.has(order.id)} onChange={(e) => {
                           const next = new Set(selectedOrderIds);
                           if (e.target.checked) next.add(order.id); else next.delete(order.id);
                           setSelectedOrderIds(next);
                         }} /></td>
-                        <td className="text-black">#{order.id}</td>
-                        <td className="text-black">{order.user}</td>
-                        <td className="text-black">R{order.total}</td>
-                        <td className="text-black">{order.status}</td>
-                        <td className="text-black">{order.createdAt}</td>
+                        <td className="text-black">{order.order_id}</td>
+                        <td className="text-black">{order.customer_name}</td>
+                        <td className="text-black text-ellipsis" style={{ maxWidth: '200px' }} title={order.customer_email}>{order.customer_email}</td>
+                        <td className="text-black">{order.customer_phone}</td>
+                        <td className="text-black text-ellipsis" style={{ maxWidth: '250px' }} title={order.service}>{order.service}</td>
+                        <td className="text-black font-semibold">R{parseFloat(order.amount).toFixed(2)}</td>
                         <td>
-                          <div className="table-actions">
-                            <button className="btn-secondary" onClick={() => setOrders(orders.map(o => o.id === order.id ? { ...o, status: o.status === "paid" ? "refunded" : "paid" } : o))}>
-                              Toggle Paid
-                            </button>
-                            <button className="btn-danger" onClick={() => setOrders(orders.filter(o => o.id !== order.id))}>Delete</button>
-                          </div>
+                          <span className={`badge ${order.status === "paid" ? "badge-confirmed" : "badge-yellow"}`}>
+                            {order.status === "paid" ? "Paid" : "50% Deposit"}
+                          </span>
                         </td>
+                        <td className="text-black text-sm">{order.created_at}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+
+              {sortedOrders.length > ITEMS_PER_PAGE && (
+                <Pagination
+                  currentPage={ordersPage}
+                  totalPages={totalOrdersPages}
+                  onPageChange={setOrdersPage}
+                />
+              )}
 
               <div className="entity-form">
                 <h3 className="section-title">Create Order</h3>
@@ -1061,15 +1957,20 @@ const AdminDashboard = () => {
           {activeTab === "users" && (
             <div className="users-view">
               <h1 className="page-title">Users</h1>
+              {servicesMessage && (
+                <div className={`product-message ${servicesMessage.toLowerCase().includes("success") ? "success" : "error"}`}>
+                  {servicesMessage}
+                </div>
+              )}
               <div className="bulk-bar">
                 <div>
-                  <button className="btn-secondary" onClick={() => setSelectedUserIds(new Set(users.map(u => u.id)))}>Select All</button>
+                  <button className="btn-secondary" onClick={() => setSelectedUserIds(new Set(sortedUsers.map(u => u.user_id || u.id)))}>Select All</button>
                   <button className="btn-secondary" onClick={() => setSelectedUserIds(new Set())}>Clear</button>
                 </div>
                 <div className="bulk-actions">
-                  <button className="btn-primary" onClick={() => setUsers(users.map(u => selectedUserIds.has(u.id) ? { ...u, role: "admin" } : u))}>Make Admin</button>
-                  <button className="btn-secondary" onClick={() => setUsers(users.map(u => selectedUserIds.has(u.id) ? { ...u, role: "customer" } : u))}>Make Customer</button>
-                  <button className="btn-danger" onClick={() => setUsers(users.filter(u => !selectedUserIds.has(u.id)))}>Delete</button>
+                  <button className="btn-primary" disabled>Make Admin</button>
+                  <button className="btn-secondary" disabled>Make Customer</button>
+                  <button className="btn-danger" disabled>Delete</button>
                 </div>
               </div>
 
@@ -1078,44 +1979,97 @@ const AdminDashboard = () => {
                   <thead>
                     <tr>
                       <th><input type="checkbox" onChange={(e) => {
-                        if (e.target.checked) setSelectedUserIds(new Set(users.map(u => u.id)));
+                        if (e.target.checked) setSelectedUserIds(new Set(sortedUsers.map(u => u.user_id || u.id)));
                         else setSelectedUserIds(new Set());
                       }} /></th>
-                      <th>ID</th>
-                      <th>Name</th>
+                      <SortableHeader
+                        field="user_id"
+                        currentSortField={usersSortField}
+                        currentSortDirection={usersSortDirection}
+                        onSort={handleUsersSort}
+                      >
+                        ID
+                      </SortableHeader>
+                      <SortableHeader
+                        field="user_firstname"
+                        currentSortField={usersSortField}
+                        currentSortDirection={usersSortDirection}
+                        onSort={handleUsersSort}
+                      >
+                        First Name
+                      </SortableHeader>
+                      <SortableHeader
+                        field="user_surname"
+                        currentSortField={usersSortField}
+                        currentSortDirection={usersSortDirection}
+                        onSort={handleUsersSort}
+                      >
+                        Last Name
+                      </SortableHeader>
+                      <th>Username</th>
                       <th>Email</th>
-                      <th>Role</th>
-                      <th>Actions</th>
+                      <th>Contact</th>
+                      <SortableHeader
+                        field="email_verified"
+                        currentSortField={usersSortField}
+                        currentSortDirection={usersSortDirection}
+                        onSort={handleUsersSort}
+                      >
+                        Verified
+                      </SortableHeader>
+                      <SortableHeader
+                        field="created_at"
+                        currentSortField={usersSortField}
+                        currentSortDirection={usersSortDirection}
+                        onSort={handleUsersSort}
+                      >
+                        Joined
+                      </SortableHeader>
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map(u => (
-                      <tr key={u.id}>
-                        <td><input type="checkbox" checked={selectedUserIds.has(u.id)} onChange={(e) => {
-                          const next = new Set(selectedUserIds);
-                          if (e.target.checked) next.add(u.id); else next.delete(u.id);
-                          setSelectedUserIds(next);
-                        }} /></td>
-                        <td className="text-black">{u.id}</td>
-                        <td className="text-black">{u.name}</td>
-                        <td className="text-black">{u.email}</td>
-                        <td className="text-black">{u.role}</td>
-                        <td>
-                          <div className="table-actions">
-                            <button className="btn-secondary" onClick={() => setUsers(users.map(x => x.id === u.id ? { ...x, role: x.role === "admin" ? "customer" : "admin" } : x))}>Toggle Admin</button>
-                            <button className="btn-danger" onClick={() => setUsers(users.filter(x => x.id !== u.id))}>Delete</button>
-                          </div>
-                        </td>
+                    {servicesLoading ? (
+                      <tr>
+                        <td colSpan="9" className="text-black text-center">Loading users...</td>
                       </tr>
-                    ))}
+                    ) : sortedUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan="9" className="text-black text-center">No users found.</td>
+                      </tr>
+                    ) : (
+                      paginatedUsers.map(u => (
+                        <tr key={u.user_id || u.id}>
+                          <td><input type="checkbox" checked={selectedUserIds.has(u.user_id || u.id)} onChange={(e) => {
+                            const next = new Set(selectedUserIds);
+                            if (e.target.checked) next.add(u.user_id || u.id); else next.delete(u.user_id || u.id);
+                            setSelectedUserIds(next);
+                          }} /></td>
+                          <td className="text-black text-sm">{u.user_id || u.id}</td>
+                          <td className="text-black">{u.user_firstname || '-'}</td>
+                          <td className="text-black">{u.user_surname || '-'}</td>
+                          <td className="text-black">{u.user_username || '-'}</td>
+                          <td className="text-black text-ellipsis" style={{ maxWidth: '200px' }} title={u.user_email}>{u.user_email}</td>
+                          <td className="text-black">{u.user_contact || '-'}</td>
+                          <td>
+                            <span className={`badge ${u.email_verified ? "badge-confirmed" : "badge-pending"}`}>
+                              {u.email_verified ? "Yes" : "No"}
+                            </span>
+                          </td>
+                          <td className="text-black text-sm">{u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
 
-              <div className="entity-form">
-                <h3 className="section-title">Create User</h3>
-                <UserForm onCreate={(newUser) => setUsers([{ ...newUser, id: Date.now() }, ...users])} />
-              </div>
+              {sortedUsers.length > ITEMS_PER_PAGE && (
+                <Pagination
+                  currentPage={usersPage}
+                  totalPages={totalUsersPages}
+                  onPageChange={setUsersPage}
+                />
+              )}
             </div>
           )}
 
@@ -1124,13 +2078,52 @@ const AdminDashboard = () => {
               <h1 className="page-title">Reviews</h1>
               <div className="bulk-bar">
                 <div>
-                  <button className="btn-secondary" onClick={() => setSelectedReviewIds(new Set(reviews.map(r => r.id)))}>Select All</button>
+                  <button className="btn-secondary" onClick={() => setSelectedReviewIds(new Set(sortedReviews.map(r => r.id)))}>Select All</button>
                   <button className="btn-secondary" onClick={() => setSelectedReviewIds(new Set())}>Clear</button>
                 </div>
                 <div className="bulk-actions">
-                  <button className="btn-primary" onClick={() => setReviews(reviews.map(r => selectedReviewIds.has(r.id) ? { ...r, approved: true } : r))}>Approve</button>
-                  <button className="btn-secondary" onClick={() => setReviews(reviews.map(r => selectedReviewIds.has(r.id) ? { ...r, approved: false } : r))}>Unapprove</button>
-                  <button className="btn-danger" onClick={() => setReviews(reviews.filter(r => !selectedReviewIds.has(r.id)))}>Delete</button>
+                  <button className="btn-primary" onClick={() => {
+                    Array.from(selectedReviewIds).forEach(id => {
+                      fetch('https://crtvshotss.atwebpages.com/reviews_update.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ id, is_approved: true })
+                      }).then(res => res.json()).then(json => {
+                        if (json.success) {
+                          setReviews(reviews.map(r => r.id === id ? { ...r, approved: true } : r));
+                        }
+                      });
+                    });
+                  }}>Approve</button>
+                  <button className="btn-secondary" onClick={() => {
+                    Array.from(selectedReviewIds).forEach(id => {
+                      fetch('https://crtvshotss.atwebpages.com/reviews_update.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ id, is_approved: false })
+                      }).then(res => res.json()).then(json => {
+                        if (json.success) {
+                          setReviews(reviews.map(r => r.id === id ? { ...r, approved: false } : r));
+                        }
+                      });
+                    });
+                  }}>Unapprove</button>
+                  <button className="btn-danger" onClick={() => {
+                    Array.from(selectedReviewIds).forEach(id => {
+                      fetch('https://crtvshotss.atwebpages.com/reviews_delete.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ id })
+                      }).then(res => res.json()).then(json => {
+                        if (json.success) {
+                          setReviews(reviews.filter(r => r.id !== id));
+                        }
+                      });
+                    });
+                  }}>Delete</button>
                 </div>
               </div>
 
@@ -1139,19 +2132,47 @@ const AdminDashboard = () => {
                   <thead>
                     <tr>
                       <th><input type="checkbox" onChange={(e) => {
-                        if (e.target.checked) setSelectedReviewIds(new Set(reviews.map(r => r.id)));
+                        if (e.target.checked) setSelectedReviewIds(new Set(sortedReviews.map(r => r.id)));
                         else setSelectedReviewIds(new Set());
                       }} /></th>
-                      <th>ID</th>
-                      <th>User</th>
-                      <th>Rating</th>
+                      <SortableHeader
+                        field="id"
+                        currentSortField={reviewsSortField}
+                        currentSortDirection={reviewsSortDirection}
+                        onSort={handleReviewsSort}
+                      >
+                        ID
+                      </SortableHeader>
+                      <SortableHeader
+                        field="user"
+                        currentSortField={reviewsSortField}
+                        currentSortDirection={reviewsSortDirection}
+                        onSort={handleReviewsSort}
+                      >
+                        User
+                      </SortableHeader>
+                      <SortableHeader
+                        field="rating"
+                        currentSortField={reviewsSortField}
+                        currentSortDirection={reviewsSortDirection}
+                        onSort={handleReviewsSort}
+                      >
+                        Rating
+                      </SortableHeader>
                       <th>Comment</th>
-                      <th>Approved</th>
+                      <SortableHeader
+                        field="approved"
+                        currentSortField={reviewsSortField}
+                        currentSortDirection={reviewsSortDirection}
+                        onSort={handleReviewsSort}
+                      >
+                        Approved
+                      </SortableHeader>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {reviews.map(r => (
+                    {paginatedReviews.map(r => (
                       <tr key={r.id}>
                         <td><input type="checkbox" checked={selectedReviewIds.has(r.id)} onChange={(e) => {
                           const next = new Set(selectedReviewIds);
@@ -1165,8 +2186,37 @@ const AdminDashboard = () => {
                         <td className="text-black">{r.approved ? "Yes" : "No"}</td>
                         <td>
                           <div className="table-actions">
-                            <button className="btn-secondary" onClick={() => setReviews(reviews.map(x => x.id === r.id ? { ...x, approved: !x.approved } : x))}>Toggle Approve</button>
-                            <button className="btn-danger" onClick={() => setReviews(reviews.filter(x => x.id !== r.id))}>Delete</button>
+                            <button className="btn-secondary" onClick={() => {
+                              fetch('https://crtvshotss.atwebpages.com/admin/reviews_update.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify({ id: r.id, is_approved: !r.approved })
+                              }).then(res => res.json()).then(json => {
+                                if (json.success) {
+                                  setReviews(reviews.map(x => x.id === r.id ? { ...x, approved: !x.approved } : x));
+                                }
+                              }).catch(err => {
+                                console.error('Error toggling approval:', err);
+                                alert('Failed to update review');
+                              });
+                            }}>Toggle Approve</button>
+                            <button className="btn-danger" onClick={() => {
+                              if (!confirm('Are you sure you want to delete this review?')) return;
+                              fetch('https://crtvshotss.atwebpages.com/admin/reviews_delete.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify({ id: r.id })
+                              }).then(res => res.json()).then(json => {
+                                if (json.success) {
+                                  setReviews(reviews.filter(x => x.id !== r.id));
+                                }
+                              }).catch(err => {
+                                console.error('Error deleting review:', err);
+                                alert('Failed to delete review');
+                              });
+                            }}>Delete</button>
                           </div>
                         </td>
                       </tr>
@@ -1175,71 +2225,13 @@ const AdminDashboard = () => {
                 </table>
               </div>
 
-              <div className="entity-form">
-                <h3 className="section-title">Add Review</h3>
-                <ReviewForm onCreate={(newReview) => setReviews([{ ...newReview, id: Date.now(), approved: false }, ...reviews])} />
-              </div>
-            </div>
-          )}
-
-          {activeTab === "sales" && (
-            <div className="sales-view">
-              <h1 className="page-title">Sales Overview</h1>
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-value">R{orders.reduce((sum, o) => sum + (o.status === "paid" ? o.total : 0), 0)}</div>
-                  <div className="stat-label">Total Paid Revenue</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-value">{orders.filter(o => o.status === "paid").length}</div>
-                  <div className="stat-label">Paid Orders</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-value">{orders.filter(o => o.status !== "paid").length}</div>
-                  <div className="stat-label">Unpaid/Other</div>
-                </div>
-              </div>
-
-              <div className="bulk-bar">
-                <div>
-                  <button className="btn-secondary" onClick={() => setSelectedOrderIds(new Set(orders.map(o => o.id)))}>Select All</button>
-                  <button className="btn-secondary" onClick={() => setSelectedOrderIds(new Set())}>Clear</button>
-                </div>
-                <div className="bulk-actions">
-                  <button className="btn-primary" onClick={() => setOrders(orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "paid" } : o))}>Mark Paid</button>
-                  <button className="btn-secondary" onClick={() => setOrders(orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "refunded" } : o))}>Mark Refunded</button>
-                  <button className="btn-danger" onClick={() => setOrders(orders.filter(o => !selectedOrderIds.has(o.id)))}>Delete</button>
-                </div>
-              </div>
-
-              <div className="sales-table-container bookings-table-container">
-                <table className="bookings-table">
-                  <thead>
-                    <tr>
-                      <th></th>
-                      <th>Order</th>
-                      <th>User</th>
-                      <th>Status</th>
-                      <th>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orders.map(o => (
-                      <tr key={o.id}>
-                        <td><input type="checkbox" checked={selectedOrderIds.has(o.id)} onChange={(e) => {
-                          const next = new Set(selectedOrderIds);
-                          if (e.target.checked) next.add(o.id); else next.delete(o.id);
-                          setSelectedOrderIds(next);
-                        }} /></td>
-                        <td className="text-black">#{o.id}</td>
-                        <td className="text-black">{o.user}</td>
-                        <td className="text-black">{o.status}</td>
-                        <td className="text-black">R{o.total}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {sortedReviews.length > ITEMS_PER_PAGE && (
+                <Pagination
+                  currentPage={reviewsPage}
+                  totalPages={totalReviewsPages}
+                  onPageChange={setReviewsPage}
+                />
+              )}
             </div>
           )}
 
@@ -1262,17 +2254,18 @@ const AdminDashboard = () => {
                       setEditingService(null);
                       // Reload services
                       (async () => {
-                        try {
-                          const res = await fetch("https://crtvshotss.atwebpages.com/services_list.php");
-                          const json = await res.json();
-                          if (json.success && Array.isArray(json.data)) {
-                            setServices(json.data);
+                          try {
+                            const res = await fetch("https://crtvshotss.atwebpages.com/services_list.php");
+                            const json = await res.json();
+                            if (json.success && Array.isArray(json.data)) {
+                              setServices(json.data);
+                              setServicesPage(1); // Reset to first page when data loads
+                            }
+                          } catch (e) {
+                            console.error(e);
                           }
-                        } catch (e) {
-                          console.error(e);
-                        }
-                      })();
-                    }}
+                        })();
+                      }}
                     onCancel={() => setEditingService(null)}
                     onMessage={setServicesMessage}
                     onLoading={setServicesLoading}
@@ -1282,7 +2275,7 @@ const AdminDashboard = () => {
                 <>
                   <div className="bulk-bar">
                     <div>
-                      <button className="btn-secondary" onClick={() => setSelectedServiceIds(new Set(services.map(s => s.id)))}>Select All</button>
+                      <button className="btn-secondary" onClick={() => setSelectedServiceIds(new Set(sortedServices.map(s => s.id)))}>Select All</button>
                       <button className="btn-secondary" onClick={() => setSelectedServiceIds(new Set())}>Clear</button>
                     </div>
                     <div className="bulk-actions">
@@ -1301,16 +2294,64 @@ const AdminDashboard = () => {
                     <table className="bookings-table">
                       <thead>
                         <tr>
-                          <th><input type="checkbox" onChange={(e) => {
-                            if (e.target.checked) setSelectedServiceIds(new Set(services.map(s => s.id)));
-                            else setSelectedServiceIds(new Set());
-                          }} /></th>
-                          <th>ID</th>
-                          <th>Name</th>
-                          <th>Category</th>
-                          <th>Price</th>
-                          <th>Price Type</th>
-                          <th>Active</th>
+                          <th>
+                            <input 
+                              type="checkbox" 
+                              checked={sortedServices.length > 0 && sortedServices.every(s => selectedServiceIds.has(s.id))}
+                              onChange={(e) => {
+                                if (e.target.checked) setSelectedServiceIds(new Set(sortedServices.map(s => s.id)));
+                                else setSelectedServiceIds(new Set());
+                              }} 
+                            />
+                          </th>
+                          <SortableHeader
+                            field="id"
+                            currentSortField={servicesSortField}
+                            currentSortDirection={servicesSortDirection}
+                            onSort={handleServicesSort}
+                          >
+                            ID
+                          </SortableHeader>
+                          <SortableHeader
+                            field="name"
+                            currentSortField={servicesSortField}
+                            currentSortDirection={servicesSortDirection}
+                            onSort={handleServicesSort}
+                          >
+                            Name
+                          </SortableHeader>
+                          <SortableHeader
+                            field="category"
+                            currentSortField={servicesSortField}
+                            currentSortDirection={servicesSortDirection}
+                            onSort={handleServicesSort}
+                          >
+                            Category
+                          </SortableHeader>
+                          <SortableHeader
+                            field="price"
+                            currentSortField={servicesSortField}
+                            currentSortDirection={servicesSortDirection}
+                            onSort={handleServicesSort}
+                          >
+                            Price
+                          </SortableHeader>
+                          <SortableHeader
+                            field="price_type"
+                            currentSortField={servicesSortField}
+                            currentSortDirection={servicesSortDirection}
+                            onSort={handleServicesSort}
+                          >
+                            Price Type
+                          </SortableHeader>
+                          <SortableHeader
+                            field="is_active"
+                            currentSortField={servicesSortField}
+                            currentSortDirection={servicesSortDirection}
+                            onSort={handleServicesSort}
+                          >
+                            Active
+                          </SortableHeader>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -1319,12 +2360,12 @@ const AdminDashboard = () => {
                           <tr>
                             <td colSpan="8" className="text-black text-center">Loading services...</td>
                           </tr>
-                        ) : services.length === 0 ? (
+                        ) : sortedServices.length === 0 ? (
                           <tr>
                             <td colSpan="8" className="text-black text-center">No services found. Create one below.</td>
                           </tr>
                         ) : (
-                          services.map(service => (
+                          paginatedServices.map(service => (
                             <tr key={service.id}>
                               <td><input type="checkbox" checked={selectedServiceIds.has(service.id)} onChange={(e) => {
                                 const next = new Set(selectedServiceIds);
@@ -1354,6 +2395,14 @@ const AdminDashboard = () => {
                     </table>
                   </div>
 
+                  {sortedServices.length > ITEMS_PER_PAGE && (
+                    <Pagination
+                      currentPage={servicesPage}
+                      totalPages={totalServicesPages}
+                      onPageChange={setServicesPage}
+                    />
+                  )}
+
                   <div className="entity-form">
                     <h3 className="section-title">Create New Service</h3>
                     <ServiceForm
@@ -1365,6 +2414,7 @@ const AdminDashboard = () => {
                             const json = await res.json();
                             if (json.success && Array.isArray(json.data)) {
                               setServices(json.data);
+                              setServicesPage(1); // Reset to first page when data loads
                             }
                           } catch (e) {
                             console.error(e);

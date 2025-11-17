@@ -18,7 +18,7 @@ const Login = () => {
 
     try {
       const res = await fetch(
-        "https://crtvshotss.atwebpages.com/login.php",
+        "https://crtvshotss.atwebpages.com/sessions/login_simple.php",
         {
           method: "POST",
           body: formData,
@@ -26,7 +26,19 @@ const Login = () => {
         }
       );
 
-      const data = await res.json();
+      // Check if response is JSON
+      const text = await res.text();
+      console.log("Server response:", text);
+      
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        console.error("Failed to parse JSON. Server returned:", text.substring(0, 500));
+        setError("Server error: The login endpoint is not responding correctly. Please make sure the session files are uploaded to the server.");
+        return;
+      }
+
       console.log("Login Response:", data);
 
       if (data.success) {
@@ -41,7 +53,7 @@ const Login = () => {
       }
     } catch (err) {
       console.error("Fetch error:", err);
-      setError("Server error, please try again later.");
+      setError("Network error. Please check your connection and try again.");
     }
   };
 
@@ -131,12 +143,12 @@ const Login = () => {
           <div className="mt-6 text-center text-sm">
             <p>
               Don't have an account?{" "}
-              <a
-                href="https://crtvshotss.atwebpages.com/signup.php"
-                className="text-blue-600 hover:underline font-medium"
-              >
-                Sign up
-              </a>
+              <Link
+      to="/signup"
+      className="text-blue-600 hover:underline font-medium"
+    >
+      Sign up
+    </Link>
             </p>
             <p className="mt-2">
               <a

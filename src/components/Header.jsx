@@ -14,6 +14,7 @@ export default function Header() {
     const [isDark, setIsDark] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [sessionChecked, setSessionChecked] = useState(false);
 
     const pathToItem = (pathname) => {
         if (pathname === "/" || pathname === "") return "HOME";
@@ -22,11 +23,39 @@ export default function Header() {
         if (pathname.startsWith("/gallery")) return "GALLERY";
         if (pathname.startsWith("/reviews")) return "REVIEWS";
         if (pathname.startsWith("/about")) return "ABOUT";
+        if (pathname.startsWith("/admin")) return "ADMIN";
         return "";
     };
 
     const active = pathToItem(location.pathname);
-    const navItems = ["HOME", "BOOKING", "MERCHANDISE", "GALLERY", "REVIEWS", "ABOUT"];
+    
+    // Add ADMIN to nav items if user is admin
+    const baseNavItems = ["HOME", "BOOKING", "MERCHANDISE", "GALLERY", "REVIEWS", "ABOUT"];
+    const navItems = user?.is_admin === 1 
+        ? [...baseNavItems, "ADMIN"] 
+        : baseNavItems;
+
+    // Check localStorage for user on mount
+    useEffect(() => {
+        if (!sessionChecked) {
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                try {
+                    const userData = JSON.parse(storedUser);
+                    console.log("User loaded from localStorage:", userData);
+                    setUser(userData);
+                } catch (error) {
+                    console.error("Error parsing stored user:", error);
+                    localStorage.removeItem('user');
+                    setUser(null);
+                }
+            } else {
+                console.log("No user found in localStorage");
+                setUser(null);
+            }
+            setSessionChecked(true);
+        }
+    }, [sessionChecked, setUser]);
 
     useEffect(() => {
         const detectBackground = () => {
@@ -56,11 +85,13 @@ export default function Header() {
 
     const handleLogout = async () => {
         try {
-            await fetch("https://crtvshotss.atwebpages.com/logout.php", {
+            await fetch("https://crtvshotss.atwebpages.com/sessions/logout_simple.php", {
                 method: "POST",
                 credentials: "include",
             });
             setUser(null);
+            localStorage.removeItem('user');
+            setSessionChecked(false);
             navigate("/");
         } catch (err) {
             console.error("Logout failed", err);
@@ -75,6 +106,7 @@ export default function Header() {
             case "MERCHANDISE": return "/merch";
             case "REVIEWS": return "/reviews";
             case "ABOUT": return "/about";
+            case "ADMIN": return "/admin";
             default: return "#";
         }
     };
@@ -145,7 +177,7 @@ export default function Header() {
                             onMouseLeave={() => setShowDropdown(false)}
                         >
                             <button
-                                className={`flex items-center space-x-2 p-2 rounded-full transition ${
+                                className={`flex items-center space-x-3 px-3 py-2 rounded-full transition ${
                                     isDark ? "bg-white/10 hover:bg-white/20" : "bg-black/10 hover:bg-black/20"
                                 }`}
                             >
@@ -154,17 +186,35 @@ export default function Header() {
                                     alt="Profile"
                                     className={`h-8 w-8 rounded-full border ${isDark ? "border-white/40" : "border-black/40"}`}
                                 />
+                                <span className={`text-sm font-medium ${isDark ? "text-white" : "text-black"}`}>
+                                    {user.firstname || user.email}
+                                </span>
                             </button>
 
                             {showDropdown && (
                                 <div
-                                    className={`absolute right-0 mt-2 w-40 rounded-lg shadow-lg border backdrop-blur-md ${
+                                    className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg border backdrop-blur-md ${
                                         isDark
                                             ? "bg-black/80 border-white/10 text-white"
                                             : "bg-white/80 border-black/10 text-black"
                                     }`}
                                 >
                                     <div className="py-2 text-sm">
+                                        <div className="px-4 py-2 border-b border-white/10">
+                                            <p className="font-semibold">{user.firstname || "User"}</p>
+                                            <p className="text-xs opacity-75">{user.email}</p>
+                                            {user.is_admin === 1 && (
+                                                <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-red-600 text-white rounded">Admin</span>
+                                            )}
+                                        </div>
+                                        {user.is_admin === 1 && (
+                                            <Link
+                                                to="/admin"
+                                                className="block px-4 py-2 hover:bg-white/10"
+                                            >
+                                                Admin Dashboard
+                                            </Link>
+                                        )}
                                         <Link
                                             to="/profile"
                                             className="block px-4 py-2 hover:bg-white/10"
@@ -173,7 +223,7 @@ export default function Header() {
                                         </Link>
                                         <button
                                             onClick={handleLogout}
-                                            className="w-full text-left px-4 py-2 hover:bg-white/10"
+                                            className="w-full text-left px-4 py-2 hover:bg-white/10 text-red-500"
                                         >
                                             Logout
                                         </button>
@@ -270,7 +320,37 @@ export default function Header() {
                             ))}
                         </div>
 
-                        {!user && (
+                        {user ? (
+                            <div className="pt-3 border-t border-black/10 dark:border-white/10">
+                                <div className="px-3 py-2 mb-2">
+                                    <p className="font-semibold text-sm">{user.firstname || "User"}</p>
+                                    <p className="text-xs opacity-75">{user.email}</p>
+                                    {user.is_admin === 1 && (
+                                        <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-red-600 text-white rounded">Admin</span>
+                                    )}
+                                </div>
+                                {user.is_admin === 1 && (
+                                    <Link
+                                        to="/admin"
+                                        className={`block px-3 py-2 rounded-md text-sm font-semibold transition-all ${
+                                            isDark
+                                                ? "hover:bg-white/10 text-white"
+                                                : "hover:bg-black/10 text-black"
+                                        }`}
+                                    >
+                                        Admin Dashboard
+                                    </Link>
+                                )}
+                                <button
+                                    onClick={handleLogout}
+                                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-semibold transition-all text-red-500 ${
+                                        isDark ? "hover:bg-white/10" : "hover:bg-black/10"
+                                    }`}
+                                >
+                                    Logout
+                                </button>
+                            </div>
+                        ) : (
                             <div className="pt-3 border-t border-black/10 dark:border-white/10 flex space-x-3">
                                 <Link
                                     to="/login"
