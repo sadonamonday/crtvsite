@@ -378,7 +378,9 @@ const getCurrentContent = () => {
 
       {selectedVideo && <VideoModal video={selectedVideo} onClose={() => setSelectedVideo(null)} />}
     </div>
+
   );
+  
 };
 
 export default Gallery;
