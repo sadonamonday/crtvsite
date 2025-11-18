@@ -999,14 +999,14 @@ const AdminDashboard = () => {
     })();
   }, [activeTab]);
 
-  // Load orders when orders tab is active (from database)
+  // Load merch orders when orders tab is active (from database)
   React.useEffect(() => {
     if (activeTab !== "orders") return;
     (async () => {
       try {
         setServicesLoading(true);
         setServicesMessage("");
-        const res = await fetch("https://crtvshotss.atwebpages.com/orders_list.php", {
+        const res = await fetch("https://crtvshotss.atwebpages.com/merch_orders_list.php", {
           credentials: "include"
         });
         const json = await res.json();
@@ -1024,7 +1024,7 @@ const AdminDashboard = () => {
     })();
   }, [activeTab]);
 
-  // Load bookings when bookings tab is active (from database)
+  // Load service bookings when bookings tab is active (from database)
   const [bookingsData, setBookingsData] = React.useState([]);
   React.useEffect(() => {
     if (activeTab !== "bookings") return;
@@ -1161,7 +1161,7 @@ const AdminDashboard = () => {
   };
   
   // Orders sorting and pagination - use bookingsData for bookings tab, orders for orders tab
-  const currentOrdersData = activeTab === "bookings" ? bookingsData : orders;
+  const currentOrdersData = activeTab === "orders" ? orders : bookingsData;
   
   const handleOrdersSort = (field, direction) => {
     setOrdersSortField(field);
@@ -1686,16 +1686,16 @@ const AdminDashboard = () => {
 
         <nav className="sidebar-nav">
           <button
-            onClick={() => setActiveTab("bookings")}
-            className={`nav-item ${activeTab === "bookings" ? "active" : ""}`}
+            onClick={() => setActiveTab("orders")}
+            className={`nav-item ${activeTab === "orders" ? "active" : ""}`}
           >
             <Calendar size={20} />
             <span>Orders</span>
           </button>
 
           <button
-            onClick={() => setActiveTab("orders")}
-            className={`nav-item ${activeTab === "orders" ? "active" : ""}`}
+            onClick={() => setActiveTab("bookings")}
+            className={`nav-item ${activeTab === "bookings" ? "active" : ""}`}
           >
             <CalendarDays size={20} />
             <span>Bookings</span>
@@ -1764,21 +1764,25 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <main className="admin-main">
         <div className="admin-content">
-          {activeTab === "bookings" && (
-            <div className="bookings-view">
-              <h1 className="page-title">Orders</h1>
+          {activeTab === "orders" && (
+            <div className="orders-view">
+              <h1 className="page-title">Merchandise Orders</h1>
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-value">{bookingsData.length}</div>
+                  <div className="stat-value">{orders.length}</div>
                   <div className="stat-label">Total Orders</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-value">{bookingsData.filter(o => o.payment_option === "full").length}</div>
-                  <div className="stat-label">Paid</div>
+                  <div className="stat-value">{orders.filter(o => o.order_status === "processing").length}</div>
+                  <div className="stat-label">Processing</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-value">{bookingsData.filter(o => o.payment_option === "deposit").length}</div>
-                  <div className="stat-label">Pending</div>
+                  <div className="stat-value">{orders.filter(o => o.order_status === "shipping").length}</div>
+                  <div className="stat-label">Shipping</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">{orders.filter(o => o.order_status === "delivered").length}</div>
+                  <div className="stat-label">Delivered</div>
                 </div>
               </div>
 
@@ -1791,41 +1795,15 @@ const AdminDashboard = () => {
                   <button className="btn-secondary" onClick={() => setSelectedOrderIds(new Set())}>Clear</button>
                 </div>
                 <div className="bulk-actions">
-                  <button className="btn-primary" onClick={async () => {
-                    if (selectedOrderIds.size === 0) {
-                      alert('Please select bookings to mark as paid');
-                      return;
-                    }
-                    const confirmed = window.confirm(`Mark ${selectedOrderIds.size} booking(s) as paid?`);
-                    if (!confirmed) return;
-                    try {
-                      const res = await fetch('https://crtvshotss.atwebpages.com/update_order_status.php', {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ order_ids: Array.from(selectedOrderIds), status: 'paid' })
-                      });
-                      const data = await res.json();
-                      if (data.success) {
-                        setBookingsData(prev => prev.map(o => selectedOrderIds.has(o.id) ? { ...o, status: 'paid' } : o));
-                        setSelectedOrderIds(new Set());
-                        alert('Bookings marked as paid');
-                      } else {
-                        alert('Failed: ' + (data.message || 'Unknown error'));
-                      }
-                    } catch (e) {
-                      alert('Error: ' + e.message);
-                    }
-                  }}>Mark Paid</button>
                   <button className="btn-danger" onClick={async () => {
                     if (selectedOrderIds.size === 0) {
-                      alert('Please select bookings to delete');
+                      alert('Please select orders to delete');
                       return;
                     }
-                    const confirmed = window.confirm(`Delete ${selectedOrderIds.size} booking(s)? This cannot be undone.`);
+                    const confirmed = window.confirm(`Delete ${selectedOrderIds.size} order(s)? This cannot be undone.`);
                     if (!confirmed) return;
                     try {
-                      const res = await fetch('https://crtvshotss.atwebpages.com/delete_orders.php', {
+                      const res = await fetch('https://crtvshotss.atwebpages.com/merch_orders_delete.php', {
                         method: 'POST',
                         credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
@@ -1833,9 +1811,9 @@ const AdminDashboard = () => {
                       });
                       const data = await res.json();
                       if (data.success) {
-                        setBookingsData(prev => prev.filter(o => !selectedOrderIds.has(o.id)));
+                        setOrders(prev => prev.filter(o => !selectedOrderIds.has(o.id)));
                         setSelectedOrderIds(new Set());
-                        alert('Bookings deleted');
+                        alert('Orders deleted');
                       } else {
                         alert('Failed: ' + (data.message || 'Unknown error'));
                       }
@@ -1877,23 +1855,31 @@ const AdminDashboard = () => {
                         Customer
                       </SortableHeader>
                       <th>Email</th>
-                      <th>Phone</th>
-                      <th>Service</th>
+                      <th>Address</th>
+                      <th>Items</th>
                       <SortableHeader
-                        field="amount"
+                        field="subtotal"
                         currentSortField={ordersSortField}
                         currentSortDirection={ordersSortDirection}
                         onSort={handleOrdersSort}
                       >
-                        Amount
+                        Subtotal
                       </SortableHeader>
                       <SortableHeader
-                        field="status"
+                        field="total"
                         currentSortField={ordersSortField}
                         currentSortDirection={ordersSortDirection}
                         onSort={handleOrdersSort}
                       >
-                        Payment
+                        Total
+                      </SortableHeader>
+                      <SortableHeader
+                        field="order_status"
+                        currentSortField={ordersSortField}
+                        currentSortDirection={ordersSortDirection}
+                        onSort={handleOrdersSort}
+                      >
+                        Order Status
                       </SortableHeader>
                       <SortableHeader
                         field="created_at"
@@ -1916,13 +1902,40 @@ const AdminDashboard = () => {
                         <td className="text-black">{order.order_id}</td>
                         <td className="text-black">{order.customer_name}</td>
                         <td className="text-black text-ellipsis" style={{ maxWidth: '200px' }} title={order.customer_email}>{order.customer_email}</td>
-                        <td className="text-black">{order.customer_phone}</td>
-                        <td className="text-black text-ellipsis" style={{ maxWidth: '250px' }} title={order.item_name || order.service}>{order.item_name || order.service}</td>
-                        <td className="text-black font-semibold">R{parseFloat(order.amount).toFixed(2)}</td>
+                        <td className="text-black text-ellipsis" style={{ maxWidth: '200px' }} title={order.customer_address}>{order.customer_address || '—'}</td>
+                        <td className="text-black text-ellipsis" style={{ maxWidth: '200px' }} title={order.items}>{order.items ? (JSON.parse(order.items).length > 0 ? `${JSON.parse(order.items).length} item(s)` : '—') : '—'}</td>
+                        <td className="text-black font-semibold">R{parseFloat(order.subtotal || 0).toFixed(2)}</td>
+                        <td className="text-black font-semibold">R{parseFloat(order.total || 0).toFixed(2)}</td>
                         <td>
-                          <span className={`badge ${order.payment_option === "full" ? "badge-confirmed" : "badge-yellow"}`}>
-                            {order.payment_option === "full" ? "Paid" : "50% Deposit"}
-                          </span>
+                          <select
+                            className="status-select"
+                            value={order.order_status || 'processing'}
+                            onChange={async (e) => {
+                              const newStatus = e.target.value;
+                              try {
+                                const res = await fetch('https://crtvshotss.atwebpages.com/merch_orders_update_status.php', {
+                                  method: 'POST',
+                                  credentials: 'include',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ order_id: order.id, order_status: newStatus })
+                                });
+                                const data = await res.json();
+                                if (data.success) {
+                                  setOrders(prev => prev.map(o => o.id === order.id ? { ...o, order_status: newStatus } : o));
+                                } else {
+                                  alert('Failed to update status: ' + (data.message || 'Unknown error'));
+                                }
+                              } catch (e) {
+                                alert('Error updating status: ' + e.message);
+                              }
+                            }}
+                          >
+                            <option value="processing">Processing</option>
+                            <option value="shipping">Shipping</option>
+                            <option value="out_for_delivery">Out for Delivery</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
                         </td>
                         <td className="text-black text-sm">{order.created_at}</td>
                       </tr>
@@ -2022,20 +2035,20 @@ const AdminDashboard = () => {
 
           {activeTab === "products" && <AdminAddProduct />}
 
-          {activeTab === "orders" && (
-            <div className="orders-view">
-              <h1 className="page-title">Bookings</h1>
+          {activeTab === "bookings" && (
+            <div className="bookings-view">
+              <h1 className="page-title">Service Bookings</h1>
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-value">{orders.length}</div>
+                  <div className="stat-value">{bookingsData.length}</div>
                   <div className="stat-label">Total Bookings</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-value">{orders.filter(o => o.payment_option === "full").length}</div>
+                  <div className="stat-value">{bookingsData.filter(o => o.payment_option === "full").length}</div>
                   <div className="stat-label">Paid</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-value">{orders.filter(o => o.payment_option === "deposit").length}</div>
+                  <div className="stat-value">{bookingsData.filter(o => o.payment_option === "deposit").length}</div>
                   <div className="stat-label">Deposit</div>
                 </div>
               </div>
@@ -2068,7 +2081,7 @@ const AdminDashboard = () => {
                 <div className="bulk-actions">
                   <button className="btn-primary" onClick={async () => {
                     if (selectedOrderIds.size === 0) {
-                      alert('Please select orders to mark as paid');
+                      alert('Please select bookings to mark as paid');
                       return;
                     }
                     try {
@@ -2081,8 +2094,8 @@ const AdminDashboard = () => {
                         })
                       );
                       await Promise.all(promises);
-                      const updated = orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "paid" } : o);
-                      setOrders(updated);
+                      const updated = bookingsData.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "paid" } : o);
+                      setBookingsData(updated);
                       setSelectedOrderIds(new Set());
                     } catch (e) {
                       alert('Error updating bookings: ' + e.message);
@@ -2090,7 +2103,7 @@ const AdminDashboard = () => {
                   }}>Mark Paid</button>
                   <button className="btn-secondary" onClick={async () => {
                     if (selectedOrderIds.size === 0) {
-                      alert('Please select orders to mark as refunded');
+                      alert('Please select bookings to mark as refunded');
                       return;
                     }
                     try {
@@ -2103,8 +2116,8 @@ const AdminDashboard = () => {
                         })
                       );
                       await Promise.all(promises);
-                      const updated = orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "refunded" } : o);
-                      setOrders(updated);
+                      const updated = bookingsData.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "refunded" } : o);
+                      setBookingsData(updated);
                       setSelectedOrderIds(new Set());
                     } catch (e) {
                       alert('Error updating bookings: ' + e.message);
@@ -2112,10 +2125,10 @@ const AdminDashboard = () => {
                   }}>Mark Refunded</button>
                   <button className="btn-danger" onClick={async () => {
                     if (selectedOrderIds.size === 0) {
-                      alert('Please select orders to delete');
+                      alert('Please select bookings to delete');
                       return;
                     }
-                    if (!confirm(`Delete ${selectedOrderIds.size} order(s)?`)) return;
+                    if (!confirm(`Delete ${selectedOrderIds.size} booking(s)?`)) return;
                     try {
                       const promises = Array.from(selectedOrderIds).map(id => 
                         fetch('https://crtvshotss.atwebpages.com/bookings_delete.php', {
@@ -2126,7 +2139,7 @@ const AdminDashboard = () => {
                         })
                       );
                       await Promise.all(promises);
-                      setOrders(orders.filter(o => !selectedOrderIds.has(o.id)));
+                      setBookingsData(bookingsData.filter(o => !selectedOrderIds.has(o.id)));
                       setSelectedOrderIds(new Set());
                     } catch (e) {
                       alert('Error deleting bookings: ' + e.message);
@@ -2186,7 +2199,7 @@ const AdminDashboard = () => {
                         Amount
                       </SortableHeader>
                       <SortableHeader
-                        field="status"
+                        field="payment_option"
                         currentSortField={ordersSortField}
                         currentSortDirection={ordersSortDirection}
                         onSort={handleOrdersSort}
@@ -2250,8 +2263,8 @@ const AdminDashboard = () => {
               )}
 
               <div className="entity-form">
-                <h3 className="section-title">Create Order</h3>
-                <OrderForm onCreate={(newOrder) => setOrders([newOrder, ...orders])} />
+                <h3 className="section-title">Create Booking</h3>
+                <OrderForm onCreate={(newOrder) => setBookingsData([newOrder, ...bookingsData])} />
               </div>
             </div>
           )}
