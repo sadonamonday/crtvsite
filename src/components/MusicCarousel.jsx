@@ -32,13 +32,12 @@ export default function MusicCarousel() {
             {/* GRID LAYOUT */}
             <div
                 className="
-                    grid
-                    grid-cols-1
-                    sm:grid-cols-2
-                    lg:grid-cols-3
-                    xl:grid-cols-4
-                    gap-10
-                "
+        grid
+        grid-cols-1
+        sm:grid-cols-2
+        lg:grid-cols-3
+        gap-12
+    "
             >
                 {videos.length > 0 ? (
                     videos.map((video, index) => {
@@ -49,18 +48,18 @@ export default function MusicCarousel() {
                             <div
                                 key={vid || index}
                                 className="
-                                    relative
-                                    aspect-video
-                                    rounded-2xl
-                                    overflow-hidden
-                                    shadow-xl
-                                    bg-black
-                                    transform
-                                    transition-all
-                                    duration-300
-                                    hover:scale-105
-                                    hover:shadow-2xl
-                                "
+                        relative
+                        rounded-2xl
+                        overflow-hidden
+                        shadow-xl
+                        bg-black
+                        transform
+                        transition-all
+                        duration-300
+                        hover:scale-[1.07]
+                        hover:shadow-2xl
+                        aspect-[16/10]   /* bigger height */
+                    "
                             >
                                 <iframe
                                     width="100%"
@@ -75,8 +74,8 @@ export default function MusicCarousel() {
                                 />
 
                                 {/* Title Overlay */}
-                                <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 via-black/20 to-transparent p-3 text-white">
-                                    <h3 className="text-xs md:text-sm font-semibold truncate">
+                                <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 to-transparent p-4 text-white">
+                                    <h3 className="text-sm font-semibold truncate">
                                         {title}
                                     </h3>
                                 </div>
@@ -89,6 +88,7 @@ export default function MusicCarousel() {
                     </p>
                 )}
             </div>
+
         </section>
     );
 }
