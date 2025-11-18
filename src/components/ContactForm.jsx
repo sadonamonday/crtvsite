@@ -54,7 +54,7 @@ export default function ContactForm() {
             {/* Added pt-32 for top padding to avoid header overlap */}
 
             <h2 className="text-4xl font-bold mb-12 text-center tracking-tight text-[#E63946]">
-                Contact Me
+                Contact Us
             </h2>
 
             <form
