@@ -14,8 +14,7 @@ export default function HomePage() {
       <RecentWork />
       <MusicCarousel />
       <Reviews />
-      <ContactForm />
-      <Footer />
+       <Footer />
     </div>
   );
 }

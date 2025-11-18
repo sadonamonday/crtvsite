@@ -53,6 +53,7 @@ export default function Footer() {
                 </div>
 
                 {/* Quick Links */}
+
                 <div>
                     <h4 className="font-semibold mb-4">Quick Links</h4>
                     <ul
@@ -60,12 +61,13 @@ export default function Footer() {
                             isDark ? "text-gray-300" : "text-gray-700"
                         }`}
                     >
-                        <li><a href="/" className="hover:text-primary transition">Home</a></li>
-                        <li><a href="/booking" className="hover:text-primary transition">Booking</a></li>
-                        <li><a href="/gallery" className="hover:text-primary transition">Gallery</a></li>
-                        <li><a href="/merch" className="hover:text-primary transition">Merchandise</a></li>
-                        <li><a href="/reviews" className="hover:text-primary transition">reviews</a></li>
-                        <li><a href="/about" className="hover:text-primary transition">About</a></li>
+                        <li><Link to="/" className="hover:text-primary transition">Home</Link></li>
+                        <li><Link to="/booking" className="hover:text-primary transition">Booking</Link></li>
+                        <li><Link to="/gallery" className="hover:text-primary transition">Gallery</Link></li>
+                        <li><Link to="/merch" className="hover:text-primary transition">Merchandise</Link></li>
+                        <li><Link to="/reviews" className="hover:text-primary transition">Reviews</Link></li>
+                        <li><Link to="/about" className="hover:text-primary transition">About</Link></li>
+                        <li><Link to="/contact" className="hover:text-primary transition">Contact Page</Link></li>
                     </ul>
                 </div>
 

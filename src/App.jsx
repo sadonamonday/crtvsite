@@ -16,6 +16,7 @@ import Verify2FA from "./pages/Verify2fa.jsx";
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import Signup from "./pages/Signup.jsx";
 import Profile from "./pages/Profile.jsx";
+import Contact from "./pages/ContactPage.jsx";
 
 function AppContent() {
   const location = useLocation();
@@ -41,6 +42,7 @@ function AppContent() {
           <Route path="/Verify2FA" element={<Verify2FA />} />
           <Route path="/signup" element={<Signup />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/contact" element={<Contact />} />
 
         </Routes>
       </main>
