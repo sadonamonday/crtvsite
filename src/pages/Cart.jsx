@@ -78,27 +78,32 @@ const Cart = () => {
               ))}
             </ul>
 
-            <div className="mt-8 bg-white rounded-lg p-6 shadow-md">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+            <div className="mt-8 p-6 bg-white rounded-lg shadow-md">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Order Summary</h2>
+                <div className="text-2xl font-bold text-[#06d6a0]">
+                  R{total}
+                </div>
+              </div>
+              
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <button
                   onClick={clearCart}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold px-6 py-3 rounded transition w-full sm:w-auto"
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold px-6 py-3 rounded transition w-full md:w-auto"
                 >
                   Clear Cart
                 </button>
-                <div className="text-2xl font-bold text-gray-900">
-                  Subtotal: R{total}
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                
+                <div className="flex gap-2 w-full md:w-auto">
                   <button
                     onClick={() => navigate("/merch")}
-                    className="bg-gray-700 hover:bg-gray-800 text-white font-semibold px-6 py-3 rounded transition"
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold px-6 py-3 rounded transition flex-1"
                   >
                     Continue Shopping
                   </button>
                   <button
                     onClick={() => navigate("/checkout")}
-                    className="bg-[#06d6a0] hover:bg-[#05b88c] text-black font-semibold px-8 py-3 rounded transition"
+                    className="bg-[#06d6a0] hover:bg-[#05b88c] text-black font-semibold px-6 py-3 rounded transition flex-1"
                   >
                     Checkout
                   </button>

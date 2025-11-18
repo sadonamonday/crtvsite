@@ -10,6 +10,7 @@ const MerchPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedSizes, setSelectedSizes] = useState({}); // Track selected size for each product
 
   const navigate = useNavigate();
   const { addToCart } = useCart(); // ✅ Access the addToCart function
@@ -24,6 +25,15 @@ const MerchPage = () => {
         const data = await res.json();
         setProducts(data);
         setFilteredProducts(data);
+        
+        // Initialize selected sizes
+        const initialSizes = {};
+        data.forEach(product => {
+          if (product.sizes && product.sizes.length > 0) {
+            initialSizes[product.id] = product.sizes[0]; // Default to first available size
+          }
+        });
+        setSelectedSizes(initialSizes);
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {
@@ -48,6 +58,24 @@ const MerchPage = () => {
   }, [searchTerm, selectedCategory, products]);
 
   const categories = ["All", ...new Set(products.map((p) => p.category))];
+
+  // Handle size selection
+  const handleSizeChange = (productId, size) => {
+    setSelectedSizes(prev => ({
+      ...prev,
+      [productId]: size
+    }));
+  };
+
+  // Handle add to cart with selected size
+  const handleAddToCart = (product) => {
+    const selectedSize = selectedSizes[product.id];
+    const productWithSize = {
+      ...product,
+      selectedSize: selectedSize
+    };
+    addToCart(productWithSize);
+  };
 
   return (
     <div className="bg-gray-50 flex flex-col min-h-screen">
@@ -97,6 +125,30 @@ const MerchPage = () => {
                   <h2 className="text-gray-900 font-bold text-xl mb-2">{p.title}</h2>
                   <p className="text-gray-700 mb-4">R{p.price}</p>
 
+                  {/* Size Selection */}
+                  {p.sizes && p.sizes.length > 0 && (
+                    <div className="mb-4">
+                      <label className="block text-gray-700 text-sm font-medium mb-2">
+                        Size:
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {p.sizes.map((size) => (
+                          <button
+                            key={size}
+                            onClick={() => handleSizeChange(p.id, size)}
+                            className={`px-3 py-1 text-sm rounded border ${
+                              selectedSizes[p.id] === size
+                                ? "bg-[#06d6a0] text-black border-[#06d6a0]"
+                                : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                            } transition-colors`}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mt-auto flex gap-2">
                     {/* View More button */}
                     <button
@@ -108,7 +160,7 @@ const MerchPage = () => {
 
                     {/* ✅ Add to Cart button */}
                     <button
-                      onClick={() => addToCart(p)}
+                      onClick={() => handleAddToCart(p)}
                       className="flex-1 bg-[#06d6a0] hover:bg-[#05b88c] text-black p-2 rounded font-semibold transition"
                     >
                       Add to Cart

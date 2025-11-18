@@ -369,14 +369,21 @@ const BookingsCalendar = ({ orders, onDateSelect, selectedDate }) => {
     });
   };
 
-  // Count bookings per date
+  // Count bookings per date (robust against various DB formats)
   const bookingsByDate = {};
   orders.forEach(order => {
-    if (order.created_at) {
-      const dateStr = order.created_at.split(' ')[0]; // Get YYYY-MM-DD part
-      bookingsByDate[dateStr] = (bookingsByDate[dateStr] || 0) + 1;
+    const raw = (order && order.date != null) ? String(order.date).trim() : '';
+    if (!raw || raw.toUpperCase() === 'NULL') return;
+    // Handle both "YYYY-MM-DD" and "YYYY-MM-DD HH:MM:SS" formats
+    const dateOnly = raw.split(' ')[0].trim();
+    // Basic YYYY-MM-DD validation
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
+      bookingsByDate[dateOnly] = (bookingsByDate[dateOnly] || 0) + 1;
     }
   });
+
+  console.log('Bookings by date (calendar):', bookingsByDate);
+  console.log('Bookings total (calendar):', Array.isArray(orders) ? orders.length : 0);
 
   // Find max bookings for color scaling
   const maxBookings = Math.max(...Object.values(bookingsByDate), 1);
@@ -400,10 +407,15 @@ const BookingsCalendar = ({ orders, onDateSelect, selectedDate }) => {
   const getBackgroundStyle = (dateString) => {
     const count = bookingsByDate[dateString] || 0;
     if (count === 0 || dateString === selectedDate) return {};
-    
-    const opacity = 0.3 + (count / maxBookings) * 0.7;
+
+    // Threshold-based heat: 1 -> light, 2-3 -> medium, 4+ -> dark
+    let opacity = 0.35;
+    if (count === 1) opacity = 0.35;
+    else if (count <= 3) opacity = 0.6;
+    else opacity = 1.0;
+
     return {
-      backgroundColor: `rgba(37, 99, 235, ${opacity})` // blue-600 with variable opacity
+      backgroundColor: `rgba(37, 99, 235, ${opacity})`
     };
   };
 
@@ -456,7 +468,15 @@ const BookingsCalendar = ({ orders, onDateSelect, selectedDate }) => {
               style={getBackgroundStyle(dateString)}
               title={bookingCount > 0 ? `${bookingCount} booking${bookingCount > 1 ? 's' : ''}` : 'No bookings'}
             >
-              <span>{index + 1}</span>
+              <span className="relative inline-flex items-center justify-center w-5 h-5">
+                {index + 1}
+                {bookingCount > 0 && (
+                  <span
+                    className="absolute -top-1 -right-1 inline-block w-2 h-2 rounded-full"
+                    style={{ backgroundColor: 'rgba(37, 99, 235, 1)' }}
+                  />
+                )}
+              </span>
             </button>
           );
         })}
@@ -486,8 +506,9 @@ const BookingsCalendar = ({ orders, onDateSelect, selectedDate }) => {
 // Bookings Date Details Component
 const BookingsDateDetails = ({ date, orders }) => {
   const dateOrders = orders.filter(o => {
-    if (!o.created_at) return false;
-    const orderDate = o.created_at.split(' ')[0];
+    if (!o.date) return false;
+    // Handle both "YYYY-MM-DD" and "YYYY-MM-DD HH:MM:SS" formats
+    const orderDate = o.date.split(' ')[0];
     return orderDate === date;
   });
 
@@ -508,19 +529,31 @@ const BookingsDateDetails = ({ date, orders }) => {
       <div className="space-y-2 max-h-96 overflow-y-auto">
         {dateOrders.map((order, idx) => (
           <div key={idx} className="p-3 bg-blue-50 border border-blue-200 rounded">
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-start gap-4">
               <div className="flex-1">
-                <p className="font-semibold text-black">{order.customer_name}</p>
-                <p className="text-sm text-gray-700">{order.service}</p>
-                <p className="text-sm text-gray-600">{order.customer_email}</p>
+                <p className="font-semibold text-black text-base">{order.customer_name}</p>
+                <p className="text-sm text-gray-700 font-medium">{order.item_name || order.service}</p>
+                {order.time_start && order.time_end && (
+                  <p className="text-sm text-blue-600 font-semibold mt-1">
+                    ⏰ {formatTimeForDisplay(order.time_start)} - {formatTimeForDisplay(order.time_end)}
+                  </p>
+                )}
+                <p className="text-sm text-gray-600 mt-1">📧 {order.customer_email}</p>
+                {order.customer_phone && (
+                  <p className="text-sm text-gray-600">📞 {order.customer_phone}</p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">Order: {order.order_id}</p>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-black">R{parseFloat(order.amount).toFixed(2)}</p>
-                <span className={`inline-block px-2 py-1 rounded text-xs ${
-                  order.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+              <div className="text-right flex-shrink-0">
+                <p className="font-bold text-black text-lg">R{parseFloat(order.amount).toFixed(2)}</p>
+                <span className={`inline-block px-2 py-1 rounded text-xs font-medium mt-1 ${
+                  order.payment_option === 'full' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                 }`}>
-                  {order.status === 'paid' ? 'Paid' : '50% Deposit'}
+                  {order.payment_option === 'full' ? 'Paid' : '50% Deposit'}
                 </span>
+                {order.payment_option && (
+                  <p className="text-xs text-gray-500 mt-1 capitalize">{order.payment_option} payment</p>
+                )}
               </div>
             </div>
           </div>
@@ -546,7 +579,10 @@ const AdminDashboard = () => {
       service: "Matric Dance Photography",
       amount: 1800,
       status: "paid",
-      created_at: "2024-12-10"
+      date: "2024-12-10",
+      time_start: "14:00",
+      time_end: "18:00",
+      created_at: "2024-12-10 10:30:00"
     },
     { 
       id: 102, 
@@ -557,7 +593,10 @@ const AdminDashboard = () => {
       service: "Wedding Videography",
       amount: 9500,
       status: "pending",
-      created_at: "2024-12-12"
+      date: "2024-12-12",
+      time_start: "09:00",
+      time_end: "17:00",
+      created_at: "2024-12-12 08:15:00"
     },
     { 
       id: 103, 
@@ -568,7 +607,10 @@ const AdminDashboard = () => {
       service: "Corporate Event Combo",
       amount: 4400,
       status: "paid",
-      created_at: "2024-12-08"
+      date: "2024-12-08",
+      time_start: "10:00",
+      time_end: "15:00",
+      created_at: "2024-12-08 09:20:00"
     },
     { 
       id: 104, 
@@ -579,7 +621,10 @@ const AdminDashboard = () => {
       service: "Birthday Party Photography",
       amount: 1500,
       status: "pending",
-      created_at: "2024-12-15"
+      date: "2024-12-15",
+      time_start: "15:00",
+      time_end: "18:00",
+      created_at: "2024-12-15 12:45:00"
     },
     { 
       id: 105, 
@@ -590,7 +635,10 @@ const AdminDashboard = () => {
       service: "Complete Music Video Package",
       amount: 12500,
       status: "paid",
-      created_at: "2024-12-05"
+      date: "2024-12-05",
+      time_start: "08:00",
+      time_end: "20:00",
+      created_at: "2024-12-05 07:30:00"
     },
     { 
       id: 106, 
@@ -601,7 +649,10 @@ const AdminDashboard = () => {
       service: "Fashion Show Videography",
       amount: 5000,
       status: "pending",
-      created_at: "2024-12-18"
+      date: "2024-12-18",
+      time_start: "18:00",
+      time_end: "23:00",
+      created_at: "2024-12-18 16:10:00"
     },
     { 
       id: 107, 
@@ -612,7 +663,10 @@ const AdminDashboard = () => {
       service: "Commercial Photography",
       amount: 5000,
       status: "paid",
-      created_at: "2024-12-03"
+      date: "2024-12-03",
+      time_start: "09:00",
+      time_end: "13:00",
+      created_at: "2024-12-03 08:00:00"
     },
     { 
       id: 108, 
@@ -623,7 +677,10 @@ const AdminDashboard = () => {
       service: "Personal Photo Shoot - Family",
       amount: 1800,
       status: "paid",
-      created_at: "2024-12-11"
+      date: "2024-12-11",
+      time_start: "11:00",
+      time_end: "14:00",
+      created_at: "2024-12-11 09:30:00"
     },
     { 
       id: 109, 
@@ -634,7 +691,10 @@ const AdminDashboard = () => {
       service: "Matric Dance Combo",
       amount: 3500,
       status: "pending",
-      created_at: "2024-12-20"
+      date: "2024-12-20",
+      time_start: "16:00",
+      time_end: "22:00",
+      created_at: "2024-12-20 14:20:00"
     },
     { 
       id: 110, 
@@ -645,7 +705,10 @@ const AdminDashboard = () => {
       service: "Professional Color Grading",
       amount: 3000,
       status: "paid",
-      created_at: "2024-12-07"
+      date: "2024-12-07",
+      time_start: "10:00",
+      time_end: "16:00",
+      created_at: "2024-12-07 09:00:00"
     },
     { 
       id: 111, 
@@ -656,7 +719,10 @@ const AdminDashboard = () => {
       service: "Music Video Reels(DJI Osmo)",
       amount: 3500,
       status: "pending",
-      created_at: "2024-12-19"
+      date: "2024-12-19",
+      time_start: "13:00",
+      time_end: "17:00",
+      created_at: "2024-12-19 11:45:00"
     },
     { 
       id: 112, 
@@ -667,7 +733,10 @@ const AdminDashboard = () => {
       service: "Wedding Combo Package",
       amount: 15000,
       status: "paid",
-      created_at: "2024-12-01"
+      date: "2024-12-01",
+      time_start: "10:00",
+      time_end: "22:00",
+      created_at: "2024-12-01 08:30:00"
     }
   ]);
   // Orders from database (for orders tab)
@@ -930,14 +999,14 @@ const AdminDashboard = () => {
     })();
   }, [activeTab]);
 
-  // Load orders when orders tab is active (from database)
+  // Load merch orders when orders tab is active (from database)
   React.useEffect(() => {
     if (activeTab !== "orders") return;
     (async () => {
       try {
         setServicesLoading(true);
         setServicesMessage("");
-        const res = await fetch("https://crtvshotss.atwebpages.com/orders_list.php", {
+        const res = await fetch("https://crtvshotss.atwebpages.com/merch_orders_list.php", {
           credentials: "include"
         });
         const json = await res.json();
@@ -949,6 +1018,32 @@ const AdminDashboard = () => {
         }
       } catch (e) {
         setServicesMessage("Error loading orders: " + e.message);
+      } finally {
+        setServicesLoading(false);
+      }
+    })();
+  }, [activeTab]);
+
+  // Load service bookings when bookings tab is active (from database)
+  const [bookingsData, setBookingsData] = React.useState([]);
+  React.useEffect(() => {
+    if (activeTab !== "bookings") return;
+    (async () => {
+      try {
+        setServicesLoading(true);
+        setServicesMessage("");
+        const res = await fetch("https://crtvshotss.atwebpages.com/orders_list.php", {
+          credentials: "include"
+        });
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setBookingsData(json.data);
+          setOrdersPage(1); // Reset to first page when data loads
+        } else {
+          setServicesMessage("Failed to load bookings");
+        }
+      } catch (e) {
+        setServicesMessage("Error loading bookings: " + e.message);
       } finally {
         setServicesLoading(false);
       }
@@ -1065,8 +1160,8 @@ const AdminDashboard = () => {
     });
   };
   
-  // Orders sorting and pagination - use sampleOrders for bookings tab, orders for orders tab
-  const currentOrdersData = activeTab === "bookings" ? sampleOrders : orders;
+  // Orders sorting and pagination - use bookingsData for bookings tab, orders for orders tab
+  const currentOrdersData = activeTab === "orders" ? orders : bookingsData;
   
   const handleOrdersSort = (field, direction) => {
     setOrdersSortField(field);
@@ -1206,14 +1301,20 @@ const AdminDashboard = () => {
     const [customerName, setCustomerName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
+    const [address, setAddress] = useState("");
     const [service, setService] = useState("");
+    const [bookingDate, setBookingDate] = useState("");
+    const [timeStart, setTimeStart] = useState("");
+    const [timeEnd, setTimeEnd] = useState("");
+    const [notes, setNotes] = useState("");
     const [amount, setAmount] = useState("");
+    const [paymentOption, setPaymentOption] = useState("full");
     const [status, setStatus] = useState("pending");
     const [isSubmitting, setIsSubmitting] = useState(false);
     
     const handleCreate = async () => {
       if (!customerName || !email || !phone || !service || !amount) {
-        alert("All fields are required");
+        alert("Name, email, phone, service, and amount are required");
         return;
       }
       
@@ -1227,8 +1328,14 @@ const AdminDashboard = () => {
             customer_name: customerName,
             customer_email: email,
             customer_phone: phone,
+            customer_address: address,
             service,
+            date: bookingDate,
+            time_start: timeStart,
+            time_end: timeEnd,
+            notes,
             amount: parseFloat(amount),
+            payment_option: paymentOption,
             status
           })
         });
@@ -1241,8 +1348,14 @@ const AdminDashboard = () => {
             customer_name: customerName,
             customer_email: email,
             customer_phone: phone,
+            customer_address: address,
             service,
+            date: bookingDate,
+            time_start: timeStart,
+            time_end: timeEnd,
+            notes,
             amount,
+            payment_option: paymentOption,
             status,
             created_at: new Date().toISOString().split('T')[0]
           });
@@ -1250,8 +1363,14 @@ const AdminDashboard = () => {
           setCustomerName("");
           setEmail("");
           setPhone("");
+          setAddress("");
           setService("");
+          setBookingDate("");
+          setTimeStart("");
+          setTimeEnd("");
+          setNotes("");
           setAmount("");
+          setPaymentOption("full");
           setStatus("pending");
         } else {
           alert('Failed to create booking: ' + (data.message || 'Unknown error'));
@@ -1265,16 +1384,25 @@ const AdminDashboard = () => {
     
     return (
       <div className="entity-form-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-        <input className="settings-input" placeholder="Customer Name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
-        <input className="settings-input" placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input className="settings-input" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-        <input className="settings-input" placeholder="Service" value={service} onChange={(e) => setService(e.target.value)} />
-        <input className="settings-input" placeholder="Amount (R)" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
+        <input className="settings-input" placeholder="Customer Name *" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+        <input className="settings-input" placeholder="Email *" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input className="settings-input" placeholder="Phone *" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <input className="settings-input" placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} />
+        <input className="settings-input" placeholder="Service *" value={service} onChange={(e) => setService(e.target.value)} />
+        <input className="settings-input" placeholder="Booking Date" type="date" value={bookingDate} onChange={(e) => setBookingDate(e.target.value)} />
+        <input className="settings-input" placeholder="Start Time" type="time" value={timeStart} onChange={(e) => setTimeStart(e.target.value)} />
+        <input className="settings-input" placeholder="End Time" type="time" value={timeEnd} onChange={(e) => setTimeEnd(e.target.value)} />
+        <input className="settings-input" placeholder="Amount (R) *" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
+        <select className="settings-input" value={paymentOption} onChange={(e) => setPaymentOption(e.target.value)}>
+          <option value="full">Full Payment</option>
+          <option value="deposit">50% Deposit</option>
+        </select>
         <select className="settings-input" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="pending">Pending</option>
           <option value="paid">Paid</option>
           <option value="refunded">Refunded</option>
         </select>
+        <input className="settings-input" placeholder="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} style={{ gridColumn: 'span 2' }} />
         <button className="btn-primary" onClick={handleCreate} disabled={isSubmitting}>
           {isSubmitting ? 'Creating...' : 'Create Booking'}
         </button>
@@ -1558,16 +1686,16 @@ const AdminDashboard = () => {
 
         <nav className="sidebar-nav">
           <button
-            onClick={() => setActiveTab("bookings")}
-            className={`nav-item ${activeTab === "bookings" ? "active" : ""}`}
+            onClick={() => setActiveTab("orders")}
+            className={`nav-item ${activeTab === "orders" ? "active" : ""}`}
           >
             <Calendar size={20} />
             <span>Orders</span>
           </button>
 
           <button
-            onClick={() => setActiveTab("orders")}
-            className={`nav-item ${activeTab === "orders" ? "active" : ""}`}
+            onClick={() => setActiveTab("bookings")}
+            className={`nav-item ${activeTab === "bookings" ? "active" : ""}`}
           >
             <CalendarDays size={20} />
             <span>Bookings</span>
@@ -1636,21 +1764,25 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <main className="admin-main">
         <div className="admin-content">
-          {activeTab === "bookings" && (
-            <div className="bookings-view">
-              <h1 className="page-title">Orders</h1>
+          {activeTab === "orders" && (
+            <div className="orders-view">
+              <h1 className="page-title">Merchandise Orders</h1>
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-value">{sampleOrders.length}</div>
+                  <div className="stat-value">{orders.length}</div>
                   <div className="stat-label">Total Orders</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-value">{sampleOrders.filter(o => o.status === "paid").length}</div>
-                  <div className="stat-label">Paid</div>
+                  <div className="stat-value">{orders.filter(o => o.order_status === "processing").length}</div>
+                  <div className="stat-label">Processing</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-value">{sampleOrders.filter(o => o.status === "pending").length}</div>
-                  <div className="stat-label">Pending</div>
+                  <div className="stat-value">{orders.filter(o => o.order_status === "shipping").length}</div>
+                  <div className="stat-label">Shipping</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">{orders.filter(o => o.order_status === "delivered").length}</div>
+                  <div className="stat-label">Delivered</div>
                 </div>
               </div>
 
@@ -1663,14 +1795,31 @@ const AdminDashboard = () => {
                   <button className="btn-secondary" onClick={() => setSelectedOrderIds(new Set())}>Clear</button>
                 </div>
                 <div className="bulk-actions">
-                  <button className="btn-primary" onClick={() => {
-                    alert("Sample orders are read-only. Use the Orders tab for database orders.");
-                  }}>Mark Paid</button>
-                  <button className="btn-secondary" onClick={() => {
-                    alert("Sample orders are read-only. Use the Orders tab for database orders.");
-                  }}>Mark Refunded</button>
-                  <button className="btn-danger" onClick={() => {
-                    alert("Sample orders are read-only. Use the Orders tab for database orders.");
+                  <button className="btn-danger" onClick={async () => {
+                    if (selectedOrderIds.size === 0) {
+                      alert('Please select orders to delete');
+                      return;
+                    }
+                    const confirmed = window.confirm(`Delete ${selectedOrderIds.size} order(s)? This cannot be undone.`);
+                    if (!confirmed) return;
+                    try {
+                      const res = await fetch('https://crtvshotss.atwebpages.com/merch_orders_delete.php', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ order_ids: Array.from(selectedOrderIds) })
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        setOrders(prev => prev.filter(o => !selectedOrderIds.has(o.id)));
+                        setSelectedOrderIds(new Set());
+                        alert('Orders deleted');
+                      } else {
+                        alert('Failed: ' + (data.message || 'Unknown error'));
+                      }
+                    } catch (e) {
+                      alert('Error: ' + e.message);
+                    }
                   }}>Delete</button>
                 </div>
               </div>
@@ -1706,23 +1855,31 @@ const AdminDashboard = () => {
                         Customer
                       </SortableHeader>
                       <th>Email</th>
-                      <th>Phone</th>
-                      <th>Service</th>
+                      <th>Address</th>
+                      <th>Items</th>
                       <SortableHeader
-                        field="amount"
+                        field="subtotal"
                         currentSortField={ordersSortField}
                         currentSortDirection={ordersSortDirection}
                         onSort={handleOrdersSort}
                       >
-                        Amount
+                        Subtotal
                       </SortableHeader>
                       <SortableHeader
-                        field="status"
+                        field="total"
                         currentSortField={ordersSortField}
                         currentSortDirection={ordersSortDirection}
                         onSort={handleOrdersSort}
                       >
-                        Payment
+                        Total
+                      </SortableHeader>
+                      <SortableHeader
+                        field="order_status"
+                        currentSortField={ordersSortField}
+                        currentSortDirection={ordersSortDirection}
+                        onSort={handleOrdersSort}
+                      >
+                        Order Status
                       </SortableHeader>
                       <SortableHeader
                         field="created_at"
@@ -1735,33 +1892,54 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedOrders.length === 0 ? (
-                      <tr>
-                        <td colSpan="8" className="text-black text-center">No orders found.</td>
+                    {paginatedOrders.map(order => (
+                      <tr key={order.id}>
+                        <td><input type="checkbox" checked={selectedOrderIds.has(order.id)} onChange={(e) => {
+                          const next = new Set(selectedOrderIds);
+                          if (e.target.checked) next.add(order.id); else next.delete(order.id);
+                          setSelectedOrderIds(next);
+                        }} /></td>
+                        <td className="text-black">{order.order_id}</td>
+                        <td className="text-black">{order.customer_name}</td>
+                        <td className="text-black text-ellipsis" style={{ maxWidth: '200px' }} title={order.customer_email}>{order.customer_email}</td>
+                        <td className="text-black text-ellipsis" style={{ maxWidth: '200px' }} title={order.customer_address}>{order.customer_address || '—'}</td>
+                        <td className="text-black text-ellipsis" style={{ maxWidth: '200px' }} title={order.items}>{order.items ? (JSON.parse(order.items).length > 0 ? `${JSON.parse(order.items).length} item(s)` : '—') : '—'}</td>
+                        <td className="text-black font-semibold">R{parseFloat(order.subtotal || 0).toFixed(2)}</td>
+                        <td className="text-black font-semibold">R{parseFloat(order.total || 0).toFixed(2)}</td>
+                        <td>
+                          <select
+                            className="status-select"
+                            value={order.order_status || 'processing'}
+                            onChange={async (e) => {
+                              const newStatus = e.target.value;
+                              try {
+                                const res = await fetch('https://crtvshotss.atwebpages.com/merch_orders_update_status.php', {
+                                  method: 'POST',
+                                  credentials: 'include',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ order_id: order.id, order_status: newStatus })
+                                });
+                                const data = await res.json();
+                                if (data.success) {
+                                  setOrders(prev => prev.map(o => o.id === order.id ? { ...o, order_status: newStatus } : o));
+                                } else {
+                                  alert('Failed to update status: ' + (data.message || 'Unknown error'));
+                                }
+                              } catch (e) {
+                                alert('Error updating status: ' + e.message);
+                              }
+                            }}
+                          >
+                            <option value="processing">Processing</option>
+                            <option value="shipping">Shipping</option>
+                            <option value="out_for_delivery">Out for Delivery</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        </td>
+                        <td className="text-black text-sm">{order.created_at}</td>
                       </tr>
-                    ) : (
-                      paginatedOrders.map(order => (
-                        <tr key={order.id}>
-                          <td><input type="checkbox" checked={selectedOrderIds.has(order.id)} onChange={(e) => {
-                            const next = new Set(selectedOrderIds);
-                            if (e.target.checked) next.add(order.id); else next.delete(order.id);
-                            setSelectedOrderIds(next);
-                          }} /></td>
-                          <td className="text-black">{order.order_id}</td>
-                          <td className="text-black">{order.customer_name}</td>
-                          <td className="text-black text-ellipsis" style={{ maxWidth: '200px' }} title={order.customer_email}>{order.customer_email}</td>
-                          <td className="text-black">{order.customer_phone}</td>
-                          <td className="text-black text-ellipsis" style={{ maxWidth: '250px' }} title={order.service}>{order.service}</td>
-                          <td className="text-black font-semibold">R{parseFloat(order.amount).toFixed(2)}</td>
-                          <td>
-                            <span className={`badge ${order.status === "paid" ? "badge-confirmed" : "badge-yellow"}`}>
-                                {order.status === "paid" ? "Paid" : "50% Deposit"}
-                              </span>
-                          </td>
-                          <td className="text-black text-sm">{order.created_at}</td>
-                        </tr>
-                      ))
-                    )}
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -1857,21 +2035,21 @@ const AdminDashboard = () => {
 
           {activeTab === "products" && <AdminAddProduct />}
 
-          {activeTab === "orders" && (
-            <div className="orders-view">
-              <h1 className="page-title">Bookings</h1>
+          {activeTab === "bookings" && (
+            <div className="bookings-view">
+              <h1 className="page-title">Service Bookings</h1>
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-value">{orders.length}</div>
-                  <div className="stat-label">Total Orders</div>
+                  <div className="stat-value">{bookingsData.length}</div>
+                  <div className="stat-label">Total Bookings</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-value">{orders.filter(o => o.status === "paid").length}</div>
+                  <div className="stat-value">{bookingsData.filter(o => o.payment_option === "full").length}</div>
                   <div className="stat-label">Paid</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-value">{orders.filter(o => o.status === "pending").length}</div>
-                  <div className="stat-label">Pending</div>
+                  <div className="stat-value">{bookingsData.filter(o => o.payment_option === "deposit").length}</div>
+                  <div className="stat-label">Deposit</div>
                 </div>
               </div>
 
@@ -1879,14 +2057,14 @@ const AdminDashboard = () => {
                 <div className="calendar-section">
                   <h3 className="section-title" style={{ marginBottom: '1rem' }}>Bookings Calendar</h3>
                   <BookingsCalendar
-                    orders={orders}
+                    orders={bookingsData}
                     onDateSelect={setSelectedBookingDate}
                     selectedDate={selectedBookingDate}
                   />
                   {selectedBookingDate && (
                     <BookingsDateDetails
                       date={selectedBookingDate}
-                      orders={orders}
+                      orders={bookingsData}
                     />
                   )}
                 </div>
@@ -1903,7 +2081,7 @@ const AdminDashboard = () => {
                 <div className="bulk-actions">
                   <button className="btn-primary" onClick={async () => {
                     if (selectedOrderIds.size === 0) {
-                      alert('Please select orders to mark as paid');
+                      alert('Please select bookings to mark as paid');
                       return;
                     }
                     try {
@@ -1916,8 +2094,8 @@ const AdminDashboard = () => {
                         })
                       );
                       await Promise.all(promises);
-                      const updated = orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "paid" } : o);
-                      setOrders(updated);
+                      const updated = bookingsData.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "paid" } : o);
+                      setBookingsData(updated);
                       setSelectedOrderIds(new Set());
                     } catch (e) {
                       alert('Error updating bookings: ' + e.message);
@@ -1925,7 +2103,7 @@ const AdminDashboard = () => {
                   }}>Mark Paid</button>
                   <button className="btn-secondary" onClick={async () => {
                     if (selectedOrderIds.size === 0) {
-                      alert('Please select orders to mark as refunded');
+                      alert('Please select bookings to mark as refunded');
                       return;
                     }
                     try {
@@ -1938,8 +2116,8 @@ const AdminDashboard = () => {
                         })
                       );
                       await Promise.all(promises);
-                      const updated = orders.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "refunded" } : o);
-                      setOrders(updated);
+                      const updated = bookingsData.map(o => selectedOrderIds.has(o.id) ? { ...o, status: "refunded" } : o);
+                      setBookingsData(updated);
                       setSelectedOrderIds(new Set());
                     } catch (e) {
                       alert('Error updating bookings: ' + e.message);
@@ -1947,10 +2125,10 @@ const AdminDashboard = () => {
                   }}>Mark Refunded</button>
                   <button className="btn-danger" onClick={async () => {
                     if (selectedOrderIds.size === 0) {
-                      alert('Please select orders to delete');
+                      alert('Please select bookings to delete');
                       return;
                     }
-                    if (!confirm(`Delete ${selectedOrderIds.size} order(s)?`)) return;
+                    if (!confirm(`Delete ${selectedOrderIds.size} booking(s)?`)) return;
                     try {
                       const promises = Array.from(selectedOrderIds).map(id => 
                         fetch('https://crtvshotss.atwebpages.com/bookings_delete.php', {
@@ -1961,7 +2139,7 @@ const AdminDashboard = () => {
                         })
                       );
                       await Promise.all(promises);
-                      setOrders(orders.filter(o => !selectedOrderIds.has(o.id)));
+                      setBookingsData(bookingsData.filter(o => !selectedOrderIds.has(o.id)));
                       setSelectedOrderIds(new Set());
                     } catch (e) {
                       alert('Error deleting bookings: ' + e.message);
@@ -2004,6 +2182,15 @@ const AdminDashboard = () => {
                       <th>Phone</th>
                       <th>Service</th>
                       <SortableHeader
+                        field="date"
+                        currentSortField={ordersSortField}
+                        currentSortDirection={ordersSortDirection}
+                        onSort={handleOrdersSort}
+                      >
+                        Booking Date
+                      </SortableHeader>
+                      <th>Time Slot</th>
+                      <SortableHeader
                         field="amount"
                         currentSortField={ordersSortField}
                         currentSortDirection={ordersSortDirection}
@@ -2012,7 +2199,7 @@ const AdminDashboard = () => {
                         Amount
                       </SortableHeader>
                       <SortableHeader
-                        field="status"
+                        field="payment_option"
                         currentSortField={ordersSortField}
                         currentSortDirection={ordersSortDirection}
                         onSort={handleOrdersSort}
@@ -2025,32 +2212,44 @@ const AdminDashboard = () => {
                         currentSortDirection={ordersSortDirection}
                         onSort={handleOrdersSort}
                       >
-                        Date
+                        Order Date
                       </SortableHeader>
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedOrders.map(order => (
-                      <tr key={order.id}>
-                        <td><input type="checkbox" checked={selectedOrderIds.has(order.id)} onChange={(e) => {
-                          const next = new Set(selectedOrderIds);
-                          if (e.target.checked) next.add(order.id); else next.delete(order.id);
-                          setSelectedOrderIds(next);
-                        }} /></td>
-                        <td className="text-black">{order.order_id}</td>
-                        <td className="text-black">{order.customer_name}</td>
-                        <td className="text-black text-ellipsis" style={{ maxWidth: '200px' }} title={order.customer_email}>{order.customer_email}</td>
-                        <td className="text-black">{order.customer_phone}</td>
-                        <td className="text-black text-ellipsis" style={{ maxWidth: '250px' }} title={order.service}>{order.service}</td>
-                        <td className="text-black font-semibold">R{parseFloat(order.amount).toFixed(2)}</td>
-                        <td>
-                          <span className={`badge ${order.status === "paid" ? "badge-confirmed" : "badge-yellow"}`}>
-                            {order.status === "paid" ? "Paid" : "50% Deposit"}
-                          </span>
-                        </td>
-                        <td className="text-black text-sm">{order.created_at}</td>
+                    {paginatedOrders.length === 0 ? (
+                      <tr>
+                        <td colSpan="10" className="text-black text-center">No orders found.</td>
                       </tr>
-                    ))}
+                    ) : (
+                      paginatedOrders.map(order => (
+                        <tr key={order.id}>
+                          <td><input type="checkbox" checked={selectedOrderIds.has(order.id)} onChange={(e) => {
+                            const next = new Set(selectedOrderIds);
+                            if (e.target.checked) next.add(order.id); else next.delete(order.id);
+                            setSelectedOrderIds(next);
+                          }} /></td>
+                          <td className="text-black">{order.order_id}</td>
+                          <td className="text-black">{order.customer_name}</td>
+                          <td className="text-black text-ellipsis" style={{ maxWidth: '200px' }} title={order.customer_email}>{order.customer_email}</td>
+                          <td className="text-black">{order.customer_phone}</td>
+                          <td className="text-black text-ellipsis" style={{ maxWidth: '250px' }} title={order.item_name || order.service}>{order.item_name || order.service}</td>
+                          <td className="text-black text-sm">
+                            {order.date ? new Date(order.date).toLocaleDateString('en-ZA', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
+                          </td>
+                          <td className="text-black text-sm">
+                            {order.time_start && order.time_end ? `${formatTimeForDisplay(order.time_start)}-${formatTimeForDisplay(order.time_end)}` : '—'}
+                          </td>
+                          <td className="text-black font-semibold">R{parseFloat(order.amount).toFixed(2)}</td>
+                          <td>
+                            <span className={`badge ${order.payment_option === "full" ? "badge-confirmed" : "badge-yellow"}`}>
+                              {order.payment_option === "full" ? "Paid" : "50% Deposit"}
+                            </span>
+                          </td>
+                          <td className="text-black text-sm">{order.created_at}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -2064,8 +2263,8 @@ const AdminDashboard = () => {
               )}
 
               <div className="entity-form">
-                <h3 className="section-title">Create Order</h3>
-                <OrderForm onCreate={(newOrder) => setOrders([newOrder, ...orders])} />
+                <h3 className="section-title">Create Booking</h3>
+                <OrderForm onCreate={(newOrder) => setBookingsData([newOrder, ...bookingsData])} />
               </div>
             </div>
           )}

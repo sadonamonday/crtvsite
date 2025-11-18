@@ -122,7 +122,8 @@ function TabButton({ label, active, onClick }) {
 
 // Overview / Dashboard
 function OverviewTab() {
-    const { data, error, loading } = useFetchJson(`${API_BASE}/dashboard.php`, []);
+    const email = typeof window !== 'undefined' ? sessionStorage.getItem('user_email') : '';
+    const { data, error, loading } = useFetchJson(`${API_BASE}/dashboard.php?${new URLSearchParams(email ? { email } : {}).toString()}` || `${API_BASE}/dashboard.php`, [email]);
 
     if (loading) return <Skeleton text="Loading dashboard..." />;
     if (error) return <ErrorBox message={error} />;
@@ -212,6 +213,7 @@ function OrdersTab() {
     const [pageSize, setPageSize] = useState(10);
     const [status, setStatus] = useState('');
     const [q, setQ] = useState('');
+    const email = typeof window !== 'undefined' ? sessionStorage.getItem('user_email') : '';
 
     const query = useMemo(() => {
         const params = new URLSearchParams();
@@ -219,8 +221,9 @@ function OrdersTab() {
         params.set('page_size', String(pageSize));
         if (status) params.set('status', status);
         if (q) params.set('q', q);
+        if (email) params.set('email', email);
         return params.toString();
-    }, [page, pageSize, status, q]);
+    }, [page, pageSize, status, q, email]);
 
     const { data, error, loading } = useFetchJson(`${API_BASE}/order_list.php?${query}`, [query]);
 
@@ -317,6 +320,7 @@ function BookingsTab() {
     const [status, setStatus] = useState('');
     const [from, setFrom] = useState(''); // YYYY-MM-DD
     const [to, setTo] = useState('');
+    const email = typeof window !== 'undefined' ? sessionStorage.getItem('user_email') : '';
 
     const query = useMemo(() => {
         const params = new URLSearchParams();
@@ -325,8 +329,9 @@ function BookingsTab() {
         if (status) params.set('status', status);
         if (from) params.set('from', from);
         if (to) params.set('to', to);
+        if (email) params.set('email', email);
         return params.toString();
-    }, [page, pageSize, status, from, to]);
+    }, [page, pageSize, status, from, to, email]);
 
     const { data, error, loading } = useFetchJson(`${API_BASE}/bookings_list.php?${query}`, [query]);
 

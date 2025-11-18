@@ -443,12 +443,45 @@ const services = [
 }
 ];
 
-const Calendar = ({ selectedDate, onSelectDate }) => {
+const Calendar = ({ selectedDate, onSelectDate, onTimeSlotsChange, refreshTrigger }) => {
   const [currentMonth, setCurrentMonth] = useState(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
+    // Start at November 2025 since that's where available dates are
+    const startMonth = new Date(2025, 10, 1); // November 2025 (month is 0-indexed)
+    startMonth.setHours(0, 0, 0, 0);
+    return startMonth;
   });
+  const [availableDates, setAvailableDates] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch available dates from database
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch availability data (should already have booked slots removed by backend)
+        const availRes = await fetch("https://crtvshotss.atwebpages.com/save_availability.php?action=list", {
+          credentials: "include"
+        });
+        
+        const availData = await availRes.json();
+        
+        if (Array.isArray(availData)) {
+          // Only show dates that have available time slots
+          const datesWithSlots = availData.filter(dateSlot => 
+            dateSlot.timeSlots && dateSlot.timeSlots.length > 0
+          );
+          setAvailableDates(datesWithSlots);
+        }
+      } catch (e) {
+        console.error("Failed to load availability:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchAvailability();
+  }, [refreshTrigger]);
   
   const daysInMonth = new Date(
     currentMonth.getFullYear(),
@@ -495,13 +528,29 @@ const Calendar = ({ selectedDate, onSelectDate }) => {
     return date < today;
   };
 
+  // Check if a date is available in the database (same logic as AdminDashboard)
+  const isDateAvailable = (dateString) => {
+    return availableDates.some(d => d.date === dateString);
+  };
+
   const handleDateClick = (date) => {
-    // Don't allow selection of past dates
-    if (isPastDate(date)) {
+    const formattedDate = formatDateString(date);
+    
+    // Don't allow selection of past dates or unavailable dates
+    if (isPastDate(date) || !isDateAvailable(formattedDate)) {
       return;
     }
-    const formattedDate = formatDateString(date);
+    
+    // Find the time slots for this date
+    const dateData = availableDates.find(d => d.date === formattedDate);
+    const timeSlots = dateData?.timeSlots || [];
+    
     onSelectDate(formattedDate);
+    
+    // Pass available time slots to parent component
+    if (onTimeSlotsChange) {
+      onTimeSlotsChange(timeSlots);
+    }
   };
 
   return (
@@ -534,37 +583,54 @@ const Calendar = ({ selectedDate, onSelectDate }) => {
          ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
-        {Array.from({ length: firstDayOfMonth }).map((_, index) => (
-          <div key={`empty-${index}`} className="p-2" />
-        ))}
-        
-        {Array.from({ length: daysInMonth }).map((_, index) => {
-          const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index + 1);
-          const dateString = formatDateString(date);
-          const isSelected = selectedDate === dateString;
-          const isPast = isPastDate(date);
+      <div className="grid grid-cols-7 gap-1 min-h-[200px]">
+        {loading ? (
+          <div className="col-span-7 text-center py-8 text-gray-500">
+            Loading available dates...
+          </div>
+        ) : (
+          <>
+            {Array.from({ length: firstDayOfMonth }).map((_, index) => (
+              <div key={`empty-${index}`} className="p-2" />
+            ))}
+            
+            {Array.from({ length: daysInMonth }).map((_, index) => {
+              const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), index + 1);
+              const dateString = formatDateString(date);
+              const isSelected = selectedDate === dateString;
+              const isPast = isPastDate(date);
+              const isAvailable = isDateAvailable(dateString);
+              const isDisabled = isPast || !isAvailable;
 
-          return (
-             <button
-               key={index}
-               type="button"
-               onClick={() => handleDateClick(date)}
-               disabled={isPast}
-               className={`p-2 rounded text-sm transition
-                ${isSelected ? 'bg-green-600 text-white' : 
-                  isPast ? 'text-gray-400 cursor-not-allowed' : 
-                  'hover:bg-gray-200 text-gray-800'}
-                ${!isPast && 'hover:bg-gray-200'}
-              `}
-             >
-               <span className={isPast ? 'line-through opacity-50' : ''}>
-                 {index + 1}
-               </span>
-             </button>
-           );
-         })}
+              return (
+                 <button
+                   key={index}
+                   type="button"
+                   onClick={() => handleDateClick(date)}
+                   disabled={isDisabled}
+                   className={`p-2 rounded text-sm transition
+                    ${isSelected ? 'bg-green-600 text-white' : 
+                      isAvailable && !isPast ? 'bg-red-600 text-white hover:bg-red-700' :
+                      isDisabled ? 'text-gray-400 cursor-not-allowed bg-gray-100' : 
+                      'hover:bg-gray-200 text-gray-800'}
+                  `}
+                   title={!isAvailable && !isPast ? 'Not available' : isAvailable ? 'Available for booking' : ''}
+                 >
+                   <span className={isDisabled ? 'line-through opacity-50' : ''}>
+                     {index + 1}
+                   </span>
+                 </button>
+               );
+             })}
+          </>
+        )}
        </div>
+       
+       {!loading && availableDates.length === 0 && (
+         <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-center text-sm text-yellow-800">
+           No available dates yet. Please check back later or contact us directly.
+         </div>
+       )}
      </div>
    );
  };
@@ -583,8 +649,8 @@ const calculateHoursBetweenTimes = (startTime, endTime) => {
   return diffMinutes / 60; // Convert to hours
 };
 
-const TimeDropdownSelector = ({ selectedTime, onTimeSelect }) => {
-  const timeOptions = generateTimeOptions();
+const TimeDropdownSelector = ({ selectedTime, onTimeSelect, availableSlots = [] }) => {
+  const allTimeOptions = generateTimeOptions();
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
@@ -604,6 +670,61 @@ const TimeDropdownSelector = ({ selectedTime, onTimeSelect }) => {
     }
   }, [startTime, endTime, onTimeSelect]);
 
+  // Get available start times from available slots
+  const getAvailableStartTimes = () => {
+    if (availableSlots.length === 0) {
+      return allTimeOptions; // No restrictions if no slots specified
+    }
+    
+    const validStartTimes = new Set();
+    availableSlots.forEach(slot => {
+      const [start, end] = slot.split('-');
+      if (start) {
+        // Add the start time and all times between start and end as potential start times
+        const startIdx = allTimeOptions.indexOf(start);
+        const endIdx = allTimeOptions.indexOf(end);
+        if (startIdx !== -1 && endIdx !== -1) {
+          for (let i = startIdx; i < endIdx; i++) {
+            validStartTimes.add(allTimeOptions[i]);
+          }
+        }
+      }
+    });
+    
+    return allTimeOptions.filter(time => validStartTimes.has(time));
+  };
+
+  // Get available end times based on selected start time and available slots
+  const getAvailableEndTimes = () => {
+    if (!startTime) return [];
+    
+    if (availableSlots.length === 0) {
+      return allTimeOptions.filter(time => time > startTime); // No restrictions if no slots specified
+    }
+    
+    const validEndTimes = new Set();
+    availableSlots.forEach(slot => {
+      const [slotStart, slotEnd] = slot.split('-');
+      const slotStartIdx = allTimeOptions.indexOf(slotStart);
+      const slotEndIdx = allTimeOptions.indexOf(slotEnd);
+      const startTimeIdx = allTimeOptions.indexOf(startTime);
+      
+      // If the selected start time falls within this slot's range
+      if (startTimeIdx >= slotStartIdx && startTimeIdx < slotEndIdx) {
+        // Add all times from start time to slot end as valid end times
+        for (let i = startTimeIdx + 1; i <= slotEndIdx; i++) {
+          if (i < allTimeOptions.length) {
+            validEndTimes.add(allTimeOptions[i]);
+          }
+        }
+      }
+    });
+    
+    return allTimeOptions.filter(time => validEndTimes.has(time));
+  };
+
+  const timeOptions = getAvailableStartTimes();
+
   const handleStartTimeChange = (e) => {
     const newStartTime = e.target.value;
     setStartTime(newStartTime);
@@ -618,8 +739,7 @@ const TimeDropdownSelector = ({ selectedTime, onTimeSelect }) => {
   };
 
   const getEndTimeOptions = () => {
-    if (!startTime) return timeOptions;
-    return timeOptions.filter(time => time > startTime);
+    return getAvailableEndTimes();
   };
 
   const getDuration = () => {
@@ -748,6 +868,8 @@ export default function BookingPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
+  const [calendarRefreshTrigger, setCalendarRefreshTrigger] = useState(0);
   // Services fetched from backend (initialized with static fallback)
   const [servicesList, setServicesList] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(true);
@@ -796,7 +918,6 @@ const normalizedServices = services.map((service) => {
 });
 
 setServicesList(normalizedServices);
-setFilteredServices(normalizedServices);
         if (!res.ok) throw new Error(`Failed to fetch services: ${res.status}`);
         const data = await res.json();
         if (!Array.isArray(data)) throw new Error("Invalid services payload");
@@ -882,6 +1003,50 @@ setFilteredServices(normalizedServices);
     if (!txt) return 0;
     const m = txt.replace(/[, ]/g, "").match(/(\d+)/);
     return m ? parseInt(m[1], 10) : 0;
+  };
+
+  // Function to update availability by removing booked time slot
+  const updateAvailabilityAfterBooking = async (bookedDate, bookedTimeSlot) => {
+    try {
+      const payload = {
+        action: "remove_time_slot",
+        date: bookedDate,
+        time_slot: bookedTimeSlot
+      };
+      
+      console.log("Updating availability with payload:", payload);
+      
+      const response = await fetch("https://crtvshotss.atwebpages.com/save_availability.php", {
+        method: "POST",
+        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      const text = await response.text();
+      console.log("Raw response:", text);
+      
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (e) {
+        console.error("Failed to parse response:", text);
+        return;
+      }
+      
+      if (result.success) {
+        console.log("Availability updated successfully");
+        // Trigger calendar refresh
+        setCalendarRefreshTrigger(prev => prev + 1);
+      } else {
+        console.error("Failed to update availability:", result.message || result);
+      }
+    } catch (error) {
+      console.error("Error updating availability:", error);
+    }
   };
 
   const getServiceDisplayName = () => {
@@ -1045,17 +1210,19 @@ setFilteredServices(normalizedServices);
         service: service,
         item_name: displayName,
         item_description: `${displayName} - ${date}${time ? ` ${time}` : ""}`,
-        date: date,
-        time_start: time_start || undefined,
-        time_end: time_end || undefined,
-        customer_name: details.name,
-        customer_email: details.email,
+        date: date || "",
+        time_start: time_start || "",
+        time_end: time_end || "",
+        customer_name: details.name || "",
+        customer_email: details.email || "",
         customer_phone: details.phone || "",
         customer_address: details.address || "",
         notes: details.notes || "",
-        payment_option: paymentOption, // 'full' | 'deposit'
+        payment_option: paymentOption || "", // 'full' | 'deposit'
         amount: basePrice,             // backend applies 50% when deposit
       };
+
+      console.log("Sending booking data:", bookingData);
 
       try {
         const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
@@ -1077,6 +1244,11 @@ setFilteredServices(normalizedServices);
         }
 
         if (data && data.success && data.payfast) {
+          // Update availability to remove booked time slot
+          if (date && time) {
+            await updateAvailabilityAfterBooking(date, time);
+          }
+          
           // Redirect to PayFast
           const payfastUrl = "https://sandbox.payfast.co.za/eng/process";
           const form = document.createElement('form');
@@ -1122,17 +1294,19 @@ setFilteredServices(normalizedServices);
         service: 'other',
         item_name: title,
         item_description: desc,
-        date: date,
-        time_start: time_start || undefined,
-        time_end: time_end || undefined,
-        customer_name: details.name,
-        customer_email: details.email,
+        date: date || "",
+        time_start: time_start || "",
+        time_end: time_end || "",
+        customer_name: details.name || "",
+        customer_email: details.email || "",
         customer_phone: details.phone || "",
         customer_address: details.address || "",
         notes: details.notes || "",
         payment_option: 'full',
         amount: budget,
       };
+
+      console.log("Sending custom booking data:", bookingData);
 
       try {
         const res = await fetch("https://crtvshotss.atwebpages.com/form_booking.php", {
@@ -1152,6 +1326,11 @@ setFilteredServices(normalizedServices);
         }
 
         if (data && data.success && data.payfast) {
+          // Update availability to remove booked time slot
+          if (date && time) {
+            await updateAvailabilityAfterBooking(date, time);
+          }
+          
           const payfastUrl = "https://sandbox.payfast.co.za/eng/process";
           const form = document.createElement('form');
           form.method = 'POST';
@@ -1542,15 +1721,31 @@ setFilteredServices(normalizedServices);
                 <Calendar
                   selectedDate={date}
                   onSelectDate={setDate}
+                  onTimeSlotsChange={setAvailableTimeSlots}
+                  refreshTrigger={calendarRefreshTrigger}
                 />
               </div>
 
               <div>
                 <label className="block mb-4 font-medium text-gray-800">Select Time</label>
-                <TimeDropdownSelector 
-                  selectedTime={time} 
-                  onTimeSelect={setTime} 
-                />
+                {date ? (
+                  <>
+                    <TimeDropdownSelector 
+                      selectedTime={time} 
+                      onTimeSelect={setTime}
+                      availableSlots={availableTimeSlots}
+                    />
+                    {availableTimeSlots.length > 0 && (
+                      <p className="mt-2 text-sm text-gray-600">
+                        Available time slots for this date: {availableTimeSlots.join(', ')}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm text-gray-500">
+                    Please select a date first to see available time slots
+                  </p>
+                )}
                 <p className="mt-2 text-sm text-gray-600">
                   Available hours: 8:00 AM - 8:00 PM, in 30-minute intervals
                 </p>
