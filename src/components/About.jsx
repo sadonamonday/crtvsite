@@ -25,7 +25,7 @@ export default function About() {
                         href="/about"
                         className="inline-block mt-6 bg-black text-white px-6 py-3 rounded-full text-sm font-semibold shadow-md hover:bg-gray-900 transition-all duration-300"
                     >
-                        More About Me
+                        More About Us
                     </a>
                 </div>
 

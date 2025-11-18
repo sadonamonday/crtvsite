@@ -1,6 +1,6 @@
 import { Instagram, Youtube, Music } from "lucide-react";
+import { Link } from "react-router-dom";
 
-//import backgroundVideo from "../assets/backgroundVideo.mp4";
 export default function Hero() {
     return (
         <div className="relative w-full h-screen bg-black text-white overflow-hidden">
@@ -31,6 +31,23 @@ export default function Hero() {
                     <p>Director</p>
                 </div>
 
+                {/* Buttons */}
+                <div className="flex space-x-4 pt-4">
+                    <Link
+                        to="/booking"
+                        className="px-6 py-3 bg-green-900 text-white rounded-full font-semibold text-sm md:text-base hover:scale-105 transition-all duration-200"
+                    >
+                        Book Now
+                    </Link>
+
+                    <Link
+                        to="/gallery"
+                        className="px-6 py-3 border-2 border-green-900 text-white rounded-full font-semibold text-sm md:text-base hover:bg-white hover:text-black hover:scale-105 transition-all duration-200"
+                    >
+                        View Gallery
+                    </Link>
+                </div>
+
                 {/* Social Icons */}
                 <div className="flex space-x-6 pt-6">
                     <a href="https://www.instagram.com/crtvshots" className="hover:opacity-70 transition">
@@ -43,6 +60,7 @@ export default function Hero() {
                         <Music size={22} />
                     </a>
                 </div>
+
             </div>
         </div>
     );
